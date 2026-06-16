@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Análise de Padrões de Decisão — Entre Escolhas</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#08080F; --bg-card:#0F0F1E; --bg-raised:#141428;
+      --border:rgba(108,99,255,0.15); --border-hover:rgba(108,99,255,0.4);
+      --accent:#6C63FF; --accent-dim:rgba(108,99,255,0.12); --accent-glow:rgba(108,99,255,0.25);
+      --text:#F0EFF8; --text-2:#9490C0; --text-3:#5E5A8A;
+      --white:#FFFFFF; --gold:#C9A84C; --green:#22C55E;
+    }
+    html { scroll-behavior:smooth; }
+    body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; font-size:16px; line-height:1.6; min-height:100vh; }
+    body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"); pointer-events:none; z-index:0; }
+    .serif { font-family:'Playfair Display',Georgia,serif; }
+    .grad { background:linear-gradient(135deg,#A89BFF 0%,#6C63FF 50%,#C9A84C 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .container { max-width:720px; margin:0 auto; padding:0 24px; }
+    .orb { position:fixed; border-radius:50%; filter:blur(120px); pointer-events:none; z-index:0; }
+
+    /* Nav */
+    nav { position:fixed; top:0; left:0; right:0; z-index:100; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; background:rgba(8,8,15,0.85); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+    .nav-logo { font-size:1.1rem; font-weight:700; color:var(--text); text-decoration:none; }
+    .nav-logo span { color:var(--accent); }
+    .nav-back { font-size:0.85rem; color:var(--text-3); text-decoration:none; }
+    .nav-back:hover { color:var(--text); }
+
+    /* Progress bar */
+    .progress-bar-wrap { position:fixed; top:57px; left:0; right:0; z-index:99; height:3px; background:var(--bg-raised); }
+    .progress-bar-fill { height:100%; background:var(--accent); transition:width 0.4s ease; width:0%; }
+
+    /* Main */
+    main { padding:100px 0 60px; position:relative; z-index:1; }
+
+    /* Screens */
+    .screen { display:none; animation:fadeIn 0.4s ease; }
+    .screen.active { display:block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    /* Intro */
+    .intro-badge { display:inline-flex; align-items:center; gap:8px; background:var(--accent-dim); border:1px solid var(--border); border-radius:100px; padding:6px 16px; font-size:0.8rem; color:var(--accent); font-weight:500; margin-bottom:28px; }
+    .intro-badge-dot { width:6px; height:6px; background:var(--accent); border-radius:50%; animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+    .intro h1 { font-size:clamp(1.8rem,4vw,2.8rem); font-weight:700; letter-spacing:-0.03em; margin-bottom:16px; line-height:1.15; }
+    .intro p { color:var(--text-2); font-size:1.05rem; line-height:1.7; margin-bottom:32px; }
+    .intro-rules { background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:24px; margin-bottom:36px; }
+    .intro-rules h3 { font-size:0.85rem; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:16px; }
+    .intro-rules ul { list-style:none; display:flex; flex-direction:column; gap:10px; }
+    .intro-rules li { display:flex; align-items:flex-start; gap:10px; font-size:0.9rem; color:var(--text-2); }
+    .intro-rules li::before { content:'→'; color:var(--accent); font-weight:700; flex-shrink:0; }
+
+    /* Question */
+    .q-meta { font-size:0.78rem; color:var(--text-3); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:20px; }
+    .q-text { font-size:1.1rem; line-height:1.7; color:var(--text); margin-bottom:32px; font-style:italic; }
+    .q-context { background:var(--bg-card); border-left:3px solid var(--accent); border-radius:0 10px 10px 0; padding:14px 20px; font-size:0.88rem; color:var(--text-2); margin-bottom:28px; line-height:1.6; }
+    .opts { display:flex; flex-direction:column; gap:12px; }
+    .opt { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:18px 20px; cursor:pointer; transition:border-color 0.2s, background 0.2s, transform 0.15s; display:flex; align-items:flex-start; gap:14px; text-align:left; color:var(--text); font-size:0.95rem; line-height:1.5; }
+    .opt:hover { border-color:var(--border-hover); background:rgba(108,99,255,0.06); transform:translateX(4px); }
+    .opt.selected { border-color:var(--accent); background:var(--accent-dim); }
+    .opt-letter { width:28px; height:28px; min-width:28px; background:var(--bg-raised); border:1px solid var(--border); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; color:var(--text-3); transition:background 0.2s, color 0.2s, border-color 0.2s; }
+    .opt.selected .opt-letter { background:var(--accent); color:var(--white); border-color:var(--accent); }
+    .q-nav { display:flex; justify-content:space-between; align-items:center; margin-top:32px; }
+    .btn-back { background:none; border:1px solid var(--border); color:var(--text-3); padding:12px 24px; border-radius:10px; cursor:pointer; font-size:0.9rem; transition:border-color 0.2s, color 0.2s; }
+    .btn-back:hover { border-color:var(--accent); color:var(--text); }
+    .btn-next { background:var(--accent); color:var(--white); border:none; padding:14px 32px; border-radius:10px; font-size:0.95rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; transition:opacity 0.2s, transform 0.2s; }
+    .btn-next:disabled { opacity:0.35; cursor:not-allowed; transform:none; }
+    .btn-next:not(:disabled):hover { opacity:0.88; transform:translateY(-1px); }
+
+    /* Result */
+    .result-header { text-align:center; padding:20px 0 40px; }
+    .result-icon { font-size:3.5rem; margin-bottom:16px; }
+    .result-tag { display:inline-block; background:var(--accent-dim); border:1px solid var(--border-hover); border-radius:8px; padding:6px 14px; font-size:0.8rem; font-weight:600; color:var(--accent); margin-bottom:20px; }
+    .result-name { font-size:clamp(1.6rem,4vw,2.4rem); font-weight:700; letter-spacing:-0.025em; margin-bottom:12px; }
+    .result-mode { display:inline-block; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:6px 16px; font-size:0.85rem; color:var(--text-2); margin-bottom:24px; }
+    .result-desc { font-size:1rem; color:var(--text-2); line-height:1.75; max-width:580px; margin:0 auto 40px; }
+    .dims-section { background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:28px; margin-bottom:28px; }
+    .dims-title { font-size:0.75rem; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:20px; }
+    .dim-item { margin-bottom:16px; }
+    .dim-label { display:flex; justify-content:space-between; font-size:0.82rem; color:var(--text-2); margin-bottom:6px; }
+    .dim-bar-bg { height:6px; background:var(--bg-raised); border-radius:100px; overflow:hidden; }
+    .dim-bar { height:100%; background:linear-gradient(90deg,var(--accent),#A89BFF); border-radius:100px; width:0; transition:width 1.2s cubic-bezier(0.4,0,0.2,1); }
+    .insights-section { background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:28px; margin-bottom:28px; }
+    .insight { display:flex; gap:12px; margin-bottom:16px; font-size:0.9rem; line-height:1.6; }
+    .insight:last-child { margin-bottom:0; }
+    .insight-icon { font-size:1.1rem; flex-shrink:0; }
+    .insight-text strong { color:var(--text); display:block; margin-bottom:2px; }
+    .insight-text span { color:var(--text-2); }
+    .result-ctas { display:flex; flex-direction:column; gap:12px; margin-top:36px; }
+    .btn-primary { background:var(--accent); color:var(--white); padding:16px 32px; border-radius:12px; font-size:1rem; font-weight:700; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; transition:transform 0.2s, box-shadow 0.2s; border:none; cursor:pointer; }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 40px var(--accent-glow); color:var(--white); }
+    .btn-outline { border:1px solid var(--border-hover); color:var(--accent); padding:14px 28px; border-radius:12px; font-size:0.95rem; font-weight:600; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; transition:background 0.2s; }
+    .btn-outline:hover { background:var(--accent-dim); }
+    .result-share { text-align:center; margin-top:24px; font-size:0.82rem; color:var(--text-3); }
+    .result-share a { color:var(--accent); text-decoration:none; }
+
+    @media(max-width:600px) {
+      .q-nav { flex-direction:column; gap:12px; }
+      .btn-next, .btn-back { width:100%; justify-content:center; }
+    }
+  </style>
+</head>
+<body>
+<div class="orb" style="width:500px;height:500px;background:rgba(108,99,255,0.1);top:-150px;right:-150px;"></div>
+<div class="orb" style="width:350px;height:350px;background:rgba(201,168,76,0.06);bottom:100px;left:-100px;"></div>
+
+<nav>
+  <a href="/" class="nav-logo">Entre<span>Escolhas</span></a>
+  <a id="nav-back-link" href="/" class="nav-back">← Voltar</a>
+</nav>
+
+<div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill"></div></div>
+
+<main>
+<div class="container">
+
+  <!-- INTRO -->
+  <div class="screen active" id="screen-intro">
+    <div class="intro">
+      <div class="intro-badge"><span class="intro-badge-dot"></span><span id="intro-badge-text">Carregando…</span></div>
+      <h1 id="intro-title">Análise de<br/><span class="grad serif">Padrões de Decisão</span></h1>
+      <p id="intro-desc">10 cenários. Cada escolha revela como você processa informações, decide sob pressão e reage quando o contexto muda.</p>
+      <div class="intro-rules">
+        <h3>Antes de começar</h3>
+        <ul>
+          <li>Escolha a opção que representa sua reação <strong>mais natural</strong> — não a "mais correta"</li>
+          <li>Não existe resposta certa ou errada. A análise é sobre padrões, não performance</li>
+          <li>Leva em média <strong>15 a 20 minutos</strong>. Reserve um momento tranquilo</li>
+          <li>Não é teste psicológico. É leitura situacional de tendências comportamentais</li>
+        </ul>
+      </div>
+      <button class="btn-primary" onclick="startTest()" style="width:100%;">
+        Começar análise
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- QUESTIONS (generated by JS) -->
+  <div class="screen" id="screen-question">
+    <p class="q-meta" id="q-meta">Cenário 1 de 10</p>
+    <div class="q-context" id="q-context"></div>
+    <p class="q-text" id="q-text"></p>
+    <div class="opts" id="q-opts"></div>
+    <div class="q-nav">
+      <button class="btn-back" id="btn-back" onclick="prevQ()">← Anterior</button>
+      <button class="btn-next" id="btn-next" onclick="nextQ()" disabled>
+        Próximo
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="screen-result">
+    <div class="result-header">
+      <div class="result-icon" id="r-icon"></div>
+      <div class="result-tag" id="r-tag">Resultado</div>
+      <div class="result-name" id="r-name"></div>
+      <div class="result-mode" id="r-mode"></div>
+      <p class="result-desc" id="r-desc"></p>
+    </div>
+    <div class="dims-section">
+      <div class="dims-title" id="r-dims-title">Suas dimensões comportamentais</div>
+      <div id="r-dims"></div>
+    </div>
+    <div class="insights-section">
+      <div class="dims-title">Insights do seu perfil</div>
+      <div id="r-insights"></div>
+    </div>
+    <div class="result-ctas">
+      <a href="/banco-de-talentos.html" class="btn-primary">
+        Entrar no Banco de Talentos — gratuito
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="/" class="btn-outline">Ver outras jornadas</a>
+    </div>
+    <p class="result-share" id="r-share">Gostou? <a href="#" target="_blank">Compartilhe no WhatsApp</a></p>
+  </div>
+
+</div>
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// JORNADAS — configuração completa dos 4 testes
+// ═══════════════════════════════════════════════════════════
+
+const JORNADAS = {
+
+  // ─────────────────────────────────────────────────────────
+  // 1. ARQUÉTIPO COGNITIVO
+  // Dimensões: SIS=sistemas, AMB=ambiguidade, VEL=velocidade,
+  //            REL=relacional, EXE=execução, EMO=emocional
+  // ─────────────────────────────────────────────────────────
+  'arquetipo': {
+    badge: 'Arquétipo Cognitivo • Gratuito',
+    title: 'Análise de<br/><span class="grad serif">Padrões de Decisão</span>',
+    desc: '10 cenários. Cada escolha revela como você processa informações, decide sob pressão e reage quando o contexto muda.',
+    resultTag: 'Arquétipo Cognitivo Dominante',
+    dimsTitle: 'Suas 6 dimensões comportamentais',
+    shareText: 'Fiz a análise de padrões de decisão no Entre Escolhas e descobri meu arquétipo cognitivo! https://www.entreescolhas.com.br',
+    backLink: '/',
+    dimNames: {
+      SIS: 'Orientação a sistemas',
+      AMB: 'Tolerância à ambiguidade',
+      VEL: 'Velocidade de decisão',
+      REL: 'Foco relacional',
+      EXE: 'Propensão à execução',
+      EMO: 'Regulação emocional'
+    },
+    questions: [
+      {
+        context: "Contexto profissional — reunião com cliente",
+        text: "Você acaba de entrar em uma reunião onde o cliente muda completamente os requisitos do projeto. Sua equipe olha para você esperando direção. O que você faz primeiro?",
+        opts: [
+          { text: "Peço 5 minutos para processar e estruturo um novo plano rapidamente", dims: {SIS:3, VEL:2} },
+          { text: "Inicio uma conversa aberta com o cliente para entender o porquê da mudança", dims: {REL:3, AMB:2} },
+          { text: "Avalio o impacto nos compromissos existentes antes de qualquer resposta", dims: {SIS:2, EMO:3} },
+          { text: "Energizo o grupo — mudanças assim costumam esconder oportunidades", dims: {AMB:3, EXE:2} }
+        ]
+      },
+      {
+        context: "Contexto pessoal — tomada de decisão",
+        text: "Você precisa decidir entre duas oportunidades de carreira. Uma é segura e previsível. A outra tem mais potencial mas também mais risco. O prazo é amanhã.",
+        opts: [
+          { text: "Faço uma planilha com prós/contras e pontuo cada critério objetivamente", dims: {SIS:3, VEL:1} },
+          { text: "Converso com pessoas que passaram por situações parecidas antes de decidir", dims: {REL:3, EMO:2} },
+          { text: "Vou de instinto — analise demais e vou travar", dims: {VEL:3, EXE:2} },
+          { text: "Aceito a ambiguidade e escolho o caminho com maior potencial de aprendizado", dims: {AMB:3, SIS:1} }
+        ]
+      },
+      {
+        context: "Contexto de equipe — conflito",
+        text: "Dois membros do seu time estão em conflito aberto. O trabalho está sendo prejudicado. Você não é gestor, mas é a pessoa mais sênior no projeto.",
+        opts: [
+          { text: "Proponho uma conversa estruturada com os dois — agenda clara e foco em solução", dims: {SIS:2, REL:2, EXE:2} },
+          { text: "Falo individualmente com cada um antes de qualquer reunião conjunta", dims: {REL:3, EMO:2} },
+          { text: "Escalo para o gestor — não é meu papel intervir sem autoridade formal", dims: {SIS:2, EMO:2} },
+          { text: "Reestrutura as entregas para minimizar a interação entre eles enquanto o clima esfria", dims: {EXE:3, VEL:2} }
+        ]
+      },
+      {
+        context: "Contexto de pressão — prazo",
+        text: "São 17h de uma sexta. O prazo de entrega é às 18h e você descobriu um erro crítico no trabalho. Corrigir vai levar pelo menos 2 horas.",
+        opts: [
+          { text: "Aviso o cliente imediatamente, explico o problema e proponho um novo prazo com justificativa", dims: {REL:3, EMO:2} },
+          { text: "Trabalho nas 2 horas, entrego às 19h sem avisar — o trabalho é o que importa", dims: {EXE:3, VEL:2} },
+          { text: "Entrego o que está pronto com uma nota explicando o que ainda precisa de revisão", dims: {VEL:2, AMB:3} },
+          { text: "Avalio o impacto real do erro — se for baixo, entrego agora e corrijo depois", dims: {SIS:3, AMB:2} }
+        ]
+      },
+      {
+        context: "Contexto de liderança — feedback",
+        text: "Você precisa dar feedback negativo a um colega próximo sobre um erro que afetou o resultado do time. Como você conduz essa conversa?",
+        opts: [
+          { text: "Direto ao ponto: descrevo o comportamento, o impacto e o que precisa mudar", dims: {SIS:2, VEL:3} },
+          { text: "Começo entendendo o contexto dele antes de trazer o feedback", dims: {REL:3, EMO:2} },
+          { text: "Preparo exemplos concretos e uma estrutura clara para a conversa", dims: {SIS:3, EXE:2} },
+          { text: "Escolho o momento certo — contexto e estado emocional dele importam", dims: {EMO:3, REL:2} }
+        ]
+      },
+      {
+        context: "Contexto de incerteza — novo projeto",
+        text: "Seu gestor apresenta um projeto inovador sem precedentes na empresa. O escopo está vago, o time é novo e não há processos definidos. Qual é sua reação?",
+        opts: [
+          { text: "Entusiasmo — adoro construir do zero. Começo mapeando o que não sabemos", dims: {AMB:3, EXE:2} },
+          { text: "Cautela — faço perguntas até ter clareza suficiente para dar o primeiro passo", dims: {SIS:3, EMO:2} },
+          { text: "Estruturo o processo antes de executar: quem decide o quê, quais são os marcos", dims: {SIS:2, EXE:3} },
+          { text: "Conecto as pessoas certas primeiro — o time alinhado resolve o resto", dims: {REL:3, AMB:2} }
+        ]
+      },
+      {
+        context: "Contexto de negociação",
+        text: "Você está negociando um aumento. Seu gestor ofereceu 8%, mas você esperava 15%. O que você faz?",
+        opts: [
+          { text: "Apresento dados de mercado e uma argumentação estruturada sobre meu valor", dims: {SIS:3, EXE:2} },
+          { text: "Agradeço a oferta, peço um tempo para pensar e volto com uma contraproposta", dims: {VEL:1, EMO:3, SIS:2} },
+          { text: "Sou transparente sobre a expectativa e peço que revisem considerando meu histórico", dims: {REL:2, VEL:3} },
+          { text: "Aceito os 8% mas nego outros benefícios — férias, flexibilidade, desenvolvimento", dims: {AMB:2, EXE:3} }
+        ]
+      },
+      {
+        context: "Contexto de aprendizado",
+        text: "Você entra em uma área completamente nova no trabalho. Qual é sua estratégia de aprendizado?",
+        opts: [
+          { text: "Mapeo todo o ecossistema primeiro — ferramentas, pessoas, processos — antes de agir", dims: {SIS:3, AMB:1} },
+          { text: "Aprendo fazendo. Erro rápido, corrijo rápido", dims: {EXE:3, VEL:2} },
+          { text: "Busco um mentor ou alguém experiente para guiar meu aprendizado", dims: {REL:3, EMO:2} },
+          { text: "Mergulho na documentação e nas fontes primárias antes de buscar ajuda", dims: {SIS:2, AMB:3} }
+        ]
+      },
+      {
+        context: "Contexto de crise",
+        text: "O sistema principal da empresa caiu durante um evento importante. Você não é o responsável técnico, mas está na sala com os tomadores de decisão.",
+        opts: [
+          { text: "Organizo a sala — quem vai falar com o cliente, quem resolve o técnico, quem comunica internamente", dims: {EXE:3, SIS:2} },
+          { text: "Fico quieto — não é minha área de responsabilidade e opiniões sem contexto atrapalham", dims: {EMO:3, REL:1} },
+          { text: "Faço perguntas para entender o impacto real antes de qualquer ação", dims: {SIS:3, VEL:1} },
+          { text: "Cuido do humor da sala — crises pioram quando o ambiente entra em pânico", dims: {REL:3, EMO:2} }
+        ]
+      },
+      {
+        context: "Contexto de escolha pessoal",
+        text: "Você tem 4 horas livres inesperadas em um dia de semana. O que você faz?",
+        opts: [
+          { text: "Organizo algo que estava pendente há semanas — inbox, projetos pessoais, planejamento", dims: {SIS:2, EXE:3} },
+          { text: "Ligo para alguém próximo ou encontro alguém — tempo de qualidade com pessoas importa", dims: {REL:3, EMO:2} },
+          { text: "Exploro algo novo — um livro, um curso, uma conversa fora da minha bolha", dims: {AMB:3, SIS:1} },
+          { text: "Descanco sem culpa — recarregar é tão produtivo quanto executar", dims: {EMO:3, VEL:1} }
+        ]
+      }
+    ],
+    archetypes: [
+      {
+        id: 'arquiteto',
+        name: 'Arquiteto de Possibilidades',
+        icon: '🏗️',
+        mode: 'Modo Analítico-Criativo',
+        dims: ['SIS','AMB'],
+        desc: 'Você combina pensamento sistêmico com alta tolerância à ambiguidade. Constrói estruturas onde outros enxergam caos. Sua força está em transformar complexidade em clareza — sem perder a criatividade no processo. Em ambientes de alta incerteza, você é o tipo de pessoa que naturalmente começa a mapear o que não se sabe ainda.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Criar sistemas onde não existem. Você não precisa de tudo definido para começar a organizar.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Pode travar na fase de estruturação se não aprender a aceitar imperfeições no processo.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Projetos novos, ambientes que valorizam inovação estruturada e autonomia intelectual.' }
+        ]
+      },
+      {
+        id: 'executor',
+        name: 'Executor Pragmático',
+        icon: '🔩',
+        mode: 'Modo Orientado a Resultado',
+        dims: ['EXE','VEL'],
+        desc: 'Você decide rápido e entrega. Não paralisa diante da incerteza — age, observa o resultado e ajusta. Sua energia natural vai para a execução: transformar intenção em realidade concreta. Em equipes, você frequentemente é o catalisador que empurra do planejamento para a ação.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Velocidade e entrega. Você transforma intenção em resultado mais rápido que a maioria.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'A urgência de agir pode gerar retrabalho. Nem sempre 80% rápido é melhor que 100% no prazo.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Ambientes de alta cadência, metas claras e autonomia para executar sem excesso de processo.' }
+        ]
+      },
+      {
+        id: 'conector',
+        name: 'Conector Empático',
+        icon: '🔗',
+        mode: 'Modo Relacional-Adaptativo',
+        dims: ['REL','EMO'],
+        desc: 'Você processa o mundo através das pessoas e das relações. Antes de decidir, você lê o ambiente — quem está impactado, como estão se sentindo, o que não está sendo dito. Essa inteligência relacional é rara e extremamente valiosa em contextos de liderança, negociação e mudança cultural.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Construir confiança e ler dinâmicas interpessoais com precisão que a maioria não percebe.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Alta sensibilidade ao ambiente pode gerar paralisia em contextos de conflito ou pressão emocional.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Papéis com foco em pessoas, cultura, liderança ou qualquer contexto onde relacionamento é estratégico.' }
+        ]
+      },
+      {
+        id: 'analista',
+        name: 'Analista Sistemático',
+        icon: '📐',
+        mode: 'Modo Lógico-Estruturado',
+        dims: ['SIS','EXE'],
+        desc: 'Você pensa em sistemas e executa com método. Antes de agir, estrutura. Antes de decidir, analisa. Sua abordagem reduz riscos e aumenta a qualidade das entregas — especialmente em contextos onde erros têm alto custo. Você é o tipo de profissional que outros procuram quando precisam de confiabilidade.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Confiabilidade e precisão. Você entrega o que promete, com qualidade consistente.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Em ambientes de alta velocidade, pode ser percebido como lento. Aprenda a calibrar a profundidade de análise pelo contexto.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Ambientes com processos valorizados, onde qualidade supera velocidade e planejamento é respeitado.' }
+        ]
+      },
+      {
+        id: 'estrategista',
+        name: 'Estrategista Adaptativo',
+        icon: '🧭',
+        mode: 'Modo Estratégico-Ágil',
+        dims: ['AMB','VEL'],
+        desc: 'Você age rápido mesmo em cenários incertos. Não precisa de todas as informações para se mover — lê sinais, testa hipóteses e ajusta em tempo real. Essa combinação de velocidade e adaptabilidade é sua vantagem competitiva em mercados voláteis e papéis de liderança emergente.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Navegar cenários novos sem paralisar. Você encontra caminhos onde outros encontram becos sem saída.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'A facilidade para se adaptar pode gerar falta de profundidade. Alguns contextos exigem persistência, não agilidade.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Startups, transformações organizacionais, papéis de inovação — qualquer lugar onde o mapa muda enquanto você caminha.' }
+        ]
+      },
+      {
+        id: 'guardiao',
+        name: 'Guardião Relacional',
+        icon: '🛡️',
+        mode: 'Modo Cuidador-Sistemático',
+        dims: ['REL','SIS'],
+        desc: 'Você une cuidado com as pessoas e pensamento estruturado. Constrói ambientes seguros onde a equipe performa. Seu estilo de liderança é baseado em confiança e clareza — as pessoas sabem o que esperar de você e sentem que podem contar. Essa combinação cria os times mais coesos e resilientes.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Criar ambientes de alta confiança e performance sustentável — não apenas resultado pontual.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Dificuldade em tomar decisões difíceis que afetam pessoas. O cuidado pode adiar conversas necessárias.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Gestão de pessoas, desenvolvimento de cultura organizacional, papéis de liderança de médio e longo prazo.' }
+        ]
+      }
+    ]
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // 2. FIT CULTURAL & CARREIRA
+  // Dimensões: AUT=autonomia, PRO=processo/estrutura, INO=inovação,
+  //            IMP=impacto coletivo, COL=colaboração, SEG=segurança
+  // ─────────────────────────────────────────────────────────
+  'fit-cultural': {
+    badge: 'Fit Cultural & Carreira • Gratuito',
+    title: 'Descubra seu<br/><span class="grad serif">Perfil de Fit Cultural</span>',
+    desc: '10 cenários profissionais. Cada escolha revela o tipo de ambiente, cultura e dinâmica onde você performa naturalmente melhor.',
+    resultTag: 'Perfil de Fit Cultural',
+    dimsTitle: 'Suas 6 dimensões de fit',
+    shareText: 'Descobri meu perfil de fit cultural no Entre Escolhas. Análise gratuita em 20 minutos! https://www.entreescolhas.com.br/fit-cultural.html',
+    backLink: '/fit-cultural.html',
+    dimNames: {
+      AUT: 'Necessidade de autonomia',
+      PRO: 'Apreço por processo e estrutura',
+      INO: 'Atração por inovação',
+      IMP: 'Orientação a impacto coletivo',
+      COL: 'Preferência por colaboração',
+      SEG: 'Valorização da segurança'
+    },
+    questions: [
+      {
+        context: "Contexto de trabalho — responsabilidade nova",
+        text: "Você recebe uma nova responsabilidade sem processo definido. Seu gestor diz apenas: 'É com você'. Como você reage?",
+        opts: [
+          { text: "Perfeito — adoro começar do zero e definir o processo eu mesmo", dims: {AUT:3, INO:2} },
+          { text: "Primeiro documento o que precisa ser feito e mapeio os riscos antes de agir", dims: {PRO:3, AUT:1} },
+          { text: "Pesquiso como outros resolveram algo parecido e adapto ao contexto", dims: {INO:2, COL:2} },
+          { text: "Confirmo as expectativas de resultado — clareza sobre onde chegar é o que importa", dims: {SEG:3, PRO:1} }
+        ]
+      },
+      {
+        context: "Contexto de carreira — escolha de empresa",
+        text: "Você tem duas propostas equivalentes em salário. Como você decide qual aceitar?",
+        opts: [
+          { text: "Escolho onde há mais liberdade para testar, criar e tomar decisões com autonomia", dims: {AUT:3, INO:2} },
+          { text: "Escolho onde há carreira mais definida, equipe sênior e processos maduros para aprender", dims: {PRO:2, SEG:3} },
+          { text: "Escolho onde o impacto do produto ou da missão é mais relevante para mim pessoalmente", dims: {IMP:3, COL:1} },
+          { text: "Escolho onde a cultura é melhor — com quem trabalho importa tanto quanto o que faço", dims: {COL:3, IMP:1} }
+        ]
+      },
+      {
+        context: "Contexto de tomada de decisão — ideia recusada",
+        text: "Sua ideia foi descartada em reunião sem muito espaço para debate. O que você faz?",
+        opts: [
+          { text: "Documento, busco dados concretos e apresento novamente com argumentação mais sólida", dims: {PRO:3, AUT:2} },
+          { text: "Aceito — quem tem mais contexto deve decidir, meu papel é executar bem a direção escolhida", dims: {SEG:2, COL:2} },
+          { text: "Peço uma conversa separada para entender o porquê e o que mudaria a posição", dims: {COL:3, AUT:1} },
+          { text: "Testo em menor escala se tiver margem — prefiro mostrar funcionando a convencer no abstrato", dims: {AUT:3, INO:2} }
+        ]
+      },
+      {
+        context: "Contexto de cultura — ambiente ideal",
+        text: "Em qual ambiente você tende a performar com mais energia e consistência?",
+        opts: [
+          { text: "Equipe pequena, autonomia alta, problema difícil, caos organizado — quero construir algo novo", dims: {AUT:3, INO:2} },
+          { text: "Empresa com processos maduros, possibilidade de especialização profunda e carreira clara", dims: {PRO:3, SEG:2} },
+          { text: "Organização com missão forte e impacto visível no mundo real", dims: {IMP:3, COL:2} },
+          { text: "Ambiente de alta colaboração e confiança — onde as ideias circulam livremente entre times", dims: {COL:3, INO:1} }
+        ]
+      },
+      {
+        context: "Contexto de processo — adoção de ferramentas",
+        text: "O time decide adotar uma ferramenta que você acredita ser inferior à atual. O que você faz?",
+        opts: [
+          { text: "Defendo com dados — não mudo processo sem evidência clara de que a mudança melhora algo", dims: {PRO:3, AUT:2} },
+          { text: "Me adapto — o time decidiu, executo com qualidade e aprendo a nova ferramenta sem resistência", dims: {SEG:3, COL:2} },
+          { text: "Proponho período de teste comparativo antes da decisão ser definitiva", dims: {INO:3, PRO:2} },
+          { text: "Aceito se o processo foi coletivo — prefiro consenso a ter razão individualmente", dims: {COL:3, SEG:1} }
+        ]
+      },
+      {
+        context: "Contexto de feedback — estilo percebido",
+        text: "Você recebe feedback de que é 'muito independente' e precisa 'alinhar mais com o time'. Como você interpreta?",
+        opts: [
+          { text: "Ajusto — colaboração é fundamental e vou criar mais pontos de contato ativamente", dims: {COL:3, PRO:2} },
+          { text: "Pondero — o feedback faz sentido, mas autonomia é parte de como gero resultado", dims: {AUT:3, INO:1} },
+          { text: "Peço exemplos concretos — quero entender onde o alinhamento falhou de fato", dims: {PRO:2, COL:2} },
+          { text: "Reflito se esse ambiente é o certo para mim — excesso de hierarquia prejudica minha performance", dims: {AUT:2, INO:2} }
+        ]
+      },
+      {
+        context: "Contexto de engajamento — tipo de projeto",
+        text: "Em qual cenário você tende a se engajar com mais energia e dedicação?",
+        opts: [
+          { text: "Um problema novo, sem precedente, que ninguém na empresa resolveu antes", dims: {INO:3, AUT:2} },
+          { text: "Um processo que funciona mas precisa de escala — organizar algo que cresceu rápido demais", dims: {PRO:3, SEG:2} },
+          { text: "Um projeto com impacto direto e visível na vida de pessoas reais", dims: {IMP:3, COL:1} },
+          { text: "Uma transformação cultural — mudar como um time inteiro pensa e trabalha junto", dims: {COL:3, IMP:2} }
+        ]
+      },
+      {
+        context: "Contexto de erros — postura diante de falhas",
+        text: "Como você costuma encarar os próprios erros no ambiente de trabalho?",
+        opts: [
+          { text: "Erro faz parte — o que importa é aprender rápido, ajustar e não repetir", dims: {INO:3, AUT:2} },
+          { text: "Erro é sinal de processo falho — analiso o que causou para evitar recorrência sistêmica", dims: {PRO:3, SEG:1} },
+          { text: "Avalio se o erro veio de falta de alinhamento — comunicação resolve a maioria dos problemas", dims: {COL:3, PRO:1} },
+          { text: "Prefiro cautela — validação antes de agir reduz o custo de errar a longo prazo", dims: {SEG:3, PRO:2} }
+        ]
+      },
+      {
+        context: "Contexto de liderança — o gestor ideal",
+        text: "O que você mais valoriza em um gestor ou líder?",
+        opts: [
+          { text: "Clareza de direção e liberdade para eu executar do meu jeito — confia no meu método", dims: {AUT:3, INO:1} },
+          { text: "Estrutura, feedback consistente e plano de desenvolvimento claro e previsível", dims: {PRO:2, SEG:3} },
+          { text: "Missão e propósito compartilhados — alguém que me mostra o porquê do trabalho", dims: {IMP:3, COL:2} },
+          { text: "Presença humana, confiança genuína e cuidado real com o crescimento do time", dims: {COL:3, SEG:1} }
+        ]
+      },
+      {
+        context: "Contexto de projeto ideal — escolha livre",
+        text: "Se você pudesse escolher seu próximo projeto sem nenhuma restrição, qual seria?",
+        opts: [
+          { text: "Criar algo do zero — produto, processo ou iniciativa sem precedente na empresa", dims: {INO:3, AUT:2} },
+          { text: "Implementar rigor em algo que cresceu rápido demais — escalar o que já funciona com qualidade", dims: {PRO:3, SEG:2} },
+          { text: "Um projeto com impacto social mensurável — algo que posso ver fazendo diferença concreta", dims: {IMP:3, COL:1} },
+          { text: "Liderar a transformação de uma equipe que está aquém do seu potencial real", dims: {COL:3, IMP:1} }
+        ]
+      }
+    ],
+    archetypes: [
+      {
+        id: 'construtor',
+        name: 'Construtor de Futuro',
+        icon: '🚀',
+        mode: 'Modo Autônomo-Inovador',
+        dims: ['AUT','INO'],
+        desc: 'Você performa melhor onde outros tropeçam: em situações sem precedentes, com autonomia real e problema difícil. Ambientes muito estruturados ou hierárquicos drenam sua energia. Você não precisa de manual — precisa de espaço. Startups, papéis de founder, liderança de novos projetos: esses são os seus terrenos.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Construir do zero sem precisar de validação a cada passo. Você transforma ambiguidade em movimento.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Em ambientes muito estruturados, você pode ser percebido como difícil de alinhar. Aprenda a traduzir autonomia em resultados visíveis.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Startups, papéis de inovação, liderança de novos produtos — qualquer lugar onde o mapa ainda está sendo desenhado.' }
+        ]
+      },
+      {
+        id: 'especialista',
+        name: 'Especialista de Profundidade',
+        icon: '🔬',
+        mode: 'Modo Estruturado-Seguro',
+        dims: ['PRO','SEG'],
+        desc: 'Você floresce em ambientes onde processo é respeitado e especialização é valorizada. Não é apego à burocracia — é comprometimento com qualidade e previsibilidade. Você é quem os outros procuram quando precisam de execução confiável, prazos cumpridos e trabalho de alta qualidade consistente.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Confiabilidade e profundidade. Você entrega com qualidade porque entende o processo melhor que a maioria.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Em ambientes de alta mudança, pode ser percebido como resistente. Flexibilidade de método (não de padrão) é o equilíbrio.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Empresas consolidadas, áreas técnicas, papéis de especialista sênior ou arquiteto de processos.' }
+        ]
+      },
+      {
+        id: 'agente',
+        name: 'Agente de Impacto',
+        icon: '🌱',
+        mode: 'Modo Mission-Driven',
+        dims: ['IMP','COL'],
+        desc: 'Você não consegue dar o melhor de si sem sentir que o trabalho importa além do salário. Missão e impacto coletivo são seus combustíveis. Em ambientes colaborativos com propósito claro, você opera num nível que outros raramente alcançam — porque a motivação vem de dentro, não de fora.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Capacidade de mobilizar pessoas em torno de uma causa. Você inspira mais do que instrui.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Em ambientes puramente orientados a resultado financeiro, sua motivação pode escassear. Escolha onde o propósito é real.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Empresas de impacto, setor público, ONGs, empresas com missão genuína e cultura de colaboração.' }
+        ]
+      },
+      {
+        id: 'catalisador',
+        name: 'Catalisador Colaborativo',
+        icon: '🔄',
+        mode: 'Modo Conector-Inovador',
+        dims: ['COL','INO'],
+        desc: 'Você transforma culturas por dentro. Combina energia inovadora com habilidade de mover grupos — não por decreto, mas por engajamento genuíno. Em qualquer organização, você tende a ser o nó que conecta ideias e pessoas, gerando movimento onde havia inércia.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Conectar pessoas e ideias de formas que ninguém havia pensado. Você cria sinergia onde havia silos.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'A energia colaborativa pode dispersar o foco. Aprenda a criar fechamentos e não apenas pontes.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Papéis de cultura organizacional, inovação, facilitação, product management ou liderança horizontal.' }
+        ]
+      },
+      {
+        id: 'pioneiro',
+        name: 'Pioneiro Autônomo',
+        icon: '🗺️',
+        mode: 'Modo Autônomo-Impacto',
+        dims: ['AUT','IMP'],
+        desc: 'Você quer autonomia para gerar impacto real e tangível — não apenas executar tarefas definidas por outros. Trabalha melhor com ownership claro e liberdade de método. Empreendedorismo, papéis de liderança com accountability direta ou consultoria são seus territórios naturais.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Senso de ownership e responsabilidade pelos resultados. Você não espera — você vai atrás.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Em estruturas muito hierárquicas ou com excesso de dependências, sua performance cai. Escolha onde você tem latitude real.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Empreendedorismo, papéis de liderança com P&L próprio, consultoria estratégica, startups em crescimento.' }
+        ]
+      },
+      {
+        id: 'guardiao-exc',
+        name: 'Guardião da Excelência',
+        icon: '🏆',
+        mode: 'Modo Processo-Colaborativo',
+        dims: ['PRO','COL'],
+        desc: 'Você une processo com colaboração — cria ambientes onde a qualidade é coletiva, não individual. É o tipo de profissional que eleva o nível dos outros sem precisar de holofote. Excelência sustentável e consistente é sua marca, e as equipes que trabalham com você tendem a melhorar.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Elevar o padrão do time inteiro. Você não apenas entrega bem — você melhora o que está ao redor.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Pode frustrar com times que não compartilham o mesmo padrão de qualidade. Aprenda a adaptar o nível de exigência ao contexto.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Papéis de tech lead, gerência de qualidade, liderança de times de alta performance, gestão de produto.' }
+        ]
+      }
+    ]
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // 3. SCANNER DE RELACIONAMENTO
+  // Dimensões: ASS=assertividade, EMP=empatia, INF=influência,
+  //            MED=mediação, NET=rede/presença, INT=profundidade
+  // ─────────────────────────────────────────────────────────
+  'scanner': {
+    badge: 'Scanner de Relacionamento • Gratuito',
+    title: 'Seu padrão de<br/><span class="grad serif">Relacionamento Profissional</span>',
+    desc: '10 cenários interpessoais. Cada escolha revela como você se conecta, influencia e reage ao conflito em contextos profissionais.',
+    resultTag: 'Padrão de Relacionamento Dominante',
+    dimsTitle: 'Suas 6 dimensões relacionais',
+    shareText: 'Descobri meu padrão de relacionamento profissional no Entre Escolhas. Teste gratuito! https://www.entreescolhas.com.br/scanner-relacionamento.html',
+    backLink: '/scanner-relacionamento.html',
+    dimNames: {
+      ASS: 'Assertividade',
+      EMP: 'Empatia e escuta',
+      INF: 'Capacidade de influência',
+      MED: 'Mediação e equilíbrio',
+      NET: 'Amplitude de rede',
+      INT: 'Profundidade relacional'
+    },
+    questions: [
+      {
+        context: "Contexto de grupo — tensão em reunião",
+        text: "Você está em uma reunião onde dois participantes entram em atrito aberto. Qual é seu comportamento natural?",
+        opts: [
+          { text: "Nomeio a tensão diretamente e proponho pausar para reformular o objetivo da conversa", dims: {ASS:3, MED:2} },
+          { text: "Observo com atenção e intervenho com uma pergunta que reorienta o grupo naturalmente", dims: {MED:3, INF:2} },
+          { text: "Falo individualmente com cada um depois — intervenção aberta costuma escalar o conflito", dims: {INT:3, EMP:2} },
+          { text: "Redirijo para o problema concreto — tensão interpessoal se dissolve com resultado", dims: {INF:3, ASS:1} }
+        ]
+      },
+      {
+        context: "Contexto de rede — tipo de conexão",
+        text: "Em que tipo de rede profissional você costuma ser mais ativo e autêntico?",
+        opts: [
+          { text: "Rede pequena mas de alta confiança — prefiro profundidade a amplitude de conexões", dims: {INT:3, EMP:2} },
+          { text: "Rede ampla — conheço muita gente e consigo conectar pessoas entre si com facilidade", dims: {NET:3, INF:2} },
+          { text: "Comunidades de afinidade ou propósito — não me conecto por networking vazio", dims: {EMP:2, INT:2} },
+          { text: "Rede estratégica — cultivo conexões com as pessoas certas nos lugares certos", dims: {INF:3, NET:2} }
+        ]
+      },
+      {
+        context: "Contexto de liderança — desacordo público",
+        text: "Alguém do seu time discorda abertamente de uma decisão que você tomou. Como você reage?",
+        opts: [
+          { text: "Ouço com atenção genuína e mudo de posição se o argumento for sólido", dims: {EMP:3, MED:2} },
+          { text: "Mantenho minha posição mas abro espaço para debate — firmeza não é rigidez", dims: {ASS:3, INF:2} },
+          { text: "Reconheço o desacordo e proponho revisitar a decisão juntos com critérios claros", dims: {MED:3, EMP:2} },
+          { text: "Explico meu raciocínio com mais profundidade — resistência costuma vir de falta de contexto", dims: {INF:3, ASS:1} }
+        ]
+      },
+      {
+        context: "Contexto social — evento de networking",
+        text: "Você está em um evento profissional com pessoas que não conhece. Qual é seu comportamento típico?",
+        opts: [
+          { text: "Converso com poucas pessoas, mas as conversas são longas e genuínas", dims: {INT:3, EMP:2} },
+          { text: "Trabalho o espaço — conheço o máximo de pessoas possível com conexões rápidas e eficientes", dims: {NET:3, INF:2} },
+          { text: "Busco quem tem algo em comum comigo — prefiro profundidade desde o início do contato", dims: {INT:2, EMP:3} },
+          { text: "Identifico as pessoas mais influentes do grupo e busco essas conexões especificamente", dims: {INF:3, NET:1} }
+        ]
+      },
+      {
+        context: "Contexto de liderança — dar feedback",
+        text: "Quando você precisa dar feedback sobre algo negativo, qual é seu estilo natural?",
+        opts: [
+          { text: "Direto e objetivo — descrevo o comportamento, o impacto e o que precisa mudar", dims: {ASS:3, INF:2} },
+          { text: "Contextual e empático — começo entendendo a perspectiva e o contexto da pessoa", dims: {EMP:3, MED:2} },
+          { text: "Estruturado — preparo exemplos concretos e foco no comportamento, não na pessoa", dims: {ASS:2, EMP:2} },
+          { text: "Equilibrado — feedback negativo sempre vem acompanhado do que está indo bem", dims: {EMP:2, MED:3} }
+        ]
+      },
+      {
+        context: "Contexto de influência — decisão divergente",
+        text: "Você discorda de uma decisão que está prestes a ser tomada. Qual é sua estratégia para mudar o rumo?",
+        opts: [
+          { text: "Argumento com dados e lógica — a qualidade do raciocínio deve prevalecer", dims: {INF:3, ASS:2} },
+          { text: "Alinho com as pessoas certas antes da decisão formal — influência acontece nos bastidores", dims: {INF:3, NET:2} },
+          { text: "Construo consenso — convido quem compartilha minha visão para amplificar a perspectiva", dims: {MED:2, NET:3} },
+          { text: "Aceito se o processo for legítimo, mas registro formalmente meu ponto de vista", dims: {ASS:2, EMP:1} }
+        ]
+      },
+      {
+        context: "Contexto de conflito — padrão de resposta",
+        text: "Em situações de conflito interpessoal, qual é seu padrão de resposta mais frequente?",
+        opts: [
+          { text: "Enfrento diretamente — conflito evitado é conflito que se amplifica", dims: {ASS:3, MED:1} },
+          { text: "Procuro entender as necessidades de cada lado antes de qualquer ação ou intervenção", dims: {EMP:3, MED:2} },
+          { text: "Facilito a conversa sem tomar partido — meu papel é criar espaço para resolução", dims: {MED:3, INF:1} },
+          { text: "Busco a solução que satisfaça todos — prefiro o terceiro caminho à escolha binária", dims: {MED:3, EMP:2} }
+        ]
+      },
+      {
+        context: "Contexto de confiança — pessoas novas",
+        text: "Como você constrói confiança com pessoas que acabou de conhecer profissionalmente?",
+        opts: [
+          { text: "Sendo consistente — faço o que disse que faria, sem exceção, sempre", dims: {ASS:2, INT:3} },
+          { text: "Mostrando interesse genuíno — pergunto, escuto e lembro de detalhes que importam para a pessoa", dims: {EMP:3, INT:2} },
+          { text: "Sendo útil antes de pedir qualquer coisa — confiança se ganha gerando valor primeiro", dims: {INF:3, NET:1} },
+          { text: "Sendo transparente sobre minhas intenções e limitações desde o início", dims: {EMP:2, INT:3} }
+        ]
+      },
+      {
+        context: "Contexto de facilitação — reunião fora de controle",
+        text: "Você está facilitando uma reunião que está saindo dos trilhos. O que você faz?",
+        opts: [
+          { text: "Retomo o controle diretamente — redireciono com firmeza e foco no objetivo", dims: {ASS:3, INF:2} },
+          { text: "Faço uma pausa, reformulo o objetivo e dou voz a quem não está sendo ouvido", dims: {MED:3, EMP:2} },
+          { text: "Faço uma pergunta poderosa que reorienta o grupo naturalmente sem imposição", dims: {INF:3, MED:2} },
+          { text: "Nomeio as tensões subjacentes — a reunião travou por algo que não foi dito ainda", dims: {EMP:3, ASS:2} }
+        ]
+      },
+      {
+        context: "Contexto de percepção — imagem profissional",
+        text: "Como você prefere ser percebido em relações profissionais de longo prazo?",
+        opts: [
+          { text: "Como alguém direto e confiável — previsível no que promete e entrega", dims: {ASS:3, INT:2} },
+          { text: "Como alguém que genuinamente se importa com as pessoas ao redor", dims: {EMP:3, INT:2} },
+          { text: "Como alguém com influência e conexões — que abre portas e cria oportunidades para outros", dims: {INF:3, NET:2} },
+          { text: "Como alguém que mantém o equilíbrio e o ambiente saudável mesmo sob pressão", dims: {MED:3, EMP:1} }
+        ]
+      }
+    ],
+    archetypes: [
+      {
+        id: 'influenciador-direto',
+        name: 'Influenciador Direto',
+        icon: '🎙️',
+        mode: 'Modo Assertivo-Persuasivo',
+        dims: ['ASS','INF'],
+        desc: 'Você combina assertividade com capacidade de persuasão. Move grupos pela força do argumento e da presença. Não é agressividade — é clareza. Você sabe o que quer, sabe posicionar e sabe convencer. Sua voz tem peso mesmo quando o título não tem, e as pessoas tendem a seguir sua direção.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Clareza de posição e capacidade de influenciar sem precisar de autoridade formal.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Alta assertividade pode ser lida como rigidez em contextos mais consultivos. Aprenda quando ouvir primeiro e falar depois.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Liderança, negociação, vendas complexas, papéis de advocacy onde posicionamento claro gera resultado.' }
+        ]
+      },
+      {
+        id: 'mediador-empatico',
+        name: 'Mediador Empático',
+        icon: '⚖️',
+        mode: 'Modo Equilibrador-Sensível',
+        dims: ['EMP','MED'],
+        desc: 'Você lê o que não é dito e facilita o que não está sendo resolvido. Sua presença diminui a temperatura em situações de conflito. Não é passividade — é inteligência situacional aplicada a pessoas. Você encontra o terceiro caminho quando os outros enxergam só dois lados opostos.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Criar espaço de resolução onde havia apenas tensão. Você ouve o que está por baixo do que é dito.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Alta empatia pode gerar dificuldade em tomar posições firmes quando necessário. Clareza e cuidado não são opostos.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Liderança de pessoas, RH estratégico, facilitação, gestão de conflitos, cultura organizacional.' }
+        ]
+      },
+      {
+        id: 'construtor-vinculos',
+        name: 'Construtor de Vínculos',
+        icon: '🤝',
+        mode: 'Modo Profundo-Relacional',
+        dims: ['INT','EMP'],
+        desc: 'Você prefere profundidade à amplitude. Seus relacionamentos levam tempo para construir, mas duram. As pessoas sentem que são genuinamente vistas quando estão com você — e isso cria lealdade que poucos conseguem. Você não tem muitas conexões: tem as certas.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Criar vínculos de confiança profunda que resistem ao tempo e às pressões do ambiente.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Em contextos que exigem rede ampla ou conexões rápidas, pode ser percebido como fechado ou seletivo demais.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Papéis de mentoria, liderança próxima, key account management, consultoria de longo prazo.' }
+        ]
+      },
+      {
+        id: 'estrategista-rede',
+        name: 'Estrategista de Rede',
+        icon: '🕸️',
+        mode: 'Modo Articulador-Estratégico',
+        dims: ['INF','NET'],
+        desc: 'Você navega ecossistemas com intencionalidade. Conhece as pessoas certas, conecta quem precisa se conectar e expande sua influência de forma estratégica. Para você, influência não é cargo — é posição relacional conquistada pela qualidade das conexões que cultiva.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Orquestrar conexões e ampliar influência através de rede bem construída e mantida.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Redes amplas exigem manutenção. Conexões superficiais demais podem não sustentam influência real no longo prazo.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Business development, parcerias estratégicas, liderança política em grandes organizações, ecossistemas de inovação.' }
+        ]
+      },
+      {
+        id: 'facilitador-grupo',
+        name: 'Facilitador de Grupo',
+        icon: '🧩',
+        mode: 'Modo Conector-Equilibrador',
+        dims: ['MED','NET'],
+        desc: 'Você mantém grupos coesos. Sua inteligência está em perceber o que tensiona e agir antes que quebre. Em equipes maiores, você é o nó que impede a fragmentação — sem precisar de autoridade formal. As pessoas gravitam em torno de você porque você cria estabilidade.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Manter coesão em grupos sob pressão. Você age antes que o conflito se instale.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Em contextos de alta velocidade, o instinto de equilibrar pode desacelerar decisões que precisam ser tomadas rápido.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Gestão de times multidisciplinares, papéis de chief of staff, agile coaching, liderança horizontal.' }
+        ]
+      },
+      {
+        id: 'ancora-confianca',
+        name: 'Âncora de Confiança',
+        icon: '⚓',
+        mode: 'Modo Consistente-Profundo',
+        dims: ['ASS','INT'],
+        desc: 'Você é previsível no melhor sentido: as pessoas sabem exatamente o que esperar de você. Combina clareza de posição com vínculos profundos. Não é a pessoa mais barulhenta da sala — mas costuma ser a mais respeitada. Sua consistência ao longo do tempo constrói autoridade que nenhum cargo garante.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Consistência e integridade ao longo do tempo. Você constrói autoridade pela coerência entre o que diz e faz.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Pode ser percebido como rígido quando o contexto muda e flexibilidade seria mais útil que consistência.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Liderança sênior, papéis de referência técnica ou cultural, mentoria formal e informal.' }
+        ]
+      }
+    ]
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // 4. BÚSSOLA VOCACIONAL
+  // Dimensões: PRO=propósito/missão, IMP=impacto tangível,
+  //            SEG=segurança/estabilidade, CRI=criatividade,
+  //            REC=reconhecimento, AUT=autonomia
+  // ─────────────────────────────────────────────────────────
+  'bussola': {
+    badge: 'Bússola Vocacional • Gratuito',
+    title: 'Descubra sua<br/><span class="grad serif">Direção Vocacional</span>',
+    desc: '10 cenários de escolha profissional. Cada resposta revela o que realmente move suas decisões de carreira — propósito, impacto, segurança, criação ou reconhecimento.',
+    resultTag: 'Vetor Vocacional Dominante',
+    dimsTitle: 'Suas 6 dimensões vocacionais',
+    shareText: 'Descobri minha direção vocacional no Entre Escolhas. Teste gratuito em 20 minutos! https://www.entreescolhas.com.br/bussola-vocacional.html',
+    backLink: '/bussola-vocacional.html',
+    dimNames: {
+      PRO: 'Orientação a propósito e missão',
+      IMP: 'Busca por impacto tangível',
+      SEG: 'Valorização da segurança',
+      CRI: 'Necessidade de criação e expressão',
+      REC: 'Busca por reconhecimento',
+      AUT: 'Necessidade de autonomia'
+    },
+    questions: [
+      {
+        context: "Contexto de trabalho — fim do dia",
+        text: "O que faz você sentir que um dia de trabalho valeu a pena de verdade?",
+        opts: [
+          { text: "Criei algo que não existia antes — resolvi um problema de forma original e minha", dims: {CRI:3, AUT:2} },
+          { text: "Vi o impacto direto do meu trabalho na vida de alguém ou em algo concreto e real", dims: {IMP:3, PRO:2} },
+          { text: "Entreguei com qualidade exatamente o que foi combinado — execução sem surpresas", dims: {SEG:2, REC:2} },
+          { text: "Alguém reconheceu especificamente a minha contribuição de forma significativa", dims: {REC:3, IMP:1} }
+        ]
+      },
+      {
+        context: "Contexto vocacional — cenário ideal",
+        text: "Se você pudesse trabalhar em qualquer contexto sem restrições financeiras, qual seria?",
+        opts: [
+          { text: "Criando produto, conteúdo ou solução com total liberdade de expressão e método", dims: {CRI:3, AUT:2} },
+          { text: "Em organização com missão de impacto real — saúde, educação, meio ambiente", dims: {PRO:3, IMP:2} },
+          { text: "Em empresa sólida com carreira definida e segurança financeira garantida", dims: {SEG:3, REC:1} },
+          { text: "Empreendendo ou em papel de alta autonomia com reconhecimento pelos resultados", dims: {AUT:3, REC:2} }
+        ]
+      },
+      {
+        context: "Contexto de motivação — trabalho sem sentido",
+        text: "Quando você trabalha em algo que não tem significado pessoal para você, o que acontece?",
+        opts: [
+          { text: "Perco o ritmo progressivamente — sem propósito, minha energia diminui com o tempo", dims: {PRO:3, IMP:2} },
+          { text: "Mantenho a qualidade mas a motivação vai embora gradualmente", dims: {SEG:2, REC:2} },
+          { text: "Afeta especialmente minha criatividade, mas consigo manter o operacional", dims: {CRI:3, AUT:1} },
+          { text: "Aguento bem se o ambiente for bom e a remuneração for justa", dims: {SEG:3, REC:2} }
+        ]
+      },
+      {
+        context: "Contexto de decisão — motor interno",
+        text: "O que você diria que mais move suas escolhas profissionais de forma consistente?",
+        opts: [
+          { text: "A vontade de criar algo que não existia antes de mim — deixar minha marca", dims: {CRI:3, AUT:2} },
+          { text: "O desejo de fazer diferença real na vida de pessoas ou no mundo", dims: {IMP:3, PRO:2} },
+          { text: "A necessidade de estabilidade e previsibilidade — sei o que tenho e posso planejar", dims: {SEG:3, REC:1} },
+          { text: "O reconhecimento pela excelência do que entrego e pela autoria do meu trabalho", dims: {REC:3, IMP:1} }
+        ]
+      },
+      {
+        context: "Contexto de energização — o que te anima",
+        text: "Qual cenário de trabalho te energiza mais de forma consistente?",
+        opts: [
+          { text: "Total liberdade para testar, criar e experimentar sem precisar de aprovação a cada passo", dims: {CRI:3, AUT:3} },
+          { text: "Saber que meu trabalho está impactando diretamente a vida de alguém de forma mensurável", dims: {IMP:3, PRO:2} },
+          { text: "Equipe estável, processos claros e liderança com direção bem definida", dims: {SEG:3, PRO:1} },
+          { text: "Ver minha autoria reconhecida pelos pares e por quem importa na minha área", dims: {REC:3, AUT:1} }
+        ]
+      },
+      {
+        context: "Contexto de valores — o que não se abre mão",
+        text: "Se você tivesse que abrir mão de algo importante no trabalho, o que seria mais difícil de perder?",
+        opts: [
+          { text: "A liberdade de criar e fazer do meu jeito, com meu método", dims: {CRI:3, AUT:2} },
+          { text: "A certeza de que meu trabalho tem impacto visível em algo que importa", dims: {IMP:3, PRO:2} },
+          { text: "A estabilidade financeira e a previsibilidade do que vem pela frente", dims: {SEG:3, REC:1} },
+          { text: "Ser reconhecido pela contribuição que entrego, especialmente pelos pares", dims: {REC:3, AUT:1} }
+        ]
+      },
+      {
+        context: "Contexto de carreira — proposta desalinhada",
+        text: "Você recebe uma oferta de salário muito acima do mercado, mas em empresa sem propósito claro. Você aceita?",
+        opts: [
+          { text: "Não — sem sentido por trás do trabalho, não consigo dar o meu melhor a longo prazo", dims: {PRO:3, IMP:2} },
+          { text: "Depende — se tiver autonomia e espaço criativo suficiente, posso tentar", dims: {AUT:3, CRI:2} },
+          { text: "Aceito se a empresa for sólida e estável — propósito pode se desenvolver com o tempo", dims: {SEG:3, REC:2} },
+          { text: "Aceito se tiver visibilidade e reconhecimento real pelo resultado que entrego", dims: {REC:3, SEG:1} }
+        ]
+      },
+      {
+        context: "Contexto de desenvolvimento — crescimento profissional",
+        text: "O que você considera mais importante no seu desenvolvimento profissional de longo prazo?",
+        opts: [
+          { text: "Construir um corpo de trabalho — projetos, produtos ou criações que carregam minha autoria", dims: {CRI:3, REC:2} },
+          { text: "Gerar impacto em escala crescente — fazer cada vez mais diferença no mundo", dims: {IMP:3, PRO:2} },
+          { text: "Construir reputação sólida e ser referência reconhecida na minha área", dims: {REC:3, SEG:2} },
+          { text: "Crescer com estabilidade — evolução consistente e sem grandes oscilações ou riscos", dims: {SEG:3, PRO:1} }
+        ]
+      },
+      {
+        context: "Contexto de carreira — sinal de alinhamento",
+        text: "O que te diz que você está no caminho profissional certo?",
+        opts: [
+          { text: "Quando sinto que o trabalho tem sentido além do salário — quando o porquê está claro", dims: {PRO:3, IMP:2} },
+          { text: "Quando posso criar livremente e ver o que criei impactar alguém de forma real", dims: {CRI:3, IMP:2} },
+          { text: "Quando me sinto seguro, valorizado e vejo perspectiva de crescimento claro à frente", dims: {SEG:3, REC:2} },
+          { text: "Quando meu trabalho é reconhecido e isso abre portas e oportunidades novas", dims: {REC:3, AUT:2} }
+        ]
+      },
+      {
+        context: "Contexto de legado — contribuição duradoura",
+        text: "Se você pudesse deixar uma contribuição profissional duradoura, qual seria?",
+        opts: [
+          { text: "Algo que existe além de mim — produto, obra ou sistema que sobrevive à minha saída", dims: {CRI:3, AUT:2} },
+          { text: "Ter transformado positivamente a vida de muitas pessoas através do trabalho ao longo dos anos", dims: {IMP:3, PRO:2} },
+          { text: "Uma carreira sólida que serviu de referência e inspiração para as próximas gerações", dims: {SEG:2, REC:3} },
+          { text: "Ser reconhecido como referência de excelência — o melhor na minha área", dims: {REC:3, IMP:1} }
+        ]
+      }
+    ],
+    archetypes: [
+      {
+        id: 'criador-autonomo',
+        name: 'Criador Autônomo',
+        icon: '🎨',
+        mode: 'Modo Criativo-Livre',
+        dims: ['CRI','AUT'],
+        desc: 'Você precisa de espaço para criar do seu jeito. Não é capricho — é condição de performance. Em ambientes muito controlados ou sem expressão genuína, você murcha. Onde outros veem restrição, você encontra urgência de fazer diferente. Sua vocação nasce da liberdade de criar.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Transformar intenção em criação original. Você não executa tarefas — você constrói coisas novas.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Alta necessidade de autonomia pode gerar fricção em estruturas com processos rígidos. Aprenda a negociar espaço dentro do sistema.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Design, produto, conteúdo, empreendedorismo criativo, papéis de inovação com ownership real.' }
+        ]
+      },
+      {
+        id: 'agente-transformacao',
+        name: 'Agente de Transformação',
+        icon: '🌍',
+        mode: 'Modo Missão-Impacto',
+        dims: ['IMP','PRO'],
+        desc: 'Você não consegue se engajar de verdade sem acreditar que o trabalho importa. Missão e impacto tangível são seu combustível real. Quando enxerga a diferença que faz na vida de pessoas reais, opera num nível que outros raramente alcançam. Sentido não é bônus — é pré-requisito.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Mobilizar energia e talento em direção a uma causa que importa. Você não precisa de incentivo externo quando acredita.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Em ambientes puramente orientados a resultado financeiro, sua motivação escasseia com o tempo. Escolha onde o propósito é genuíno.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Empresas de impacto, setor público, saúde, educação, causas socioambientais, organizações com missão clara.' }
+        ]
+      },
+      {
+        id: 'especialista-reconhecido',
+        name: 'Especialista Reconhecido',
+        icon: '🏅',
+        mode: 'Modo Excelência-Reputação',
+        dims: ['REC','SEG'],
+        desc: 'Você quer ser bom — de verdade — e ser reconhecido por isso. A combinação de estabilidade e reconhecimento te dá a base para construir expertise de longo prazo. Você não é movido por risco — é movido por excelência que perdura e pela reputação que constrói ao longo do tempo.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Construir reputação de excelência consistente. Você é a referência que outros consultam.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Necessidade de reconhecimento pode gerar insatisfação em ambientes que não valorizam explicitamente as contribuições individuais.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Especialização técnica profunda, papéis de autoridade no assunto, consultoria, academia aplicada.' }
+        ]
+      },
+      {
+        id: 'pioneiro-proposito',
+        name: 'Pioneiro de Propósito',
+        icon: '🔥',
+        mode: 'Modo Causa-Acima-de-Tudo',
+        dims: ['PRO','IMP'],
+        desc: 'Causa acima de tudo. Você encontra forças onde outros esgotam quando o trabalho tem sentido maior que você mesmo. Missão não é retórica para você — é o filtro principal de toda decisão de carreira. Você não escolhe o que é mais lucrativo; escolhe o que mais importa.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Energia inesgotável quando servindo uma causa que considera verdadeira. Você é o tipo de profissional que movimenta outras pessoas.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Alto idealismo pode gerar frustração com a realidade das organizações. Aprenda a gerar impacto dentro das limitações do sistema.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Liderança de causas, empreendedorismo de impacto, organizações que alinham propósito e escala.' }
+        ]
+      },
+      {
+        id: 'realizador-visivel',
+        name: 'Realizador Visível',
+        icon: '⭐',
+        mode: 'Modo Autoria-Reconhecimento',
+        dims: ['REC','AUT'],
+        desc: 'Você quer resultado com autoria. Não apenas fazer bem — mas que saibam que foi você. Combina autonomia de método com necessidade de reconhecimento. Empreendedorismo, papéis de liderança visível, autoria criativa ou posições de especialista reconhecido são seus territórios naturais.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Execução com identidade — você coloca sua marca no que faz e isso eleva a qualidade.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Necessidade de visibilidade pode gerar atrito em contextos de trabalho anônimo ou muito colaborativo sem crédito individual.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Empreendedorismo, liderança visível, criação de conteúdo, posições de porta-voz ou referência pública.' }
+        ]
+      },
+      {
+        id: 'construtor-seguro',
+        name: 'Construtor Seguro',
+        icon: '🏛️',
+        mode: 'Modo Estabilidade-Sentido',
+        dims: ['SEG','PRO'],
+        desc: 'Você quer estabilidade com sentido. Não se move por capricho ou modismo — escolhe com cuidado e constrói onde decidiu ficar. A combinação de previsibilidade com propósito cria a base para um trabalho sustentável e de longo prazo. Você não é o mais rápido — é o mais consistente.',
+        insights: [
+          { icon:'⚡', title:'Força central', text:'Construir com consistência e profundidade ao longo do tempo. Você é quem ainda está aqui anos depois.' },
+          { icon:'🔍', title:'Ponto de atenção', text:'Alta necessidade de segurança pode inibir mudanças necessárias. Aprenda a distinguir risco real de desconforto gerenciável.' },
+          { icon:'🎯', title:'Ambiente ideal', text:'Carreiras de longo prazo em organizações sólidas, papéis de especialização profunda, gestão pública ou estruturada.' }
+        ]
+      }
+    ]
+  }
+
+}; // end JORNADAS
+
+// ═══════════════════════════════════════════════════════════
+// INIT — ler parâmetro e configurar a jornada
+// ═══════════════════════════════════════════════════════════
+const JORNADA_PARAM = new URLSearchParams(window.location.search).get('jornada') || 'arquetipo';
+const JORNADA_CFG   = JORNADAS[JORNADA_PARAM] || JORNADAS['arquetipo'];
+const QUESTIONS     = JORNADA_CFG.questions;
+const ARCHETYPES    = JORNADA_CFG.archetypes;
+
+// Preenche a tela de intro dinamicamente
+document.getElementById('intro-badge-text').textContent = JORNADA_CFG.badge;
+document.getElementById('intro-title').innerHTML = JORNADA_CFG.title;
+document.getElementById('intro-desc').textContent = JORNADA_CFG.desc;
+document.getElementById('r-tag').textContent = JORNADA_CFG.resultTag;
+document.getElementById('r-dims-title').textContent = JORNADA_CFG.dimsTitle;
+document.getElementById('nav-back-link').href = JORNADA_CFG.backLink;
+
+// Atualiza link de compartilhar
+const shareLink = document.querySelector('#r-share a');
+if (shareLink) {
+  shareLink.href = 'https://wa.me/?text=' + encodeURIComponent(JORNADA_CFG.shareText);
+}
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let currentQ = 0;
+const answers = new Array(QUESTIONS.length).fill(null);
+
+function startTest() {
+  showScreen('screen-question');
+  renderQuestion(0);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function updateProgress() {
+  const answered = answers.filter(a => a !== null).length;
+  const pct = (answered / QUESTIONS.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function renderQuestion(idx) {
+  currentQ = idx;
+  const q = QUESTIONS[idx];
+  document.getElementById('q-meta').textContent = `Cenário ${idx+1} de ${QUESTIONS.length}`;
+  document.getElementById('q-context').textContent = q.context;
+  document.getElementById('q-text').textContent = q.text;
+
+  const optsEl = document.getElementById('q-opts');
+  optsEl.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt' + (answers[idx] === i ? ' selected' : '');
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span>${opt.text}`;
+    btn.addEventListener('click', () => selectAnswer(i));
+    optsEl.appendChild(btn);
+  });
+
+  document.getElementById('btn-back').style.visibility = idx === 0 ? 'hidden' : 'visible';
+
+  const btnNext = document.getElementById('btn-next');
+  if (idx === QUESTIONS.length - 1) {
+    btnNext.innerHTML = 'Ver meu resultado <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+  } else {
+    btnNext.innerHTML = 'Próximo <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+  }
+  btnNext.disabled = answers[idx] === null;
+  updateProgress();
+}
+
+function selectAnswer(i) {
+  answers[currentQ] = i;
+  document.querySelectorAll('.opt').forEach((b,j) => {
+    b.classList.toggle('selected', j === i);
+  });
+  const btnNext = document.getElementById('btn-next');
+  btnNext.disabled = false;
+  btnNext.innerHTML = currentQ === QUESTIONS.length - 1
+    ? 'Ver meu resultado <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'
+    : 'Próximo <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+}
+
+function nextQ() {
+  if (answers[currentQ] === null) return;
+  if (currentQ === QUESTIONS.length - 1) {
+    showResult();
+  } else {
+    renderQuestion(currentQ + 1);
+  }
+}
+
+function prevQ() {
+  if (currentQ > 0) renderQuestion(currentQ - 1);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SCORING — dinâmico, calcula max a partir das perguntas
+// ═══════════════════════════════════════════════════════════
+function calcScores() {
+  // Soma os scores reais
+  const scores = {};
+  answers.forEach((ansIdx, qIdx) => {
+    if (ansIdx === null) return;
+    const dims = QUESTIONS[qIdx].opts[ansIdx].dims;
+    Object.entries(dims).forEach(([d,v]) => { scores[d] = (scores[d] || 0) + v; });
+  });
+
+  // Calcula o máximo possível por dimensão
+  const maxPossible = {};
+  QUESTIONS.forEach(q => {
+    const qMaxes = {};
+    q.opts.forEach(opt => {
+      Object.entries(opt.dims).forEach(([d,v]) => {
+        qMaxes[d] = Math.max(qMaxes[d] || 0, v);
+      });
+    });
+    Object.entries(qMaxes).forEach(([d,v]) => {
+      maxPossible[d] = (maxPossible[d] || 0) + v;
+    });
+  });
+
+  // Normaliza para 0-100
+  const norm = {};
+  Object.keys(maxPossible).forEach(d => {
+    norm[d] = maxPossible[d] > 0
+      ? Math.min(100, Math.round(((scores[d] || 0) / maxPossible[d]) * 100))
+      : 0;
+  });
+
+  return norm;
+}
+
+function findArchetype(scores) {
+  let best = null, bestScore = -1;
+  ARCHETYPES.forEach(arch => {
+    const s = arch.dims.reduce((acc, d) => acc + (scores[d] || 0), 0);
+    if (s > bestScore) { bestScore = s; best = arch; }
+  });
+  return best;
+}
+
+function showResult() {
+  const scores = calcScores();
+  const arch = findArchetype(scores);
+
+  document.getElementById('r-icon').textContent = arch.icon;
+  document.getElementById('r-name').innerHTML = `<span class="grad">${arch.name}</span>`;
+  document.getElementById('r-mode').textContent = arch.mode;
+  document.getElementById('r-desc').textContent = arch.desc;
+  document.getElementById('r-tag').textContent = JORNADA_CFG.resultTag;
+
+  // Dimensões
+  const dimNames = JORNADA_CFG.dimNames;
+  const dimsEl = document.getElementById('r-dims');
+  dimsEl.innerHTML = '';
+  Object.entries(scores).forEach(([d, v]) => {
+    const label = dimNames[d] || d;
+    dimsEl.innerHTML += `<div class="dim-item">
+      <div class="dim-label"><span>${label}</span><span>${v}/100</span></div>
+      <div class="dim-bar-bg"><div class="dim-bar" data-width="${v}" style="width:0%"></div></div>
+    </div>`;
+  });
+
+  // Insights
+  const insightsEl = document.getElementById('r-insights');
+  insightsEl.innerHTML = arch.insights.map(i =>
+    `<div class="insight"><span class="insight-icon">${i.icon}</span><div class="insight-text"><strong>${i.title}</strong><span>${i.text}</span></div></div>`
+  ).join('');
+
+  showScreen('screen-result');
+  updateProgress();
+
+  // Anima barras
+  setTimeout(() => {
+    document.querySelectorAll('.dim-bar').forEach(bar => {
+      bar.style.width = bar.dataset.width + '%';
+    });
+  }, 200);
+
+  // Salva no localStorage
+  try {
+    const saved = JSON.parse(localStorage.getItem('ec_test_results') || '[]');
+    saved.push({ jornada: JORNADA_PARAM, archetype: arch.id, scores, date: new Date().toISOString() });
+    localStorage.setItem('ec_test_results', JSON.stringify(saved));
+  } catch(e) {}
+}
+</script>
+</body>
+</html>

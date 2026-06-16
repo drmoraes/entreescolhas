@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ATS — Entre Escolhas</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0A0A14; --bg-card: #10101E; --bg-raised: #16162A; --bg-input: #1C1C30;
+      --border: rgba(108,99,255,0.18); --border-hover: rgba(108,99,255,0.4);
+      --accent: #6C63FF; --accent-dim: rgba(108,99,255,0.12);
+      --text: #F0EFF8; --text-2: #9490C0; --text-3: #5E5A8A; --white: #FFFFFF;
+      --green: #22C55E; --green-dim: rgba(34,197,94,0.12);
+      --red: #EF4444; --red-dim: rgba(239,68,68,0.12);
+      --gold: #C9A84C; --gold-dim: rgba(201,168,76,0.12);
+      --blue: #3B82F6; --blue-dim: rgba(59,130,246,0.12);
+      --sidebar-w: 220px;
+    }
+    html, body { height: 100%; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; }
+
+    /* ── Login ─────────────────────────────────────────────── */
+    #login-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; background:radial-gradient(ellipse at 50% 40%,rgba(108,99,255,0.12) 0%,transparent 60%); }
+    .login-card { background:var(--bg-card); border:1px solid var(--border); border-radius:20px; padding:40px; width:360px; }
+    .login-logo { font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:8px; }
+    .login-logo span { color:var(--accent); }
+    .login-sub { color:var(--text-3); font-size:0.82rem; margin-bottom:28px; }
+    .login-field { margin-bottom:16px; }
+    .login-field label { display:block; font-size:0.75rem; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; }
+    .login-field input { width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:11px 14px; color:var(--text); font-size:0.9rem; outline:none; }
+    .login-field input:focus { border-color:var(--accent); }
+    .login-btn { width:100%; background:var(--accent); color:var(--white); border:none; padding:13px; border-radius:10px; font-size:0.95rem; font-weight:700; cursor:pointer; margin-top:4px; transition:opacity 0.2s; }
+    .login-btn:hover { opacity:0.85; }
+    .login-err { display:none; color:var(--red); font-size:0.8rem; margin-top:10px; text-align:center; }
+    .api-setup { margin-top:20px; padding-top:16px; border-top:1px solid var(--border); }
+    .api-setup label { display:block; font-size:0.75rem; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; }
+    .api-setup input { width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:0.82rem; outline:none; }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    #app { display:none; height:100vh; overflow:hidden; }
+    .sidebar { position:fixed; top:0; left:0; bottom:0; width:var(--sidebar-w); background:var(--bg-card); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:100; }
+    .sidebar-logo { padding:20px; border-bottom:1px solid var(--border); }
+    .sidebar-logo h2 { font-size:1rem; font-weight:700; }
+    .sidebar-logo h2 span { color:var(--accent); }
+    .sidebar-logo small { color:var(--text-3); font-size:0.72rem; }
+    .nav-section { padding:12px 12px 4px; font-size:0.68rem; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:0.1em; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:9px 14px; border-radius:8px; cursor:pointer; margin:2px 8px; color:var(--text-2); font-size:0.85rem; font-weight:500; transition:background 0.15s, color 0.15s; }
+    .nav-item:hover { background:var(--accent-dim); color:var(--text); }
+    .nav-item.active { background:var(--accent-dim); color:var(--accent); }
+    .nav-item .icon { font-size:1rem; width:20px; text-align:center; }
+    .sidebar-bottom { margin-top:auto; padding:12px; border-top:1px solid var(--border); }
+    .logout-btn { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; cursor:pointer; color:var(--text-3); font-size:0.82rem; transition:color 0.15s; background:none; border:none; width:100%; }
+    .logout-btn:hover { color:var(--red); }
+    .main { margin-left:var(--sidebar-w); height:100vh; overflow-y:auto; }
+    .topbar { position:sticky; top:0; background:rgba(10,10,20,0.9); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); padding:14px 28px; display:flex; align-items:center; justify-content:space-between; z-index:50; }
+    .topbar-title { font-size:1rem; font-weight:700; }
+    .topbar-actions { display:flex; gap:10px; align-items:center; }
+    .content { padding:24px 28px; }
+
+    /* ── Shared components ──────────────────────────────────── */
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; font-size:0.82rem; font-weight:600; cursor:pointer; transition:opacity 0.15s; border:none; }
+    .btn-primary { background:var(--accent); color:var(--white); }
+    .btn-outline { background:transparent; border:1px solid var(--border-hover); color:var(--accent); }
+    .btn-ghost   { background:transparent; border:1px solid var(--border); color:var(--text-2); }
+    .btn-danger  { background:var(--red-dim); color:var(--red); border:1px solid rgba(239,68,68,0.3); }
+    .btn:hover { opacity:0.82; }
+    .badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:100px; font-size:0.72rem; font-weight:600; }
+    .badge-novo       { background:var(--blue-dim);  color:var(--blue); }
+    .badge-triagem    { background:var(--gold-dim);  color:var(--gold); }
+    .badge-entrevista { background:rgba(168,99,255,0.15); color:#A863FF; }
+    .badge-aprovado   { background:var(--green-dim); color:var(--green); }
+    .badge-arquivado  { background:var(--bg-raised); color:var(--text-3); }
+    .card { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; }
+    .empty { text-align:center; padding:60px 20px; color:var(--text-3); }
+    .empty-icon { font-size:2.5rem; margin-bottom:12px; }
+
+    /* ── Stats ──────────────────────────────────────────────── */
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:24px; }
+    .stat-card { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:18px; }
+    .stat-value { font-size:1.8rem; font-weight:700; line-height:1; }
+    .stat-label { font-size:0.75rem; color:var(--text-3); margin-top:4px; }
+    .stat-delta { font-size:0.72rem; color:var(--green); margin-top:4px; }
+    .stat-card.blue .stat-value { color:var(--blue); }
+    .stat-card.gold .stat-value { color:var(--gold); }
+    .stat-card.purple .stat-value { color:#A863FF; }
+    .stat-card.green .stat-value { color:var(--green); }
+
+    /* ── Filters / search ───────────────────────────────────── */
+    .filters { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; align-items:center; }
+    .search-box { flex:1; min-width:220px; position:relative; }
+    .search-box input { width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:9px 36px 9px 14px; color:var(--text); font-size:0.85rem; outline:none; }
+    .search-box input:focus { border-color:var(--accent); }
+    .search-box svg { position:absolute; right:12px; top:50%; transform:translateY(-50%); opacity:0.4; }
+    select.filter-sel { background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-size:0.82rem; outline:none; cursor:pointer; }
+    select.filter-sel:focus { border-color:var(--accent); }
+
+    /* ── Table ──────────────────────────────────────────────── */
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; }
+    th { padding:10px 14px; text-align:left; font-size:0.72rem; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:0.07em; border-bottom:1px solid var(--border); white-space:nowrap; cursor:pointer; user-select:none; }
+    th:hover { color:var(--text-2); }
+    td { padding:12px 14px; border-bottom:1px solid rgba(108,99,255,0.07); font-size:0.83rem; vertical-align:middle; }
+    tr:hover td { background:var(--accent-dim); }
+    tr:last-child td { border-bottom:none; }
+    .td-nome { font-weight:600; color:var(--text); }
+    .td-email { color:var(--text-2); font-size:0.78rem; }
+    .td-actions { display:flex; gap:6px; }
+    .row-action { background:none; border:none; cursor:pointer; padding:5px 8px; border-radius:6px; color:var(--text-3); font-size:0.75rem; transition:background 0.15s, color 0.15s; }
+    .row-action:hover { background:var(--accent-dim); color:var(--accent); }
+
+    /* ── Pagination ─────────────────────────────────────────── */
+    .pagination { display:flex; align-items:center; justify-content:space-between; padding:14px 0; margin-top:8px; }
+    .pagination-info { font-size:0.78rem; color:var(--text-3); }
+    .pagination-btns { display:flex; gap:6px; }
+    .page-btn { background:var(--bg-input); border:1px solid var(--border); border-radius:6px; padding:5px 12px; font-size:0.78rem; color:var(--text-2); cursor:pointer; }
+    .page-btn.active { background:var(--accent); color:var(--white); border-color:var(--accent); }
+    .page-btn:disabled { opacity:0.35; cursor:not-allowed; }
+
+    /* ── Kanban ─────────────────────────────────────────────── */
+    .kanban { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; min-width:900px; }
+    .kanban-col { background:var(--bg-raised); border-radius:12px; padding:12px; min-height:400px; }
+    .kanban-col-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .kanban-col-title { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; }
+    .kanban-count { background:var(--bg-input); border-radius:100px; padding:2px 8px; font-size:0.72rem; color:var(--text-3); }
+    .kanban-card { background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:8px; cursor:pointer; transition:border-color 0.15s, transform 0.15s; }
+    .kanban-card:hover { border-color:var(--border-hover); transform:translateY(-2px); }
+    .kanban-name { font-weight:600; font-size:0.82rem; margin-bottom:4px; }
+    .kanban-meta { font-size:0.72rem; color:var(--text-3); }
+    .kanban-arch { display:inline-block; margin-top:6px; font-size:0.68rem; background:var(--accent-dim); color:var(--accent); border-radius:4px; padding:2px 6px; }
+
+    /* ── Candidate Modal ─────────────────────────────────────── */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:200; display:none; align-items:flex-start; justify-content:flex-end; }
+    .modal-overlay.open { display:flex; }
+    .modal-panel { width:520px; height:100vh; background:var(--bg-card); border-left:1px solid var(--border); overflow-y:auto; animation:slideIn 0.25s ease; }
+    @keyframes slideIn { from{transform:translateX(100%)} to{transform:translateX(0)} }
+    .modal-header { position:sticky; top:0; background:var(--bg-card); border-bottom:1px solid var(--border); padding:18px 20px; display:flex; justify-content:space-between; align-items:center; z-index:1; }
+    .modal-close { background:none; border:none; color:var(--text-3); cursor:pointer; font-size:1.2rem; padding:4px 8px; border-radius:6px; }
+    .modal-close:hover { background:var(--bg-raised); color:var(--text); }
+    .modal-body { padding:20px; }
+    .modal-section { margin-bottom:24px; }
+    .modal-section-title { font-size:0.7rem; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:12px; }
+    .modal-name { font-size:1.2rem; font-weight:700; margin-bottom:4px; }
+    .modal-email { color:var(--text-2); font-size:0.85rem; margin-bottom:12px; }
+    .contact-btns { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .info-item label { font-size:0.7rem; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:0.06em; display:block; margin-bottom:3px; }
+    .info-item span { font-size:0.83rem; color:var(--text); }
+    .status-select { width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:0.85rem; outline:none; cursor:pointer; margin-bottom:12px; }
+    .status-select:focus { border-color:var(--accent); }
+    .note-input { width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text); font-size:0.82rem; resize:vertical; outline:none; min-height:80px; }
+    .note-input:focus { border-color:var(--accent); }
+    .notes-list { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+    .note-item { background:var(--bg-raised); border-radius:8px; padding:10px 12px; }
+    .note-text { font-size:0.82rem; line-height:1.5; }
+    .note-meta { font-size:0.7rem; color:var(--text-3); margin-top:4px; }
+    .arch-badge { display:inline-flex; align-items:center; gap:6px; background:var(--accent-dim); border:1px solid rgba(108,99,255,0.25); border-radius:8px; padding:8px 12px; font-size:0.8rem; color:var(--accent); font-weight:600; }
+    .status-log { display:flex; flex-direction:column; gap:6px; }
+    .log-item { display:flex; align-items:center; gap:8px; font-size:0.75rem; color:var(--text-3); }
+    .log-arrow { color:var(--accent); }
+
+    /* ── Chart mini ─────────────────────────────────────────── */
+    .mini-bars { display:flex; align-items:flex-end; gap:3px; height:50px; margin-top:8px; }
+    .mini-bar { flex:1; background:var(--accent-dim); border-radius:2px 2px 0 0; min-height:2px; transition:height 0.4s; }
+    .mini-bar:hover { background:var(--accent); }
+
+    /* ── Loader ─────────────────────────────────────────────── */
+    .loader { display:flex; align-items:center; justify-content:center; gap:8px; padding:60px; color:var(--text-3); font-size:0.85rem; }
+    .spinner { width:18px; height:18px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    .view-toggle { display:flex; background:var(--bg-raised); border-radius:8px; padding:3px; gap:2px; }
+    .view-btn { background:none; border:none; padding:5px 12px; border-radius:6px; cursor:pointer; font-size:0.78rem; color:var(--text-3); transition:background 0.15s, color 0.15s; }
+    .view-btn.active { background:var(--bg-card); color:var(--text); }
+
+    @media(max-width:900px){
+      .sidebar{ width:60px; }
+      .nav-item .label, .nav-section, .sidebar-logo h2 small, .sidebar-logo h2 { display:none; }
+      .main{ margin-left:60px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ LOGIN ══════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">Entre<span>Escolhas</span></div>
+    <p class="login-sub">Painel ATS — acesso restrito</p>
+    <div class="login-field">
+      <label>Senha de acesso</label>
+      <input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <div class="api-setup">
+      <label>URL da API (Locaweb)</label>
+      <input type="text" id="api-url-input" placeholder="https://api.entreescolhas.com.br/api" />
+      <label style="margin-top:10px;">Chave da API</label>
+      <input type="text" id="api-key-input" placeholder="ec-admin-..." />
+    </div>
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-err" id="login-err">Senha incorreta. Tente novamente.</div>
+  </div>
+</div>
+
+<!-- ══════════════════ APP ══════════════════ -->
+<div id="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <h2>Entre<span>Escolhas</span> <small>ATS</small></h2>
+    </div>
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" onclick="showView('dashboard')" id="nav-dashboard">
+      <span class="icon">📊</span><span class="label">Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="showView('candidatos')" id="nav-candidatos">
+      <span class="icon">👥</span><span class="label">Candidatos</span>
+    </div>
+    <div class="nav-item" onclick="showView('pipeline')" id="nav-pipeline">
+      <span class="icon">🗂️</span><span class="label">Pipeline</span>
+    </div>
+    <div class="nav-section">Ferramentas</div>
+    <div class="nav-item" onclick="exportCSV()">
+      <span class="icon">📥</span><span class="label">Exportar CSV</span>
+    </div>
+    <div class="sidebar-bottom">
+      <button class="logout-btn" onclick="doLogout()">
+        <span>🚪</span><span class="label">Sair</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-actions">
+        <div class="view-toggle" id="view-toggle" style="display:none;">
+          <button class="view-btn active" onclick="setTableView('table')" id="vbtn-table">≡ Tabela</button>
+          <button class="view-btn" onclick="setTableView('kanban')" id="vbtn-kanban">⊞ Pipeline</button>
+        </div>
+        <button class="btn btn-ghost" onclick="refreshData()" title="Atualizar dados">↻</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- DASHBOARD -->
+      <div id="view-dashboard">
+        <div class="stats-grid" id="stats-grid">
+          <div class="loader"><div class="spinner"></div> Carregando…</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="card" style="padding:20px;">
+            <div style="font-size:0.72rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:16px;">Candidatos nos últimos 30 dias</div>
+            <div class="mini-bars" id="growth-chart"></div>
+          </div>
+          <div class="card" style="padding:20px;">
+            <div style="font-size:0.72rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:16px;">Cadastros recentes</div>
+            <div id="recent-list"></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+          <div class="card" style="padding:20px;" id="obj-chart"></div>
+          <div class="card" style="padding:20px;" id="arch-chart"></div>
+        </div>
+      </div>
+
+      <!-- CANDIDATOS (table) -->
+      <div id="view-candidatos" style="display:none;">
+        <div class="filters">
+          <div class="search-box">
+            <input type="text" id="search-input" placeholder="Buscar por nome, email, cargo…" oninput="debounceSearch()" />
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          </div>
+          <select class="filter-sel" id="f-status" onchange="loadCandidates()">
+            <option value="">Todos os status</option>
+            <option value="novo">Novo</option>
+            <option value="triagem">Triagem</option>
+            <option value="entrevista">Entrevista</option>
+            <option value="aprovado">Aprovado</option>
+            <option value="arquivado">Arquivado</option>
+          </select>
+          <select class="filter-sel" id="f-objetivo" onchange="loadCandidates()">
+            <option value="">Todos os objetivos</option>
+            <option value="autoconhecimento">Autoconhecimento</option>
+            <option value="carreira">Carreira</option>
+            <option value="recolocacao">Recolocação</option>
+            <option value="liderança">Liderança</option>
+            <option value="primeiro-emprego">Primeiro emprego</option>
+          </select>
+          <select class="filter-sel" id="f-senioridade" onchange="loadCandidates()">
+            <option value="">Qualquer senioridade</option>
+            <option value="estagio">Estágio</option>
+            <option value="junior">Júnior</option>
+            <option value="pleno">Pleno</option>
+            <option value="senior">Sênior</option>
+            <option value="especialista">Especialista</option>
+            <option value="liderança">Liderança</option>
+          </select>
+          <button class="btn btn-ghost" onclick="clearFilters()">✕ Limpar</button>
+        </div>
+        <div class="card table-wrap" id="candidates-table-wrap">
+          <div class="loader"><div class="spinner"></div> Carregando candidatos…</div>
+        </div>
+        <div class="pagination" id="pagination" style="display:none;"></div>
+      </div>
+
+      <!-- PIPELINE (kanban) -->
+      <div id="view-pipeline" style="display:none; overflow-x:auto;">
+        <div class="kanban" id="kanban-board">
+          <div class="loader"><div class="spinner"></div> Carregando pipeline…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MODAL ══════════════════ -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-panel" id="modal-panel">
+    <div class="modal-header">
+      <div style="font-weight:700;" id="modal-title">Candidato</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════════════
+const ADMIN_PASS = 'entreescolhas2026';
+let API_BASE   = '';
+let API_KEY    = '';
+let currentView = 'dashboard';
+let tableView   = 'table';
+let currentPage = 1;
+let searchTimer = null;
+let totalPages  = 1;
+
+const ARCH_LABELS = {
+  arquiteto:    'Arquiteto de Possibilidades',
+  executor:     'Executor Pragmático',
+  conector:     'Conector Empático',
+  analista:     'Analista Sistemático',
+  estrategista: 'Estrategista Adaptativo',
+  guardiao:     'Guardião Relacional',
+};
+
+// ══════════════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════════════
+function doLogin(){
+  const pass   = document.getElementById('login-password').value;
+  const apiUrl = document.getElementById('api-url-input').value.trim() || 'https://api.entreescolhas.com.br/api';
+  const apiKey = document.getElementById('api-key-input').value.trim();
+
+  if(pass !== ADMIN_PASS){
+    document.getElementById('login-err').style.display = 'block';
+    return;
+  }
+  API_BASE = apiUrl.replace(/\/$/, '');
+  API_KEY  = apiKey;
+  localStorage.setItem('ec_ats_api_base', API_BASE);
+  localStorage.setItem('ec_ats_api_key',  API_KEY);
+
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  loadDashboard();
+}
+
+function doLogout(){
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-password').value = '';
+}
+
+// Pre-fill saved API settings
+window.addEventListener('DOMContentLoaded', () => {
+  const savedBase = localStorage.getItem('ec_ats_api_base');
+  const savedKey  = localStorage.getItem('ec_ats_api_key');
+  if(savedBase) document.getElementById('api-url-input').value = savedBase;
+  if(savedKey)  document.getElementById('api-key-input').value = savedKey;
+});
+
+// ══════════════════════════════════════════════════════════════
+// API HELPERS
+// ══════════════════════════════════════════════════════════════
+async function apiGet(endpoint, params = {}){
+  const url = new URL(`${API_BASE}/${endpoint}`);
+  url.searchParams.set('key', API_KEY);
+  Object.entries(params).forEach(([k,v]) => { if(v !== '') url.searchParams.set(k, v); });
+  const res = await fetch(url.toString(), { headers: {'X-Api-Key': API_KEY} });
+  if(!res.ok) throw new Error(`API ${res.status}`);
+  return res.json();
+}
+
+async function apiPut(endpoint, body){
+  const url = `${API_BASE}/${endpoint}?key=${encodeURIComponent(API_KEY)}`;
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: { 'Content-Type':'application/json', 'X-Api-Key': API_KEY },
+    body: JSON.stringify(body),
+  });
+  if(!res.ok) throw new Error(`API ${res.status}`);
+  return res.json();
+}
+
+// Fallback: ler dados do localStorage quando API não está disponível
+function getLocalCandidates(){
+  try {
+    return JSON.parse(localStorage.getItem('ec_bt_submissions') || '[]');
+  } catch(e) { return []; }
+}
+
+// ══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════
+function showView(v){
+  currentView = v;
+  ['dashboard','candidatos','pipeline'].forEach(id => {
+    document.getElementById(`view-${id}`).style.display = id === v ? '' : 'none';
+    document.getElementById(`nav-${id}`)?.classList.toggle('active', id === v);
+  });
+  document.getElementById('topbar-title').textContent = {
+    dashboard: 'Dashboard', candidatos: 'Candidatos', pipeline: 'Pipeline Kanban'
+  }[v];
+  document.getElementById('view-toggle').style.display = (v === 'candidatos') ? '' : 'none';
+
+  if(v === 'dashboard') loadDashboard();
+  if(v === 'candidatos') loadCandidates();
+  if(v === 'pipeline') loadPipeline();
+}
+
+function refreshData(){
+  if(currentView === 'dashboard') loadDashboard();
+  if(currentView === 'candidatos') loadCandidates();
+  if(currentView === 'pipeline') loadPipeline();
+}
+
+function setTableView(v){
+  tableView = v;
+  document.getElementById('vbtn-table').classList.toggle('active', v === 'table');
+  document.getElementById('vbtn-kanban').classList.toggle('active', v === 'kanban');
+  document.getElementById('candidates-table-wrap').style.display = v === 'table' ? '' : 'none';
+  document.getElementById('pagination').style.display = v === 'table' ? '' : 'none';
+}
+
+// ══════════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════════
+async function loadDashboard(){
+  document.getElementById('stats-grid').innerHTML = '<div class="loader"><div class="spinner"></div> Carregando…</div>';
+
+  let data;
+  try {
+    data = await apiGet('stats.php');
+  } catch(e){
+    // Fallback com dados locais
+    const local = getLocalCandidates();
+    data = buildLocalStats(local);
+  }
+
+  renderStats(data);
+  renderGrowth(data.growth_30d || []);
+  renderRecent(data.recent || []);
+  renderDistChart('obj-chart',  data.by_objetivo   || [], 'Por objetivo');
+  renderDistChart('arch-chart', (data.by_arquetipo || []).map(r => ({...r, objetivo: ARCH_LABELS[r.arquetipo] || r.arquetipo})), 'Por arquétipo');
+}
+
+function buildLocalStats(list){
+  const statusMap = {novo:0, triagem:0, entrevista:0, aprovado:0, arquivado:0};
+  list.forEach(r => { statusMap[r.status || 'novo'] = (statusMap[r.status || 'novo'] || 0) + 1; });
+  const now = Date.now();
+  return {
+    totals: {
+      total: list.length,
+      ...statusMap,
+      last_7d:  list.filter(r => now - new Date(r.createdAt) < 7*864e5).length,
+      last_30d: list.filter(r => now - new Date(r.createdAt) < 30*864e5).length,
+    },
+    by_status: Object.entries(statusMap).map(([status,cnt]) => ({status, cnt})),
+    by_objetivo: [],
+    by_senioridade: [],
+    by_arquetipo: [],
+    growth_30d: [],
+    recent: list.slice(-5).reverse().map((r,i) => ({
+      id: i+1, nome: r.nome, email: r.email,
+      objetivo: r.objetivo, arquetipo: r.arquetipo, status: r.status || 'novo',
+      created_at: r.createdAt
+    })),
+  };
+}
+
+function renderStats(d){
+  const t = d.totals || {};
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card blue">
+      <div class="stat-value">${t.total || 0}</div>
+      <div class="stat-label">Total de candidatos</div>
+      <div class="stat-delta">↑ ${t.last_30d || 0} nos últimos 30 dias</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${t.novo || 0}</div>
+      <div class="stat-label">Novos</div>
+      <div class="stat-delta" style="color:var(--blue);">↑ ${t.last_7d || 0} esta semana</div>
+    </div>
+    <div class="stat-card gold">
+      <div class="stat-value">${t.triagem || 0}</div>
+      <div class="stat-label">Em triagem</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-value">${t.entrevista || 0}</div>
+      <div class="stat-label">Em entrevista</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-value">${t.aprovado || 0}</div>
+      <div class="stat-label">Aprovados</div>
+    </div>
+  `;
+}
+
+function renderGrowth(rows){
+  const el = document.getElementById('growth-chart');
+  if(!rows.length){ el.innerHTML = '<span style="color:var(--text-3);font-size:0.78rem;">Sem dados ainda.</span>'; return; }
+  const max = Math.max(...rows.map(r => +r.cnt), 1);
+  el.innerHTML = rows.map(r => {
+    const h = Math.max(4, Math.round((+r.cnt / max) * 46));
+    return `<div class="mini-bar" style="height:${h}px" title="${r.day}: ${r.cnt}"></div>`;
+  }).join('');
+}
+
+function renderRecent(rows){
+  const el = document.getElementById('recent-list');
+  if(!rows.length){ el.innerHTML = '<p style="color:var(--text-3);font-size:0.8rem;">Nenhum cadastro ainda.</p>'; return; }
+  el.innerHTML = rows.map(r => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(108,99,255,0.07);cursor:pointer;" onclick="openModal(${r.id})">
+      <div style="flex:1;">
+        <div style="font-weight:600;font-size:0.82rem;">${esc(r.nome)}</div>
+        <div style="font-size:0.72rem;color:var(--text-3);">${esc(r.objetivo||'')} · ${fmtDate(r.created_at)}</div>
+      </div>
+      <span class="badge badge-${r.status||'novo'}">${r.status||'novo'}</span>
+    </div>
+  `).join('');
+}
+
+function renderDistChart(elId, rows, title){
+  const el = document.getElementById(elId);
+  if(!rows.length){ el.innerHTML = `<div style="font-size:0.72rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.1em;">${title}</div><p style="color:var(--text-3);font-size:0.8rem;margin-top:12px;">Sem dados.</p>`; return; }
+  const total = rows.reduce((s,r) => s + (+r.cnt), 0);
+  el.innerHTML = `
+    <div style="font-size:0.72rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">${title}</div>
+    ${rows.slice(0,6).map(r => {
+      const pct = total ? Math.round((+r.cnt / total) * 100) : 0;
+      const label = r.objetivo || r.arquetipo || r.status || '—';
+      return `<div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-bottom:4px;">
+          <span style="color:var(--text-2);">${esc(label)}</span>
+          <span style="color:var(--text-3);">${r.cnt} (${pct}%)</span>
+        </div>
+        <div style="height:4px;background:var(--bg-raised);border-radius:100px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:var(--accent);border-radius:100px;transition:width 0.8s;"></div>
+        </div>
+      </div>`;
+    }).join('')}
+  `;
+}
+
+// ══════════════════════════════════════════════════════════════
+// CANDIDATES TABLE
+// ══════════════════════════════════════════════════════════════
+async function loadCandidates(){
+  const wrap = document.getElementById('candidates-table-wrap');
+  wrap.innerHTML = '<div class="loader"><div class="spinner"></div> Carregando…</div>';
+
+  const params = {
+    page:       currentPage,
+    limit:      25,
+    q:          document.getElementById('search-input').value.trim(),
+    status:     document.getElementById('f-status').value,
+    objetivo:   document.getElementById('f-objetivo').value,
+    senioridade:document.getElementById('f-senioridade').value,
+  };
+
+  let data;
+  try {
+    data = await apiGet('candidates.php', params);
+  } catch(e){
+    // Fallback local
+    const local = getLocalCandidates();
+    data = { total: local.length, page: 1, pages: 1, data: local.map((r,i) => ({
+      id: i+1, nome: r.nome, email: r.email, telefone: r.telefone || r.phone,
+      cidade: r.cidade || r.city, objetivo: r.objetivo, cargo: r.role || r.cargo,
+      empresa: r.company || r.empresa, senioridade: r.seniority || r.senioridade,
+      arquetipo: r.arquetipo, status: r.status || 'novo', created_at: r.createdAt
+    })) };
+  }
+
+  totalPages = data.pages || 1;
+  renderTable(data.data || []);
+  renderPagination(data.total, data.page, data.pages);
+}
+
+function renderTable(rows){
+  const wrap = document.getElementById('candidates-table-wrap');
+  if(!rows.length){
+    wrap.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><p>Nenhum candidato encontrado com esses filtros.</p></div>';
+    return;
+  }
+  wrap.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Nome</th>
+        <th>Objetivo</th>
+        <th>Cargo / Empresa</th>
+        <th>Senioridade</th>
+        <th>Arquétipo</th>
+        <th>Status</th>
+        <th>Cadastro</th>
+        <th></th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr>
+            <td>
+              <div class="td-nome">${esc(r.nome)}</div>
+              <div class="td-email">${esc(r.email)}</div>
+            </td>
+            <td style="color:var(--text-2);">${esc(r.objetivo||'—')}</td>
+            <td>
+              <div style="font-size:0.82rem;">${esc(r.cargo||'—')}</div>
+              <div style="font-size:0.72rem;color:var(--text-3);">${esc(r.empresa||'')}</div>
+            </td>
+            <td style="color:var(--text-2);font-size:0.78rem;">${esc(r.senioridade||'—')}</td>
+            <td>${r.arquetipo ? `<span style="font-size:0.72rem;background:var(--accent-dim);color:var(--accent);border-radius:4px;padding:2px 6px;">${ARCH_LABELS[r.arquetipo]||r.arquetipo}</span>` : '—'}</td>
+            <td><span class="badge badge-${r.status||'novo'}">${r.status||'novo'}</span></td>
+            <td style="color:var(--text-3);font-size:0.75rem;white-space:nowrap;">${fmtDate(r.created_at)}</td>
+            <td>
+              <div class="td-actions">
+                <button class="row-action" onclick="openModal(${r.id})" title="Ver perfil">👁</button>
+                <button class="row-action" onclick="quickStatus(${r.id},'triagem')" title="Mover para triagem">→</button>
+              </div>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderPagination(total, page, pages){
+  const el = document.getElementById('pagination');
+  if(pages <= 1){ el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  const btns = [];
+  for(let i=1;i<=pages;i++){
+    btns.push(`<button class="page-btn${i===page?' active':''}" onclick="gotoPage(${i})">${i}</button>`);
+  }
+  el.innerHTML = `
+    <span class="pagination-info">Total: ${total} candidatos · Página ${page} de ${pages}</span>
+    <div class="pagination-btns">
+      <button class="page-btn" onclick="gotoPage(${page-1})" ${page<=1?'disabled':''}>←</button>
+      ${btns.join('')}
+      <button class="page-btn" onclick="gotoPage(${page+1})" ${page>=pages?'disabled':''}>→</button>
+    </div>
+  `;
+}
+
+function gotoPage(p){
+  currentPage = Math.max(1, Math.min(p, totalPages));
+  loadCandidates();
+}
+
+function debounceSearch(){
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { currentPage = 1; loadCandidates(); }, 350);
+}
+
+function clearFilters(){
+  document.getElementById('search-input').value = '';
+  document.getElementById('f-status').value = '';
+  document.getElementById('f-objetivo').value = '';
+  document.getElementById('f-senioridade').value = '';
+  currentPage = 1;
+  loadCandidates();
+}
+
+// ══════════════════════════════════════════════════════════════
+// PIPELINE KANBAN
+// ══════════════════════════════════════════════════════════════
+async function loadPipeline(){
+  const board = document.getElementById('kanban-board');
+  board.innerHTML = '<div class="loader"><div class="spinner"></div> Carregando pipeline…</div>';
+
+  const statuses = ['novo','triagem','entrevista','aprovado','arquivado'];
+  const statusColors = { novo:'var(--blue)', triagem:'var(--gold)', entrevista:'#A863FF', aprovado:'var(--green)', arquivado:'var(--text-3)' };
+  const columns = {};
+  statuses.forEach(s => { columns[s] = []; });
+
+  try {
+    for(const s of statuses){
+      const d = await apiGet('candidates.php', { status: s, limit: 50 });
+      columns[s] = d.data || [];
+    }
+  } catch(e){
+    const local = getLocalCandidates();
+    local.forEach(r => { const s = r.status || 'novo'; if(columns[s]) columns[s].push(r); });
+  }
+
+  board.innerHTML = statuses.map(s => `
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <div class="kanban-col-title" style="color:${statusColors[s]}">${s.toUpperCase()}</div>
+        <span class="kanban-count">${columns[s].length}</span>
+      </div>
+      ${columns[s].length === 0
+        ? '<div style="color:var(--text-3);font-size:0.75rem;text-align:center;padding:20px 0;">Nenhum aqui</div>'
+        : columns[s].map(r => `
+          <div class="kanban-card" onclick="openModal(${r.id || 0})">
+            <div class="kanban-name">${esc(r.nome)}</div>
+            <div class="kanban-meta">${esc(r.cidade||'')}${r.objetivo?` · ${r.objetivo}`:''}</div>
+            ${r.arquetipo ? `<span class="kanban-arch">${ARCH_LABELS[r.arquetipo]||r.arquetipo}</span>` : ''}
+          </div>
+        `).join('')
+      }
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════════════════════
+async function openModal(id){
+  if(!id){ return; }
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-body').innerHTML = '<div class="loader"><div class="spinner"></div> Carregando perfil…</div>';
+  document.getElementById('modal-title').textContent = 'Candidato #' + id;
+
+  let c;
+  try {
+    c = await apiGet('candidates.php', { id });
+  } catch(e){
+    const local = getLocalCandidates();
+    c = local[id - 1] || null;
+    if(c){ c.id = id; c.notes_list = []; c.status_log = []; }
+  }
+
+  if(!c){ document.getElementById('modal-body').innerHTML = '<p style="color:var(--red);padding:20px;">Candidato não encontrado.</p>'; return; }
+
+  document.getElementById('modal-title').textContent = c.nome || 'Candidato';
+  document.getElementById('modal-body').innerHTML = buildModalHTML(c);
+}
+
+function buildModalHTML(c){
+  const arch  = c.arquetipo ? (ARCH_LABELS[c.arquetipo] || c.arquetipo) : null;
+  const notes = c.notes_list || [];
+  const log   = c.status_log || [];
+
+  return `
+    <div class="modal-section">
+      <div class="modal-name">${esc(c.nome||'')}</div>
+      <div class="modal-email">${esc(c.email||'')}</div>
+      <div class="contact-btns">
+        <a href="mailto:${esc(c.email||'')}" class="btn btn-outline" style="font-size:0.78rem;">✉ E-mail</a>
+        ${c.telefone ? `<a href="tel:${c.telefone.replace(/\D/g,'')}" class="btn btn-ghost" style="font-size:0.78rem;">📞 Ligar</a>` : ''}
+        ${c.linkedin ? `<a href="${c.linkedin.startsWith('http')?c.linkedin:'https://'+c.linkedin}" target="_blank" class="btn btn-ghost" style="font-size:0.78rem;">in LinkedIn</a>` : ''}
+        ${c.telefone ? `<a href="https://wa.me/55${c.telefone.replace(/\D/g,'')}" target="_blank" class="btn btn-ghost" style="font-size:0.78rem;background:rgba(37,211,102,0.1);color:#25D366;border-color:rgba(37,211,102,0.3);">WhatsApp</a>` : ''}
+      </div>
+      ${arch ? `<div class="arch-badge">🧠 ${arch}</div>` : ''}
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-title">Status no pipeline</div>
+      <select class="status-select" id="modal-status" onchange="updateStatus(${c.id},this.value)">
+        <option value="novo"       ${c.status==='novo'?'selected':''}>🔵 Novo</option>
+        <option value="triagem"    ${c.status==='triagem'?'selected':''}>🟡 Triagem</option>
+        <option value="entrevista" ${c.status==='entrevista'?'selected':''}>🟣 Entrevista</option>
+        <option value="aprovado"   ${c.status==='aprovado'?'selected':''}>🟢 Aprovado</option>
+        <option value="arquivado"  ${c.status==='arquivado'?'selected':''}>⚫ Arquivado</option>
+      </select>
+      ${log.length ? `
+        <div class="status-log">
+          ${log.map(l => `<div class="log-item"><span>${l.from_status}</span><span class="log-arrow">→</span><span>${l.to_status}</span><span>${fmtDate(l.changed_at)}</span></div>`).join('')}
+        </div>
+      ` : ''}
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-title">Dados profissionais</div>
+      <div class="info-grid">
+        <div class="info-item"><label>Objetivo</label><span>${esc(c.objetivo||'—')}</span></div>
+        <div class="info-item"><label>Cargo</label><span>${esc(c.cargo||'—')}</span></div>
+        <div class="info-item"><label>Empresa</label><span>${esc(c.empresa||'—')}</span></div>
+        <div class="info-item"><label>Senioridade</label><span>${esc(c.senioridade||'—')}</span></div>
+        <div class="info-item"><label>Experiência</label><span>${esc(c.experiencia||'—')}</span></div>
+        <div class="info-item"><label>Escolaridade</label><span>${esc(c.escolaridade||'—')}</span></div>
+        <div class="info-item"><label>Cidade</label><span>${esc(c.cidade||'—')}</span></div>
+        <div class="info-item"><label>Cadastrado em</label><span>${fmtDate(c.created_at||c.createdAt)}</span></div>
+        ${c.pcd ? `<div class="info-item"><label>PCD</label><span>${c.pcd_tipo||'Sim'}</span></div>` : ''}
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-title">Notas internas</div>
+      <textarea class="note-input" id="note-input" placeholder="Adicionar nota sobre este candidato…"></textarea>
+      <button class="btn btn-primary" style="margin-top:8px;width:100%;" onclick="addNote(${c.id})">Salvar nota</button>
+      ${notes.length ? `
+        <div class="notes-list">
+          ${notes.map(n => `
+            <div class="note-item">
+              <div class="note-text">${esc(n.note)}</div>
+              <div class="note-meta">${fmtDate(n.created_at)} · ${n.author}</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    </div>
+
+    <div class="modal-section">
+      <button class="btn btn-danger" style="width:100%;" onclick="archiveCandidate(${c.id})">Arquivar candidato</button>
+    </div>
+  `;
+}
+
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+async function updateStatus(id, status){
+  try {
+    await apiPut('candidates.php', { id, status });
+    refreshData();
+  } catch(e){ alert('Erro ao atualizar status. Verifique a API.'); }
+}
+
+async function quickStatus(id, status){
+  try { await apiPut('candidates.php', { id, status }); loadCandidates(); }
+  catch(e) {}
+}
+
+async function addNote(id){
+  const note = document.getElementById('note-input').value.trim();
+  if(!note) return;
+  try {
+    await apiPut('candidates.php', { id, note });
+    document.getElementById('note-input').value = '';
+    openModal(id); // refresh
+  } catch(e){ alert('Erro ao salvar nota.'); }
+}
+
+async function archiveCandidate(id){
+  if(!confirm('Arquivar este candidato?')) return;
+  try {
+    await apiPut('candidates.php', { id, status: 'arquivado' });
+    closeModal();
+    refreshData();
+  } catch(e){ alert('Erro ao arquivar.'); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════════════════════════
+function exportCSV(){
+  const status = document.getElementById('f-status')?.value || '';
+  const url = `${API_BASE}/export.php?key=${encodeURIComponent(API_KEY)}&status=${status}`;
+  window.open(url, '_blank');
+}
+
+// ══════════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════════
+function esc(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function fmtDate(s){
+  if(!s) return '—';
+  try {
+    return new Date(s).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+  } catch(e){ return s; }
+}
+</script>
+</body>
+</html>

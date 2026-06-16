@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Página não encontrada — Entre Escolhas</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #08080F; --bg-card: #0F0F1E;
+      --accent: #6C63FF; --accent-dim: rgba(108,99,255,0.12);
+      --border: rgba(108,99,255,0.15); --border-hover: rgba(108,99,255,0.4);
+      --text: #F0EFF8; --text-2: #9490C0; --text-3: #5E5A8A; --white: #FFFFFF;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; text-align: center; }
+    .orb { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; }
+    .grad { background: linear-gradient(135deg, #A89BFF 0%, #6C63FF 50%, #C9A84C 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .serif { font-family: 'Playfair Display', Georgia, serif; }
+    .num { font-size: clamp(5rem, 15vw, 9rem); font-weight: 700; letter-spacing: -0.05em; line-height: 1; margin-bottom: 24px; }
+    h1 { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 700; margin-bottom: 16px; }
+    p { color: var(--text-2); font-size: 1rem; max-width: 420px; line-height: 1.7; margin-bottom: 40px; }
+    .links { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+    .btn-primary { background: var(--accent); color: var(--white); padding: 14px 28px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; text-decoration: none; transition: opacity 0.2s; }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-ghost { border: 1px solid var(--border-hover); color: var(--text-2); padding: 14px 24px; border-radius: 10px; font-size: 0.9rem; text-decoration: none; transition: border-color 0.2s, color 0.2s; }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+    nav { position: fixed; top: 0; left: 0; right: 0; padding: 16px 24px; display: flex; align-items: center; }
+    .nav-logo { font-size: 1.1rem; font-weight: 700; color: var(--text); text-decoration: none; }
+    .nav-logo span { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="orb" style="width:400px;height:400px;background:rgba(108,99,255,0.1);top:-100px;right:-100px;"></div>
+  <div class="orb" style="width:300px;height:300px;background:rgba(201,168,76,0.07);bottom:0;left:-80px;"></div>
+
+  <nav>
+    <a href="/" class="nav-logo">Entre<span>Escolhas</span></a>
+  </nav>
+
+  <div class="num"><span class="grad">404</span></div>
+  <h1>Página não encontrada</h1>
+  <p>O endereço que você acessou não existe ou foi movido. Volte para o início e escolha sua jornada.</p>
+
+  <div class="links">
+    <a href="/" class="btn-primary">Voltar ao início</a>
+    <a href="/fit-cultural.html" class="btn-ghost">Fit Cultural</a>
+    <a href="/scanner-relacionamento.html" class="btn-ghost">Scanner de Relacionamento</a>
+    <a href="/bussola-vocacional.html" class="btn-ghost">Bússola Vocacional</a>
+  </div>
+</body>
+</html>

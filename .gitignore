@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+deploy.py
+deploy-rapido.py
+deploy-sftp.py
+
+# macOS
+.DS_Store
+
+# Docs internas
+*.docx
+landing-page-preview.html
+src-app-page.tsx
