@@ -1,4 +1,4 @@
-name: Deploy Locaweb FTP
+name: Deploy via Webhook
 
 on:
   push:
@@ -9,22 +9,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: 21
-          server-dir: /public_html/
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/*.py
-            **/*.docx
-            **/landing-page-preview.html
-            **/src-app-page.tsx
+      - name: Trigger deploy webhook
+        run: |
+          curl -s -f -X POST \
+            -H "Content-Type: application/json" \
+            -H "X-Hub-Signature-256: sha256=$(echo -n '{\"ref\":\"refs/heads/main\"}' | openssl dgst -sha256 -hmac '${{ secrets.WEBHOOK_SECRET }}' | awk '{print $2}')" \
+            -d '{\"ref\":\"refs/heads/main\",\"repository\":{\"full_name\":\"drmoraes/entreescolhas\"}}' \
+            https://entreescolhas.com.br/deploy.php
