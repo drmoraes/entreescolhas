@@ -18,7 +18,8 @@ $email = strtolower(trim($data['email'] ?? ''));
 
 if (strlen($nome) < 2) err('Nome obrigatório');
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) err('E-mail inválido');
-if (!($data['consents']['termos'] ?? false)) err('Aceite dos termos obrigatório');
+if (!($data['consents']['termos'] ?? false)) err('Aceite dos Termos de Uso obrigatório');
+if (!($data['consents']['privacidade'] ?? false)) err('Aceite da Política de Privacidade obrigatório');
 if (!($data['consents']['lgpd'] ?? false)) err('Consentimento LGPD obrigatório');
 
 // ── Rate limit simples via IP (10 req/hora) ──────────────

@@ -4,7 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Análise de Padrões de Decisão — Entre Escolhas</title>
-  <meta name="robots" content="noindex" />
+  <meta name="description" content="Comece gratuitamente sua análise situacional de padrões de decisão. Leva cerca de 20 minutos. Relatório completo por R$ 7,97 ao final." />
+  <meta name="robots" content="noindex, follow" />
+  <link rel="canonical" href="https://www.entreescolhas.com.br/teste.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.entreescolhas.com.br/teste.html" />
+  <meta property="og:site_name" content="Entre Escolhas" />
+  <meta property="og:title" content="Análise de Padrões de Decisão — Entre Escolhas" />
+  <meta property="og:description" content="Comece gratuitamente. Relatório completo por R$ 7,97 ao final da análise." />
+  <meta property="og:image" content="https://www.entreescolhas.com.br/og-image.png" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Análise de Padrões de Decisão — Entre Escolhas" />
+  <meta name="twitter:description" content="Comece gratuitamente. Relatório completo por R$ 7,97 ao final da análise." />
+  <meta name="twitter:image" content="https://www.entreescolhas.com.br/og-image.png" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -183,6 +196,7 @@
       <a href="/" class="btn-outline">Ver outras jornadas</a>
     </div>
     <p class="result-share" id="r-share">Gostou? <a href="#" target="_blank">Compartilhe no WhatsApp</a></p>
+    <p style="text-align:center;font-size:0.78rem;color:var(--text-3);margin-top:24px;max-width:480px;margin-left:auto;margin-right:auto;">O cadastro no Banco de Talentos é gratuito e opcional — não garante vaga, entrevista ou contratação. Esta ferramenta não é um teste psicológico e não emite diagnóstico clínico.</p>
   </div>
 
 </div>
@@ -201,10 +215,10 @@ const JORNADAS = {
   //            REL=relacional, EXE=execução, EMO=emocional
   // ─────────────────────────────────────────────────────────
   'arquetipo': {
-    badge: 'Arquétipo Cognitivo • Gratuito',
+    badge: 'Início gratuito • Relatório completo R$ 7,97',
     title: 'Análise de<br/><span class="grad serif">Padrões de Decisão</span>',
     desc: '10 cenários. Cada escolha revela como você processa informações, decide sob pressão e reage quando o contexto muda.',
-    resultTag: 'Arquétipo Cognitivo Dominante',
+    resultTag: 'Arquétipo Situacional Dominante',
     dimsTitle: 'Suas 6 dimensões comportamentais',
     shareText: 'Fiz a análise de padrões de decisão no Entre Escolhas e descobri meu arquétipo cognitivo! https://www.entreescolhas.com.br',
     backLink: '/',
@@ -406,7 +420,7 @@ const JORNADAS = {
   //            IMP=impacto coletivo, COL=colaboração, SEG=segurança
   // ─────────────────────────────────────────────────────────
   'fit-cultural': {
-    badge: 'Fit Cultural & Carreira • Gratuito',
+    badge: 'Início gratuito • Relatório completo R$ 7,97',
     title: 'Descubra seu<br/><span class="grad serif">Perfil de Fit Cultural</span>',
     desc: '10 cenários profissionais. Cada escolha revela o tipo de ambiente, cultura e dinâmica onde você performa naturalmente melhor.',
     resultTag: 'Perfil de Fit Cultural',
@@ -611,7 +625,7 @@ const JORNADAS = {
   //            MED=mediação, NET=rede/presença, INT=profundidade
   // ─────────────────────────────────────────────────────────
   'scanner': {
-    badge: 'Scanner de Relacionamento • Gratuito',
+    badge: 'Início gratuito • Relatório completo R$ 7,97',
     title: 'Seu padrão de<br/><span class="grad serif">Relacionamento Profissional</span>',
     desc: '10 cenários interpessoais. Cada escolha revela como você se conecta, influencia e reage ao conflito em contextos profissionais.',
     resultTag: 'Padrão de Relacionamento Dominante',
@@ -817,7 +831,7 @@ const JORNADAS = {
   //            REC=reconhecimento, AUT=autonomia
   // ─────────────────────────────────────────────────────────
   'bussola': {
-    badge: 'Bússola Vocacional • Gratuito',
+    badge: 'Início gratuito • Relatório completo R$ 7,97',
     title: 'Descubra sua<br/><span class="grad serif">Direção Vocacional</span>',
     desc: '10 cenários de escolha profissional. Cada resposta revela o que realmente move suas decisões de carreira — propósito, impacto, segurança, criação ou reconhecimento.',
     resultTag: 'Vetor Vocacional Dominante',
@@ -1047,6 +1061,7 @@ let currentQ = 0;
 const answers = new Array(QUESTIONS.length).fill(null);
 
 function startTest() {
+  if (typeof trackEvent === 'function') { trackEvent('start_test'); }
   showScreen('screen-question');
   renderQuestion(0);
 }
@@ -1094,6 +1109,7 @@ function renderQuestion(idx) {
 }
 
 function selectAnswer(i) {
+  if (typeof trackEvent === 'function') { trackEvent('answer_question', { question_index: currentQ + 1 }); }
   answers[currentQ] = i;
   document.querySelectorAll('.opt').forEach((b,j) => {
     b.classList.toggle('selected', j === i);
@@ -1165,6 +1181,10 @@ function findArchetype(scores) {
 }
 
 function showResult() {
+  if (typeof trackEvent === 'function') {
+    trackEvent('complete_test');
+    trackEvent('view_report_preview');
+  }
   const scores = calcScores();
   const arch = findArchetype(scores);
 
@@ -1209,6 +1229,10 @@ function showResult() {
     localStorage.setItem('ec_test_results', JSON.stringify(saved));
   } catch(e) {}
 }
+</script>
+<script src="/analytics.js"></script>
+<script>
+  if (typeof trackEvent === 'function') { trackEvent('view_test_intro', { jornada: JORNADA_PARAM }); }
 </script>
 </body>
 </html>

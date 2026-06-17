@@ -3,6 +3,8 @@ Allow: /
 Disallow: /admin.html
 Disallow: /admin/
 Disallow: /api/
+Disallow: /landing-page-preview.html
+Disallow: /teste.html
 Disallow: /*.json$
 
 # Sitemap

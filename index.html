@@ -9,7 +9,7 @@
   ═══════════════════════════════════════════════════════════ -->
   <title>Entre Escolhas — Leitura de Padrões de Decisão | Autoconhecimento Situacional</title>
   <meta name="description" content="Descubra seus padrões de decisão através de escolhas situacionais reais. Análise comportamental em 20 minutos por R$ 7,97. Não é teste psicológico — é leitura de tendências." />
-  <meta name="keywords" content="autoconhecimento, análise comportamental, padrões de decisão, teste comportamental, perfil profissional, arquetipos cognitivos, autoconhecimento profissional, fit cultural, banco de talentos, Brasil" />
+  <meta name="keywords" content="autoconhecimento, análise comportamental, padrões de decisão, teste comportamental, perfil profissional, leitura de padrões de decisão, autoconhecimento profissional, fit cultural, banco de talentos, Brasil" />
   <meta name="author" content="Entre Escolhas — Veritas Lab" />
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
   <link rel="canonical" href="https://www.entreescolhas.com.br/" />
@@ -113,11 +113,13 @@
         ]
       },
       {
-        "@type": "Product",
-        "@id": "https://www.entreescolhas.com.br/#produto-arquetipo",
-        "name": "Arquétipo Cognitivo — Leitura de Padrões de Decisão",
-        "description": "Análise comportamental situacional completa. Descubra seu arquétipo cognitivo dominante, tensões de padrão e propensões de comportamento em diferentes contextos. Relatório detalhado com aplicações práticas.",
-        "brand": { "@id": "https://www.entreescolhas.com.br/#organization" },
+        "@type": "Service",
+        "@id": "https://www.entreescolhas.com.br/#servico-leitura-situacional",
+        "name": "Leitura Situacional de Padrões de Decisão — Entre Escolhas",
+        "serviceType": "Análise comportamental situacional",
+        "description": "Análise comportamental situacional baseada em cenários reais. O teste é gratuito; o relatório completo com leitura de padrões, tensões observadas e aplicações práticas custa R$ 7,97. Não é teste psicológico nem laudo clínico.",
+        "provider": { "@id": "https://www.entreescolhas.com.br/#organization" },
+        "areaServed": "BR",
         "url": "https://www.entreescolhas.com.br/",
         "image": "https://www.entreescolhas.com.br/og-image.png",
         "offers": {
@@ -127,20 +129,13 @@
           "availability": "https://schema.org/InStock",
           "url": "https://www.entreescolhas.com.br/",
           "seller": { "@id": "https://www.entreescolhas.com.br/#organization" },
-          "description": "Acesso ao teste e ao relatório completo. Cadastro no banco de talentos gratuito e opcional.",
+          "description": "Início gratuito. Relatório completo desbloqueado por R$ 7,97 ao final da análise. Cadastro no banco de talentos gratuito e opcional.",
           "priceValidUntil": "2026-12-31",
           "hasMerchantReturnPolicy": {
             "@type": "MerchantReturnPolicy",
             "applicableCountry": "BR",
             "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted"
           }
-        },
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": "4.8",
-          "reviewCount": "127",
-          "bestRating": "5",
-          "worstRating": "1"
         }
       },
       {
@@ -196,19 +191,6 @@
             }
           }
         ]
-      },
-      {
-        "@type": "SoftwareApplication",
-        "name": "Entre Escolhas",
-        "applicationCategory": "LifestyleApplication",
-        "operatingSystem": "Web Browser",
-        "url": "https://www.entreescolhas.com.br/",
-        "offers": {
-          "@type": "Offer",
-          "price": "7.97",
-          "priceCurrency": "BRL"
-        },
-        "publisher": { "@id": "https://www.entreescolhas.com.br/#organization" }
       }
     ]
   }
@@ -1294,9 +1276,9 @@
     </div>
 
     <div class="jornadas-grid">
-      <article class="jornada-card available fade-up" onclick="document.querySelector('#iniciar').scrollIntoView({behavior:'smooth'})" aria-label="Arquétipo Cognitivo — disponível">
+      <article class="jornada-card available fade-up" onclick="document.querySelector('#iniciar').scrollIntoView({behavior:'smooth'})" aria-label="Leitura de Padrões de Decisão — disponível">
         <div class="jornada-icon" aria-hidden="true">🧠</div>
-        <h3>Arquétipo Cognitivo</h3>
+        <h3>Leitura de Padrões de Decisão</h3>
         <p>Descubra seu padrão dominante de processamento e decisão em 6 dimensões comportamentais.</p>
         <span class="jornada-badge">Disponível agora</span>
       </article>
@@ -1558,8 +1540,8 @@
           <a href="banco-de-talentos.html">Banco de Talentos</a>
           <a href="#faq">Perguntas frequentes</a>
           <a href="mailto:suporte@entreescolhas.com.br">suporte@entreescolhas.com.br</a>
-          <a href="/privacidade.html">Política de Privacidade</a>
-          <a href="/termos.html">Termos de Uso</a>
+          <a href="/privacidade.html" data-event="click_privacy_policy">Política de Privacidade</a>
+          <a href="/termos.html" data-event="click_terms">Termos de Uso</a>
         </div>
       </nav>
     </div>
@@ -1647,6 +1629,9 @@
     if (!isOpen) {
       item.classList.add('open');
       btn.setAttribute('aria-expanded', 'true');
+      if (typeof trackEvent === 'function') {
+        trackEvent('click_faq', { question: btn.textContent.trim().replace(/\s+/g, ' ').slice(0, 80) });
+      }
     }
   }
 
@@ -1687,6 +1672,10 @@
   }, { threshold: 0.3 });
 
   document.querySelectorAll('.report-card').forEach(el => reportObserver.observe(el));
+</script>
+<script src="/analytics.js"></script>
+<script>
+  if (typeof trackEvent === 'function') { trackEvent('view_home'); }
 </script>
 </body>
 </html>

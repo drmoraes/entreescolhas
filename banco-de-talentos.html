@@ -10,10 +10,22 @@
 
   <!-- OG -->
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Entre Escolhas" />
   <meta property="og:title" content="Banco de Talentos — Entre Escolhas" />
   <meta property="og:description" content="Conecte seu perfil comportamental a oportunidades que fazem sentido. Gratuito e opcional." />
   <meta property="og:url" content="https://www.entreescolhas.com.br/banco-de-talentos.html" />
   <meta property="og:image" content="https://www.entreescolhas.com.br/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Entre Escolhas — análise comportamental situacional" />
+  <meta property="og:locale" content="pt_BR" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Banco de Talentos — Entre Escolhas" />
+  <meta name="twitter:description" content="Conecte seu perfil comportamental a oportunidades que fazem sentido. Gratuito e opcional." />
+  <meta name="twitter:image" content="https://www.entreescolhas.com.br/og-image.png" />
+  <meta name="twitter:image:alt" content="Entre Escolhas — análise comportamental situacional" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet" />
@@ -739,10 +751,21 @@
         <input type="checkbox" id="c-termos" class="consent-required" />
         <div class="check-box" aria-hidden="true"></div>
         <div class="check-text">
-          <strong>Li e aceito os <a href="/termos.html" target="_blank" style="color:var(--accent);">Termos de Uso</a> e a <a href="/privacidade.html" target="_blank" style="color:var(--accent);">Política de Privacidade</a></strong>
+          <strong>Li e aceito os <a href="/termos.html" target="_blank" data-event="click_terms" style="color:var(--accent);">Termos de Uso</a></strong>
           <span class="required-marker">Obrigatório</span>
-          <br /><span style="font-size:0.76rem;color:var(--text-3);">Inclui: base de uso dos dados, direitos LGPD, prazo de retenção e canal de exclusão.</span>
-          <div class="check-required" id="err-c-termos">Você precisa aceitar os Termos para continuar.</div>
+          <br /><span style="font-size:0.76rem;color:var(--text-3);">Regras de uso da plataforma, responsabilidades e política de reembolso.</span>
+          <div class="check-required" id="err-c-termos">Você precisa aceitar os Termos de Uso para continuar.</div>
+        </div>
+      </label>
+
+      <label class="check-item" style="cursor:pointer;">
+        <input type="checkbox" id="c-privacidade" class="consent-required" />
+        <div class="check-box" aria-hidden="true"></div>
+        <div class="check-text">
+          <strong>Li e aceito a <a href="/privacidade.html" target="_blank" data-event="click_privacy_policy" style="color:var(--accent);">Política de Privacidade</a></strong>
+          <span class="required-marker">Obrigatório</span>
+          <br /><span style="font-size:0.76rem;color:var(--text-3);">Inclui: base de uso dos dados, direitos LGPD, prazo de retenção e canal de exclusão (suporte@entreescolhas.com.br).</span>
+          <div class="check-required" id="err-c-privacidade">Você precisa aceitar a Política de Privacidade para continuar.</div>
         </div>
       </label>
 
@@ -762,8 +785,17 @@
         <input type="checkbox" id="c-banco" />
         <div class="check-box" aria-hidden="true"></div>
         <div class="check-text">
-          <strong>Autorizo que meu perfil seja considerado para oportunidades profissionais e entendo que meus dados só serão compartilhados com empresas parceiras mediante consentimento.</strong>
-          <br /><span style="font-size:0.76rem;color:var(--text-3);">Opcional. A participação não garante vaga, entrevista ou contratação. Você pode sair do banco a qualquer momento. Informações sensíveis (como PCD) só são compartilhadas com consentimento separado.</span>
+          <strong>Autorizo que meu perfil seja considerado para oportunidades profissionais e entendo que meus dados só serão compartilhados com empresas parceiras mediante consentimento explícito. Estou ciente de que a participação no Banco de Talentos não garante vaga, entrevista ou contratação.</strong>
+          <br /><span style="font-size:0.76rem;color:var(--text-3);">Opcional. Você pode sair do banco a qualquer momento por suporte@entreescolhas.com.br. Informações sensíveis (como PCD) só são compartilhadas com consentimento separado.</span>
+        </div>
+      </label>
+
+      <label class="check-item" style="cursor:pointer;">
+        <input type="checkbox" id="c-partner-share" />
+        <div class="check-box" aria-hidden="true"></div>
+        <div class="check-text">
+          <strong>Autorizo especificamente o compartilhamento do meu perfil com empresas parceiras quando houver uma oportunidade compatível</strong>
+          <br /><span style="font-size:0.76rem;color:var(--text-3);">Opcional e independente do item anterior. Sem esta marcação, seu perfil permanece no Banco de Talentos mas não é enviado a nenhuma empresa parceira. Você será avisado antes de cada compartilhamento, quando aplicável.</span>
         </div>
       </label>
 
@@ -1027,23 +1059,30 @@ function togglePCDType(el, val){
 const API_BASE = 'https://api.entreescolhas.com.br/api';
 
 async function finalizarCadastro(){
-  const termos = document.getElementById('c-termos').checked;
-  const lgpd   = document.getElementById('c-lgpd').checked;
-  document.getElementById('err-c-termos').style.display = termos?'none':'block';
-  document.getElementById('err-c-lgpd').style.display   = lgpd  ?'none':'block';
-  if(!termos || !lgpd) return;
+  const termos      = document.getElementById('c-termos').checked;
+  const privacidade = document.getElementById('c-privacidade').checked;
+  const lgpd        = document.getElementById('c-lgpd').checked;
+  document.getElementById('err-c-termos').style.display      = termos      ?'none':'block';
+  document.getElementById('err-c-privacidade').style.display = privacidade ?'none':'block';
+  document.getElementById('err-c-lgpd').style.display        = lgpd        ?'none':'block';
+  if(!termos || !privacidade || !lgpd) return;
 
   const btn = document.querySelector('#step-6 .btn-primary');
   if(btn){ btn.disabled = true; btn.textContent = 'Enviando…'; }
 
   const entrou   = document.getElementById('c-banco').checked;
+  const partnerShare = document.getElementById('c-partner-share').checked;
   const consents = {
-    termos, lgpd,
-    banco:    entrou,
+    termos, privacidade, lgpd,
+    banco:        entrou,
+    partnerShare: partnerShare,
     emailMkt: document.getElementById('c-email-mkt').checked,
     pesquisa: document.getElementById('c-pesquisa').checked,
     whatsapp: document.getElementById('c-whatsapp').checked,
   };
+  if (typeof trackEvent === 'function') {
+    if (entrou) { trackEvent('optin_talent_bank', { partnerShare }); }
+  }
 
   const payload = {
     nome:        state.nome,
@@ -1108,6 +1147,7 @@ async function finalizarCadastro(){
   }
 
   // Mostrar sucesso
+  if (typeof trackEvent === 'function') { trackEvent('submit_talent_bank', { enteredBank: entrou }); }
   document.getElementById('step-6').classList.remove('active');
   document.getElementById('progress-wrap').style.display = 'none';
   document.getElementById('step-success').classList.add('active');
@@ -1126,6 +1166,10 @@ document.querySelectorAll('.check-item input').forEach(input=>{
     // visual handled by CSS :checked sibling
   });
 });
+</script>
+<script src="/analytics.js"></script>
+<script>
+  if (typeof trackEvent === 'function') { trackEvent('view_talent_bank_page'); }
 </script>
 </body>
 </html>

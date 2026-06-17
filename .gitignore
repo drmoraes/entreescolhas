@@ -12,3 +12,6 @@ deploy-sftp.py
 *.docx
 landing-page-preview.html
 src-app-page.tsx
+
+# Deploy webhook (nao versionar — vive no servidor)
+deploy.php
