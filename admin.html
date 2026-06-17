@@ -191,13 +191,13 @@
     <div class="login-logo">Entre<span>Escolhas</span></div>
     <p class="login-sub">Painel ATS — acesso restrito</p>
     <div class="login-field">
-      <label>Senha de acesso</label>
+      <label for="login-password">Senha de acesso</label>
       <input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" />
     </div>
     <div class="api-setup">
-      <label>URL da API (Locaweb)</label>
+      <label for="api-url-input">URL da API (Locaweb)</label>
       <input type="text" id="api-url-input" placeholder="https://api.entreescolhas.com.br/api" />
-      <label style="margin-top:10px;">Chave da API</label>
+      <label for="api-key-input" style="margin-top:10px;">Chave da API</label>
       <input type="text" id="api-key-input" placeholder="ec-admin-..." />
     </div>
     <button class="login-btn" onclick="doLogin()">Entrar</button>
