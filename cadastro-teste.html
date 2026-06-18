@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comece sua análise — Entre Escolhas</title>
+  <meta name="description" content="Informe seu nome e e-mail para começar sua análise gratuita de padrões de decisão." />
+  <meta name="robots" content="noindex, follow" />
+  <link rel="canonical" href="https://www.entreescolhas.com.br/cadastro-teste.html" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#08080F; --bg-card:#0F0F1E; --bg-raised:#141428;
+      --border:rgba(108,99,255,0.15); --border-hover:rgba(108,99,255,0.4);
+      --accent:#6C63FF; --accent-dim:rgba(108,99,255,0.12); --accent-glow:rgba(108,99,255,0.25);
+      --text:#F0EFF8; --text-2:#9490C0; --text-3:#5E5A8A;
+      --white:#FFFFFF; --gold:#C9A84C; --green:#22C55E; --red:#FF6B6B;
+    }
+    body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; font-size:16px; line-height:1.6; min-height:100vh; }
+    .serif { font-family:'Playfair Display',Georgia,serif; }
+    .grad { background:linear-gradient(135deg,#A89BFF 0%,#6C63FF 50%,#C9A84C 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .container { max-width:480px; margin:0 auto; padding:0 24px; }
+    .orb { position:fixed; border-radius:50%; filter:blur(120px); pointer-events:none; z-index:0; }
+    nav { position:fixed; top:0; left:0; right:0; z-index:100; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; background:rgba(8,8,15,0.85); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+    .nav-logo { font-size:1.1rem; font-weight:700; color:var(--text); text-decoration:none; }
+    .nav-logo span { color:var(--accent); }
+    .nav-back { font-size:0.85rem; color:var(--text-3); text-decoration:none; }
+    .nav-back:hover { color:var(--text); }
+    main { padding:120px 0 60px; position:relative; z-index:1; min-height:100vh; display:flex; align-items:center; }
+    .card { background:var(--bg-card); border:1px solid var(--border); border-radius:20px; padding:36px; width:100%; }
+    h1 { font-size:1.6rem; font-weight:700; letter-spacing:-0.02em; margin-bottom:10px; }
+    .sub { color:var(--text-2); font-size:0.95rem; margin-bottom:28px; line-height:1.6; }
+    label { display:block; font-size:0.82rem; color:var(--text-3); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px; }
+    input { width:100%; background:var(--bg-raised); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:14px 16px; font-size:0.95rem; font-family:inherit; margin-bottom:18px; }
+    input:focus { outline:none; border-color:var(--accent); }
+    .btn-primary { width:100%; background:var(--accent); color:var(--white); border:none; padding:16px; border-radius:12px; font-size:1rem; font-weight:700; cursor:pointer; transition:opacity 0.2s, transform 0.2s; }
+    .btn-primary:hover:not(:disabled) { opacity:0.88; transform:translateY(-1px); }
+    .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
+    .msg { font-size:0.85rem; margin-top:14px; display:none; }
+    .msg.error { color:var(--red); }
+    .msg.show { display:block; }
+    .success-box { display:none; text-align:center; }
+    .success-box.show { display:block; }
+    .success-icon { font-size:2.6rem; margin-bottom:16px; }
+    .fine { font-size:0.78rem; color:var(--text-3); margin-top:20px; text-align:center; line-height:1.6; }
+  </style>
+</head>
+<body>
+<div class="orb" style="width:500px;height:500px;background:rgba(108,99,255,0.1);top:-150px;right:-150px;"></div>
+
+<nav>
+  <a href="/" class="nav-logo">Entre<span>Escolhas</span></a>
+  <a href="/" class="nav-back">← Voltar</a>
+</nav>
+
+<main>
+<div class="container">
+  <div class="card">
+
+    <div id="form-state">
+      <h1>Antes de começar</h1>
+      <p class="sub">Informe seu nome e e-mail. Você vai receber um link de confirmação — é só clicar para iniciar a análise gratuita.</p>
+      <form id="lead-form">
+        <label for="lead-nome">Nome</label>
+        <input type="text" id="lead-nome" name="nome" autocomplete="name" required />
+        <label for="lead-email">E-mail</label>
+        <input type="email" id="lead-email" name="email" autocomplete="email" required />
+        <button type="submit" class="btn-primary" id="lead-submit">Quero começar</button>
+        <p class="msg error" id="lead-error"></p>
+      </form>
+      <p class="fine">Usamos seu e-mail só para enviar o link de acesso e o relatório completo. Sem spam.<br/>Já fez esse teste antes? <a href="/recuperar-acesso.html" style="color:var(--accent);">Recupere seu acesso</a>.</p>
+    </div>
+
+    <div class="success-box" id="success-state">
+      <div class="success-icon">✉️</div>
+      <h1>Confira seu e-mail</h1>
+      <p class="sub">Enviamos um link de confirmação para <strong id="success-email"></strong>. Clique nele para começar sua análise.</p>
+      <p class="fine">Não encontrou? Veja a caixa de spam ou <a href="#" id="resend-link" style="color:var(--accent);">peça um novo link</a>.</p>
+    </div>
+
+  </div>
+</div>
+</main>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const jornada = params.get('jornada') || 'arquetipo';
+
+const form = document.getElementById('lead-form');
+const errorEl = document.getElementById('lead-error');
+const submitBtn = document.getElementById('lead-submit');
+
+function setError(msg) {
+  errorEl.textContent = msg;
+  errorEl.classList.toggle('show', !!msg);
+}
+
+async function registerLead(nome, email) {
+  const res = await fetch('/api/lead_register.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nome, email, jornada }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Não foi possível enviar o e-mail. Tente novamente.');
+  return data;
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  setError('');
+  const nome = document.getElementById('lead-nome').value.trim();
+  const email = document.getElementById('lead-email').value.trim();
+  if (nome.length < 2) { setError('Informe seu nome.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Informe um e-mail válido.'); return; }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Enviando...';
+  try {
+    await registerLead(nome, email);
+    document.getElementById('success-email').textContent = email;
+    document.getElementById('form-state').style.display = 'none';
+    document.getElementById('success-state').classList.add('show');
+    if (typeof trackEvent === 'function') { trackEvent('lead_register', { jornada }); }
+  } catch (err) {
+    setError(err.message);
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Quero começar';
+  }
+});
+
+document.getElementById('resend-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('success-state').classList.remove('show');
+  document.getElementById('form-state').style.display = 'block';
+  submitBtn.disabled = false;
+  submitBtn.textContent = 'Quero começar';
+});
+</script>
+<script src="/analytics.js"></script>
+</body>
+</html>

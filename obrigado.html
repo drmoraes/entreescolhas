@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirmando pagamento — Entre Escolhas</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#08080F; --bg-card:#0F0F1E; --border:rgba(108,99,255,0.15);
+      --accent:#6C63FF; --text:#F0EFF8; --text-2:#9490C0; --text-3:#5E5A8A; --white:#FFFFFF; --red:#FF6B6B;
+    }
+    body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+    .card { background:var(--bg-card); border:1px solid var(--border); border-radius:20px; padding:40px; max-width:440px; text-align:center; }
+    .spinner { width:42px; height:42px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; margin:0 auto 22px; animation:spin 0.9s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    h1 { font-size:1.3rem; margin-bottom:12px; }
+    p { color:var(--text-2); font-size:0.92rem; line-height:1.6; }
+    a.btn { display:inline-block; margin-top:20px; background:var(--accent); color:var(--white); text-decoration:none; padding:14px 28px; border-radius:12px; font-weight:700; font-size:0.95rem; }
+    .icon { font-size:2.4rem; margin-bottom:16px; }
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="spinner"></div>
+    <h1>Confirmando seu pagamento</h1>
+    <p>Aguarde um instante enquanto confirmamos com o Mercado Pago. Você será redirecionado automaticamente.</p>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const access = params.get('access') || '';
+    const jornada = params.get('jornada') || 'arquetipo';
+    const card = document.getElementById('card');
+
+    function goToReport() {
+      window.location.href = '/teste.html?jornada=' + encodeURIComponent(jornada) + '&access=' + encodeURIComponent(access) + '&relatorio=1';
+    }
+
+    function showTimeoutState() {
+      card.innerHTML = `
+        <div class="icon">📬</div>
+        <h1>Pagamento em processamento</h1>
+        <p>Recebemos a confirmação do Mercado Pago, mas ainda estamos finalizando seu acesso. Você vai receber o relatório completo por e-mail em poucos minutos.</p>
+        <a class="btn" href="/teste.html?jornada=${encodeURIComponent(jornada)}&access=${encodeURIComponent(access)}&relatorio=1">Tentar ver agora</a>
+      `;
+    }
+
+    if (!access) {
+      window.location.replace('/cadastro-teste.html');
+    } else {
+      let attempts = 0;
+      const maxAttempts = 8; // ~16s de tentativas
+      const poll = () => {
+        attempts++;
+        fetch('/api/lead_status.php?access=' + encodeURIComponent(access))
+          .then(res => res.json())
+          .then(data => {
+            if (data.paid) {
+              goToReport();
+            } else if (attempts >= maxAttempts) {
+              showTimeoutState();
+            } else {
+              setTimeout(poll, 2000);
+            }
+          })
+          .catch(() => {
+            if (attempts >= maxAttempts) { showTimeoutState(); }
+            else { setTimeout(poll, 2000); }
+          });
+      };
+      poll();
+    }
+  </script>
+  <script src="/analytics.js"></script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recuperar acesso ao teste — Entre Escolhas</title>
+  <meta name="description" content="Já fez um dos testes do Entre Escolhas? Recupere seu link de acesso e relatório." />
+  <meta name="robots" content="noindex, follow" />
+  <link rel="canonical" href="https://www.entreescolhas.com.br/recuperar-acesso.html" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#08080F; --bg-card:#0F0F1E; --bg-raised:#141428;
+      --border:rgba(108,99,255,0.15); --border-hover:rgba(108,99,255,0.4);
+      --accent:#6C63FF; --text:#F0EFF8; --text-2:#9490C0; --text-3:#5E5A8A;
+      --white:#FFFFFF; --red:#FF6B6B;
+    }
+    body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; font-size:16px; line-height:1.6; min-height:100vh; }
+    .container { max-width:480px; margin:0 auto; padding:0 24px; }
+    .orb { position:fixed; border-radius:50%; filter:blur(120px); pointer-events:none; z-index:0; }
+    nav { position:fixed; top:0; left:0; right:0; z-index:100; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; background:rgba(8,8,15,0.85); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+    .nav-logo { font-size:1.1rem; font-weight:700; color:var(--text); text-decoration:none; }
+    .nav-logo span { color:var(--accent); }
+    .nav-back { font-size:0.85rem; color:var(--text-3); text-decoration:none; }
+    .nav-back:hover { color:var(--text); }
+    main { padding:120px 0 60px; position:relative; z-index:1; min-height:100vh; display:flex; align-items:center; }
+    .card { background:var(--bg-card); border:1px solid var(--border); border-radius:20px; padding:36px; width:100%; }
+    h1 { font-size:1.5rem; font-weight:700; letter-spacing:-0.02em; margin-bottom:10px; }
+    .sub { color:var(--text-2); font-size:0.95rem; margin-bottom:26px; line-height:1.6; }
+    label { display:block; font-size:0.82rem; color:var(--text-3); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px; }
+    input, select { width:100%; background:var(--bg-raised); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:14px 16px; font-size:0.95rem; font-family:inherit; margin-bottom:18px; }
+    input:focus, select:focus { outline:none; border-color:var(--accent); }
+    .btn-primary { width:100%; background:var(--accent); color:var(--white); border:none; padding:16px; border-radius:12px; font-size:1rem; font-weight:700; cursor:pointer; }
+    .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
+    .msg { font-size:0.85rem; margin-top:14px; display:none; }
+    .msg.error { color:var(--red); }
+    .msg.show { display:block; }
+    .success-box { display:none; text-align:center; }
+    .success-box.show { display:block; }
+    .success-icon { font-size:2.6rem; margin-bottom:16px; }
+    .fine { font-size:0.78rem; color:var(--text-3); margin-top:20px; text-align:center; line-height:1.6; }
+  </style>
+</head>
+<body>
+<div class="orb" style="width:500px;height:500px;background:rgba(108,99,255,0.1);top:-150px;right:-150px;"></div>
+
+<nav>
+  <a href="/" class="nav-logo">Entre<span>Escolhas</span></a>
+  <a href="/" class="nav-back">← Voltar</a>
+</nav>
+
+<main>
+<div class="container">
+  <div class="card">
+
+    <div id="form-state">
+      <h1>Já fez um dos nossos testes?</h1>
+      <p class="sub">Informe o e-mail e a jornada que você fez. Enviamos um novo link de acesso para continuar de onde parou ou refazer o teste.</p>
+      <form id="recover-form">
+        <label for="rec-nome">Nome</label>
+        <input type="text" id="rec-nome" autocomplete="name" required />
+        <label for="rec-email">E-mail</label>
+        <input type="email" id="rec-email" autocomplete="email" required />
+        <label for="rec-jornada">Qual teste você fez</label>
+        <select id="rec-jornada" required>
+          <option value="" disabled selected>Selecione…</option>
+          <option value="arquetipo">Arquétipo de Decisão</option>
+          <option value="fit-cultural">Fit Cultural</option>
+          <option value="scanner">Scanner de Relacionamento</option>
+          <option value="bussola">Bússola Vocacional</option>
+        </select>
+        <button type="submit" class="btn-primary" id="rec-submit">Enviar link de acesso</button>
+        <p class="msg error" id="rec-error"></p>
+      </form>
+      <p class="fine">Não lembra qual jornada fez? Tente cada opção — só enviamos e-mail se encontrarmos seu cadastro.</p>
+    </div>
+
+    <div class="success-box" id="success-state">
+      <div class="success-icon">✉️</div>
+      <h1>Confira seu e-mail</h1>
+      <p class="sub">Se encontrarmos um cadastro com esse e-mail e jornada, você vai receber um link de acesso em poucos minutos.</p>
+    </div>
+
+  </div>
+</div>
+</main>
+
+<script>
+const form = document.getElementById('recover-form');
+const errorEl = document.getElementById('rec-error');
+const submitBtn = document.getElementById('rec-submit');
+
+function setError(msg) {
+  errorEl.textContent = msg;
+  errorEl.classList.toggle('show', !!msg);
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  setError('');
+  const nome = document.getElementById('rec-nome').value.trim();
+  const email = document.getElementById('rec-email').value.trim();
+  const jornada = document.getElementById('rec-jornada').value;
+  if (nome.length < 2) { setError('Informe seu nome.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Informe um e-mail válido.'); return; }
+  if (!jornada) { setError('Selecione qual teste você fez.'); return; }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Enviando...';
+  try {
+    const res = await fetch('/api/lead_register.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, email, jornada }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Não foi possível enviar o e-mail. Tente novamente.');
+    document.getElementById('form-state').style.display = 'none';
+    document.getElementById('success-state').classList.add('show');
+    if (typeof trackEvent === 'function') { trackEvent('lead_recover', { jornada }); }
+  } catch (err) {
+    setError(err.message);
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Enviar link de acesso';
+  }
+});
+</script>
+<script src="/analytics.js"></script>
+</body>
+</html>

@@ -13,13 +13,36 @@ define('DB_CHARSET', 'utf8mb4');
 // Chave secreta para autenticar o admin — mude para algo aleatório longo
 define('ADMIN_API_KEY', 'ec-admin-' . md5('entreescolhas2026secretkey'));
 
-// Domínios permitidos para CORS (site no Netlify + local)
+// Domínios permitidos para CORS (site na Vercel + local)
 define('ALLOWED_ORIGINS', [
     'https://www.entreescolhas.com.br',
     'https://entreescolhas.com.br',
+    'https://entreescolhas.vercel.app',
     'http://localhost',
     'http://127.0.0.1',
 ]);
+
+// URL pública do site (sem barra no final) — usada para montar links em e-mails
+define('APP_BASE_URL', 'https://www.entreescolhas.com.br');
+
+// ── E-mail (Locaweb / SMTP) ──────────────────────────────────
+// Preencha com os dados da caixa de e-mail da Locaweb que vai disparar os envios.
+define('SMTP_HOST', 'email-ssl.com.br');      // host SMTP da Locaweb — confirme no painel
+define('SMTP_PORT', 587);                     // 587 = STARTTLS (recomendado), 465 = SSL direto
+define('SMTP_SECURE', 'tls');                 // 'tls' (porta 587) ou 'ssl' (porta 465)
+define('SMTP_USER', 'PREENCHER@entreescolhas.com.br'); // caixa de e-mail completa
+define('SMTP_PASS', 'PREENCHER_SENHA_DA_CAIXA');       // senha da caixa de e-mail
+define('SMTP_FROM_NAME', 'Entre Escolhas');
+
+// ── Mercado Pago (Checkout Pro) ──────────────────────────────
+// Pegue em https://www.mercadopago.com.br/developers/panel/app
+define('MP_ACCESS_TOKEN', 'PREENCHER_ACCESS_TOKEN_MERCADO_PAGO');
+define('MP_PUBLIC_KEY', 'PREENCHER_PUBLIC_KEY_MERCADO_PAGO');
+define('MP_REPORT_PRICE', 7.97);
+
+// ── Regras de tentativa do teste ─────────────────────────────
+// 1 tentativa original + 2 refações = 3 no total, por e-mail+jornada
+define('MAX_TEST_ATTEMPTS', 3);
 
 function getDB(): PDO {
     static $pdo = null;

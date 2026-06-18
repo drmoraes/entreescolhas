@@ -180,14 +180,27 @@
       <div class="result-mode" id="r-mode"></div>
       <p class="result-desc" id="r-desc"></p>
     </div>
-    <div class="dims-section">
+    <div class="dims-section" id="r-dims-section">
       <div class="dims-title" id="r-dims-title">Suas dimensões comportamentais</div>
       <div id="r-dims"></div>
     </div>
-    <div class="insights-section">
+    <div class="insights-section" id="r-insights-section">
       <div class="dims-title">Insights do seu perfil</div>
       <div id="r-insights"></div>
     </div>
+
+    <!-- PAYWALL (mostrado só se o relatório completo ainda não foi desbloqueado) -->
+    <div id="paywall-box" style="display:none;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:32px;max-width:560px;margin:0 auto 32px;text-align:center;">
+      <div style="font-size:2rem;margin-bottom:10px;">🔒</div>
+      <h3 style="font-size:1.2rem;margin-bottom:10px;">Seu relatório completo está pronto</h3>
+      <p style="color:var(--text-2);font-size:0.92rem;line-height:1.6;margin-bottom:20px;">Desbloqueie suas dimensões comportamentais detalhadas, os insights completos do seu perfil e receba tudo por e-mail — por apenas <strong style="color:var(--text);">R$ 7,97</strong>.</p>
+      <button class="btn-primary" id="btn-unlock" style="width:100%;" onclick="unlockReport()">
+        Desbloquear relatório completo
+      </button>
+      <p id="paywall-error" style="display:none;color:var(--red, #FF6B6B);font-size:0.85rem;margin-top:14px;"></p>
+    </div>
+    <p id="paid-note" style="display:none;text-align:center;color:var(--text-3);font-size:0.82rem;margin-bottom:24px;">✓ Relatório completo enviado para o seu e-mail.</p>
+
     <div class="result-ctas">
       <a href="/banco-de-talentos.html" class="btn-primary">
         Entrar no Banco de Talentos — gratuito
@@ -1055,6 +1068,75 @@ if (shareLink) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// GATE — exige cadastro confirmado (access_token válido) antes de
+// liberar o início do teste. Sem token válido, redireciona para o
+// cadastro. Se já atingiu o limite de tentativas, bloqueia o início.
+// ═══════════════════════════════════════════════════════════
+let ACCESS_TOKEN = null;
+let LEAD_STATE = null;
+
+(function initAccessGate() {
+  const urlAccess = new URLSearchParams(window.location.search).get('access');
+  const storageKey = 'ec_access_' + JORNADA_PARAM;
+  const storedAccess = sessionStorage.getItem(storageKey);
+
+  ACCESS_TOKEN = urlAccess || storedAccess;
+
+  if (urlAccess) {
+    sessionStorage.setItem(storageKey, urlAccess);
+    const cleanUrl = window.location.pathname + '?jornada=' + encodeURIComponent(JORNADA_PARAM);
+    window.history.replaceState({}, '', cleanUrl);
+  }
+
+  if (!ACCESS_TOKEN) {
+    window.location.replace('/cadastro-teste.html?jornada=' + encodeURIComponent(JORNADA_PARAM));
+    return;
+  }
+
+  // Retorno do Mercado Pago: pula intro/perguntas e mostra o relatório completo salvo
+  if (new URLSearchParams(window.location.search).get('relatorio') === '1') {
+    window.history.replaceState({}, '', window.location.pathname + '?jornada=' + encodeURIComponent(JORNADA_PARAM));
+    showSavedFullReport();
+    return;
+  }
+
+  const startBtn = document.querySelector('#screen-intro .btn-primary');
+  if (startBtn) { startBtn.disabled = true; startBtn.style.opacity = '0.5'; }
+
+  fetch('/api/lead_status.php?access=' + encodeURIComponent(ACCESS_TOKEN))
+    .then(res => {
+      if (!res.ok) throw new Error('invalid');
+      return res.json();
+    })
+    .then(data => {
+      LEAD_STATE = data;
+      if (!data.confirmed) {
+        window.location.replace('/cadastro-teste.html?jornada=' + encodeURIComponent(JORNADA_PARAM));
+        return;
+      }
+      if (data.attempts_used >= data.max_attempts) {
+        showAttemptsLimitReached();
+        return;
+      }
+      if (startBtn) { startBtn.disabled = false; startBtn.style.opacity = '1'; }
+    })
+    .catch(() => {
+      window.location.replace('/cadastro-teste.html?jornada=' + encodeURIComponent(JORNADA_PARAM));
+    });
+})();
+
+function showAttemptsLimitReached() {
+  const intro = document.querySelector('#screen-intro .intro');
+  if (!intro) return;
+  intro.innerHTML = `
+    <div class="intro-badge"><span class="intro-badge-dot"></span><span>Limite atingido</span></div>
+    <h1>Você já usou todas as<br/><span class="grad serif">tentativas desta jornada</span></h1>
+    <p>Você já fez o teste e as 2 retomadas permitidas para esta análise. Escolha outra jornada ou entre em contato se precisar de ajuda.</p>
+    <a href="/" class="btn-primary" style="width:100%;text-align:center;display:block;text-decoration:none;">Ver outras jornadas</a>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════
 let currentQ = 0;
@@ -1180,6 +1262,89 @@ function findArchetype(scores) {
   return best;
 }
 
+let LAST_REPORT = null;
+
+function showSavedFullReport() {
+  fetch('/api/lead_report.php?access=' + encodeURIComponent(ACCESS_TOKEN))
+    .then(res => res.json().catch(() => ({})).then(data => ({ ok: res.ok, data })))
+    .then(({ ok, data }) => {
+      if (!ok || !data.report) {
+        // Pagamento pode ainda estar em processamento (webhook assíncrono)
+        document.getElementById('intro-badge-text').textContent = 'Processando pagamento…';
+        showScreen('screen-intro');
+        const intro = document.querySelector('#screen-intro .intro');
+        if (intro) {
+          intro.innerHTML = `
+            <div class="intro-badge"><span class="intro-badge-dot"></span><span>Confirmando pagamento…</span></div>
+            <h1>Estamos confirmando<br/><span class="grad serif">seu pagamento</span></h1>
+            <p>Isso pode levar alguns segundos. Você também vai receber o relatório completo por e-mail assim que o pagamento for confirmado.</p>
+            <button class="btn-primary" style="width:100%;" onclick="window.location.reload()">Tentar novamente</button>
+          `;
+        }
+        return;
+      }
+      const report = data.report;
+      const arch = report.arch || {};
+      document.getElementById('r-icon').textContent = arch.icon || '✨';
+      document.getElementById('r-name').innerHTML = `<span class="grad">${arch.name || ''}</span>`;
+      document.getElementById('r-mode').textContent = arch.mode || '';
+      document.getElementById('r-desc').textContent = arch.desc || '';
+      document.getElementById('r-tag').textContent = report.resultTag || JORNADA_CFG.resultTag;
+
+      document.getElementById('r-dims-section').style.display = 'block';
+      document.getElementById('r-insights-section').style.display = 'block';
+      document.getElementById('paywall-box').style.display = 'none';
+      document.getElementById('paid-note').style.display = 'block';
+
+      const dimsEl = document.getElementById('r-dims');
+      dimsEl.innerHTML = '';
+      Object.entries(report.scores || {}).forEach(([d, v]) => {
+        const label = (report.dimNames && report.dimNames[d]) || d;
+        dimsEl.innerHTML += `<div class="dim-item">
+          <div class="dim-label"><span>${label}</span><span>${v}/100</span></div>
+          <div class="dim-bar-bg"><div class="dim-bar" data-width="${v}" style="width:0%"></div></div>
+        </div>`;
+      });
+
+      const insightsEl = document.getElementById('r-insights');
+      insightsEl.innerHTML = (arch.insights || []).map(i =>
+        `<div class="insight"><span class="insight-icon">${i.icon}</span><div class="insight-text"><strong>${i.title}</strong><span>${i.text}</span></div></div>`
+      ).join('');
+
+      showScreen('screen-result');
+      setTimeout(() => {
+        document.querySelectorAll('.dim-bar').forEach(bar => { bar.style.width = bar.dataset.width + '%'; });
+      }, 200);
+    })
+    .catch(() => {
+      window.location.replace('/cadastro-teste.html?jornada=' + encodeURIComponent(JORNADA_PARAM));
+    });
+}
+
+function renderDimsAndInsights(arch, scores) {
+  const dimNames = JORNADA_CFG.dimNames;
+  const dimsEl = document.getElementById('r-dims');
+  dimsEl.innerHTML = '';
+  Object.entries(scores).forEach(([d, v]) => {
+    const label = dimNames[d] || d;
+    dimsEl.innerHTML += `<div class="dim-item">
+      <div class="dim-label"><span>${label}</span><span>${v}/100</span></div>
+      <div class="dim-bar-bg"><div class="dim-bar" data-width="${v}" style="width:0%"></div></div>
+    </div>`;
+  });
+
+  const insightsEl = document.getElementById('r-insights');
+  insightsEl.innerHTML = arch.insights.map(i =>
+    `<div class="insight"><span class="insight-icon">${i.icon}</span><div class="insight-text"><strong>${i.title}</strong><span>${i.text}</span></div></div>`
+  ).join('');
+
+  setTimeout(() => {
+    document.querySelectorAll('.dim-bar').forEach(bar => {
+      bar.style.width = bar.dataset.width + '%';
+    });
+  }, 200);
+}
+
 function showResult() {
   if (typeof trackEvent === 'function') {
     trackEvent('complete_test');
@@ -1194,40 +1359,85 @@ function showResult() {
   document.getElementById('r-desc').textContent = arch.desc;
   document.getElementById('r-tag').textContent = JORNADA_CFG.resultTag;
 
-  // Dimensões
-  const dimNames = JORNADA_CFG.dimNames;
-  const dimsEl = document.getElementById('r-dims');
-  dimsEl.innerHTML = '';
-  Object.entries(scores).forEach(([d, v]) => {
-    const label = dimNames[d] || d;
-    dimsEl.innerHTML += `<div class="dim-item">
-      <div class="dim-label"><span>${label}</span><span>${v}/100</span></div>
-      <div class="dim-bar-bg"><div class="dim-bar" data-width="${v}" style="width:0%"></div></div>
-    </div>`;
-  });
-
-  // Insights
-  const insightsEl = document.getElementById('r-insights');
-  insightsEl.innerHTML = arch.insights.map(i =>
-    `<div class="insight"><span class="insight-icon">${i.icon}</span><div class="insight-text"><strong>${i.title}</strong><span>${i.text}</span></div></div>`
-  ).join('');
+  // Por padrão, esconde dimensões/insights até sabermos se já está pago
+  document.getElementById('r-dims-section').style.display = 'none';
+  document.getElementById('r-insights-section').style.display = 'none';
+  document.getElementById('paywall-box').style.display = 'none';
+  document.getElementById('paid-note').style.display = 'none';
 
   showScreen('screen-result');
   updateProgress();
 
-  // Anima barras
-  setTimeout(() => {
-    document.querySelectorAll('.dim-bar').forEach(bar => {
-      bar.style.width = bar.dataset.width + '%';
-    });
-  }, 200);
-
-  // Salva no localStorage
+  // Salva no localStorage (histórico local, independente do backend)
   try {
     const saved = JSON.parse(localStorage.getItem('ec_test_results') || '[]');
     saved.push({ jornada: JORNADA_PARAM, archetype: arch.id, scores, date: new Date().toISOString() });
     localStorage.setItem('ec_test_results', JSON.stringify(saved));
   } catch(e) {}
+
+  LAST_REPORT = {
+    arch: { icon: arch.icon, name: arch.name, mode: arch.mode, desc: arch.desc, insights: arch.insights },
+    scores,
+    dimNames: JORNADA_CFG.dimNames,
+    resultTag: JORNADA_CFG.resultTag,
+  };
+
+  if (!ACCESS_TOKEN) {
+    // Não deveria acontecer (gate já redireciona), mas por segurança mostra o paywall sem desbloquear
+    document.getElementById('paywall-box').style.display = 'block';
+    return;
+  }
+
+  fetch('/api/lead_save_report.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ access: ACCESS_TOKEN, report: LAST_REPORT }),
+  })
+    .then(res => res.json().catch(() => ({})).then(data => ({ ok: res.ok, data })))
+    .then(({ ok, data }) => {
+      if (ok && data.paid) {
+        document.getElementById('r-dims-section').style.display = 'block';
+        document.getElementById('r-insights-section').style.display = 'block';
+        document.getElementById('paid-note').style.display = 'block';
+        renderDimsAndInsights(arch, scores);
+      } else {
+        document.getElementById('paywall-box').style.display = 'block';
+      }
+    })
+    .catch(() => {
+      document.getElementById('paywall-box').style.display = 'block';
+    });
+}
+
+function unlockReport() {
+  const btn = document.getElementById('btn-unlock');
+  const errEl = document.getElementById('paywall-error');
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Redirecionando...';
+
+  if (typeof trackEvent === 'function') { trackEvent('start_checkout', { jornada: JORNADA_PARAM }); }
+
+  fetch('/api/mp_create_preference.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ access: ACCESS_TOKEN }),
+  })
+    .then(res => res.json().catch(() => ({})).then(data => ({ ok: res.ok, data })))
+    .then(({ ok, data }) => {
+      if (!ok) throw new Error(data.error || 'Não foi possível iniciar o pagamento.');
+      if (data.already_paid) {
+        window.location.reload();
+        return;
+      }
+      window.location.href = data.init_point;
+    })
+    .catch(err => {
+      errEl.textContent = err.message;
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Desbloquear relatório completo';
+    });
 }
 </script>
 <script src="/analytics.js"></script>

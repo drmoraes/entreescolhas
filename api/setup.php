@@ -64,4 +64,29 @@ CREATE TABLE IF NOT EXISTS candidate_status_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ");
 
+$db->exec("
+CREATE TABLE IF NOT EXISTS leads (
+  id               INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  nome             VARCHAR(255)  NOT NULL,
+  email            VARCHAR(255)  NOT NULL,
+  jornada          VARCHAR(40)   NOT NULL DEFAULT 'arquetipo',
+  confirm_token    VARCHAR(64)   NOT NULL,
+  confirmed_at     DATETIME      NULL,
+  access_token     VARCHAR(64)   NOT NULL,
+  attempts_used    TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  payment_status   ENUM('pending','paid','failed') NOT NULL DEFAULT 'pending',
+  mp_preference_id VARCHAR(80),
+  mp_payment_id    VARCHAR(80),
+  report_json      JSON          NULL,
+  report_sent_at   DATETIME      NULL,
+  ip               VARCHAR(45),
+  created_at       DATETIME      DEFAULT CURRENT_TIMESTAMP,
+  updated_at       DATETIME      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_email_jornada (email, jornada),
+  UNIQUE KEY uk_access_token (access_token),
+  KEY idx_confirm_token (confirm_token),
+  KEY idx_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+");
+
 json(['ok' => true, 'message' => 'Tabelas criadas com sucesso. Delete este arquivo agora.']);

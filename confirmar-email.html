@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirmação de e-mail — Entre Escolhas</title>
+  <meta name="robots" content="noindex, follow" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#08080F; --bg-card:#0F0F1E; --border:rgba(108,99,255,0.15);
+      --accent:#6C63FF; --text:#F0EFF8; --text-2:#9490C0; --text-3:#5E5A8A; --white:#FFFFFF;
+    }
+    body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+    .card { background:var(--bg-card); border:1px solid var(--border); border-radius:20px; padding:40px; max-width:440px; text-align:center; }
+    .icon { font-size:2.8rem; margin-bottom:18px; }
+    h1 { font-size:1.4rem; margin-bottom:12px; }
+    p { color:var(--text-2); font-size:0.95rem; line-height:1.6; margin-bottom:24px; }
+    a.btn { display:inline-block; background:var(--accent); color:var(--white); text-decoration:none; padding:14px 28px; border-radius:12px; font-weight:700; font-size:0.95rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">⚠️</div>
+    <h1>Link inválido ou expirado</h1>
+    <p>Esse link de confirmação não é mais válido. Isso pode acontecer se você já usou o link antes ou se pediu um novo link mais recente. Solicite um novo link abaixo.</p>
+    <a class="btn" id="retry-link" href="/cadastro-teste.html">Pedir novo link</a>
+  </div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const jornada = params.get('jornada');
+    if (jornada) {
+      document.getElementById('retry-link').href = '/cadastro-teste.html?jornada=' + encodeURIComponent(jornada);
+    }
+  </script>
+  <script src="/analytics.js"></script>
+</body>
+</html>
