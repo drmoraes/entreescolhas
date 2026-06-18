@@ -36,8 +36,8 @@ define('SMTP_FROM_NAME', 'Entre Escolhas');
 
 // ── Mercado Pago (Checkout Pro) ──────────────────────────────
 // Pegue em https://www.mercadopago.com.br/developers/panel/app
-define('MP_ACCESS_TOKEN', 'PREENCHER_ACCESS_TOKEN_MERCADO_PAGO');
-define('MP_PUBLIC_KEY', 'PREENCHER_PUBLIC_KEY_MERCADO_PAGO');
+define('MP_ACCESS_TOKEN', 'APP_USR-636085761384521-061803-4aef68988da7dffe6e869c746ddd096e-180998172');
+define('MP_PUBLIC_KEY', 'APP_USR-66861c3e-3525-4935-8d6b-b92c9d07dd8a');
 define('MP_REPORT_PRICE', 7.97);
 
 // ── Regras de tentativa do teste ─────────────────────────────
