@@ -15,3 +15,4 @@ src-app-page.tsx
 
 # Deploy webhook (nao versionar — vive no servidor)
 deploy.php
+*.save
