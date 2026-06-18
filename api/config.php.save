@@ -1,3 +1,13 @@
+x
+
+
+
+
+
+
+
+
+
 <?php
 // ═══════════════════════════════════════════════════════════
 // Entre Escolhas — API Config
@@ -30,8 +40,8 @@ define('APP_BASE_URL', 'https://www.entreescolhas.com.br');
 define('SMTP_HOST', 'email-ssl.com.br');      // host SMTP da Locaweb — confirme no painel
 define('SMTP_PORT', 587);                     // 587 = STARTTLS (recomendado), 465 = SSL direto
 define('SMTP_SECURE', 'tls');                 // 'tls' (porta 587) ou 'ssl' (porta 465)
-define('SMTP_USER', 'suporte@entreescolhas.com.br'); // caixa de e-mail completa
-define('SMTP_PASS', 'UtX!96KDA');       // senha da caixa de e-mail
+define('SMTP_USER', 'PREENCHER@entreescolhas.com.br'); // caixa de e-mail completa
+define('SMTP_PASS', 'PREENCHER_SENHA_DA_CAIXA');       // senha da caixa de e-mail
 define('SMTP_FROM_NAME', 'Entre Escolhas');
 
 // ── Mercado Pago (Checkout Pro) ──────────────────────────────
