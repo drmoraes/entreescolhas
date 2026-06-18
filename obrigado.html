@@ -58,7 +58,7 @@
       const maxAttempts = 8; // ~16s de tentativas
       const poll = () => {
         attempts++;
-        fetch('/api/lead_status.php?access=' + encodeURIComponent(access))
+        fetch('/api/lead_status?access=' + encodeURIComponent(access))
           .then(res => res.json())
           .then(data => {
             if (data.paid) {

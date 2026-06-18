@@ -195,8 +195,8 @@
       <input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" />
     </div>
     <div class="api-setup">
-      <label for="api-url-input">URL da API (Locaweb)</label>
-      <input type="text" id="api-url-input" placeholder="https://api.entreescolhas.com.br/api" />
+      <label for="api-url-input">URL da API</label>
+      <input type="text" id="api-url-input" placeholder="https://www.entreescolhas.com.br/api" />
       <label for="api-key-input" style="margin-top:10px;">Chave da API</label>
       <input type="text" id="api-key-input" placeholder="ec-admin-..." />
     </div>
@@ -356,7 +356,7 @@ const ARCH_LABELS = {
 // ══════════════════════════════════════════════════════════════
 function doLogin(){
   const pass   = document.getElementById('login-password').value;
-  const apiUrl = document.getElementById('api-url-input').value.trim() || 'https://api.entreescolhas.com.br/api';
+  const apiUrl = document.getElementById('api-url-input').value.trim() || `${window.location.origin}/api`;
   const apiKey = document.getElementById('api-key-input').value.trim();
 
   if(pass !== ADMIN_PASS){
@@ -458,7 +458,7 @@ async function loadDashboard(){
 
   let data;
   try {
-    data = await apiGet('stats.php');
+    data = await apiGet('stats');
   } catch(e){
     // Fallback com dados locais
     const local = getLocalCandidates();
@@ -588,7 +588,7 @@ async function loadCandidates(){
 
   let data;
   try {
-    data = await apiGet('candidates.php', params);
+    data = await apiGet('candidates', params);
   } catch(e){
     // Fallback local
     const local = getLocalCandidates();
@@ -703,7 +703,7 @@ async function loadPipeline(){
 
   try {
     for(const s of statuses){
-      const d = await apiGet('candidates.php', { status: s, limit: 50 });
+      const d = await apiGet('candidates', { status: s, limit: 50 });
       columns[s] = d.data || [];
     }
   } catch(e){
@@ -742,7 +742,7 @@ async function openModal(id){
 
   let c;
   try {
-    c = await apiGet('candidates.php', { id });
+    c = await apiGet('candidates', { id });
   } catch(e){
     const local = getLocalCandidates();
     c = local[id - 1] || null;
@@ -832,13 +832,13 @@ function closeModal(){
 
 async function updateStatus(id, status){
   try {
-    await apiPut('candidates.php', { id, status });
+    await apiPut('candidates', { id, status });
     refreshData();
   } catch(e){ alert('Erro ao atualizar status. Verifique a API.'); }
 }
 
 async function quickStatus(id, status){
-  try { await apiPut('candidates.php', { id, status }); loadCandidates(); }
+  try { await apiPut('candidates', { id, status }); loadCandidates(); }
   catch(e) {}
 }
 
@@ -846,7 +846,7 @@ async function addNote(id){
   const note = document.getElementById('note-input').value.trim();
   if(!note) return;
   try {
-    await apiPut('candidates.php', { id, note });
+    await apiPut('candidates', { id, note });
     document.getElementById('note-input').value = '';
     openModal(id); // refresh
   } catch(e){ alert('Erro ao salvar nota.'); }
@@ -855,7 +855,7 @@ async function addNote(id){
 async function archiveCandidate(id){
   if(!confirm('Arquivar este candidato?')) return;
   try {
-    await apiPut('candidates.php', { id, status: 'arquivado' });
+    await apiPut('candidates', { id, status: 'arquivado' });
     closeModal();
     refreshData();
   } catch(e){ alert('Erro ao arquivar.'); }
@@ -866,7 +866,7 @@ async function archiveCandidate(id){
 // ══════════════════════════════════════════════════════════════
 function exportCSV(){
   const status = document.getElementById('f-status')?.value || '';
-  const url = `${API_BASE}/export.php?key=${encodeURIComponent(API_KEY)}&status=${status}`;
+  const url = `${API_BASE}/export?key=${encodeURIComponent(API_KEY)}&status=${status}`;
   window.open(url, '_blank');
 }
 

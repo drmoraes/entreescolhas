@@ -1103,7 +1103,7 @@ let LEAD_STATE = null;
   const startBtn = document.querySelector('#screen-intro .btn-primary');
   if (startBtn) { startBtn.disabled = true; startBtn.style.opacity = '0.5'; }
 
-  fetch('/api/lead_status.php?access=' + encodeURIComponent(ACCESS_TOKEN))
+  fetch('/api/lead_status?access=' + encodeURIComponent(ACCESS_TOKEN))
     .then(res => {
       if (!res.ok) throw new Error('invalid');
       return res.json();
@@ -1265,7 +1265,7 @@ function findArchetype(scores) {
 let LAST_REPORT = null;
 
 function showSavedFullReport() {
-  fetch('/api/lead_report.php?access=' + encodeURIComponent(ACCESS_TOKEN))
+  fetch('/api/lead_report?access=' + encodeURIComponent(ACCESS_TOKEN))
     .then(res => res.json().catch(() => ({})).then(data => ({ ok: res.ok, data })))
     .then(({ ok, data }) => {
       if (!ok || !data.report) {
@@ -1388,7 +1388,7 @@ function showResult() {
     return;
   }
 
-  fetch('/api/lead_save_report.php', {
+  fetch('/api/lead_save_report', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ access: ACCESS_TOKEN, report: LAST_REPORT }),
@@ -1418,7 +1418,7 @@ function unlockReport() {
 
   if (typeof trackEvent === 'function') { trackEvent('start_checkout', { jornada: JORNADA_PARAM }); }
 
-  fetch('/api/mp_create_preference.php', {
+  fetch('/api/mp_create_preference', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ access: ACCESS_TOKEN }),

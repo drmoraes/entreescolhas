@@ -100,7 +100,7 @@ function setError(msg) {
 }
 
 async function registerLead(nome, email) {
-  const res = await fetch('/api/lead_register.php', {
+  const res = await fetch('/api/lead_register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ nome, email, jornada }),

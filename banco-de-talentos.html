@@ -1056,7 +1056,7 @@ function togglePCDType(el, val){
 // ═══════════════════════════════════════════════════════════════
 // FINALIZE
 // ═══════════════════════════════════════════════════════════════
-const API_BASE = 'https://api.entreescolhas.com.br/api';
+const API_BASE = '/api';
 
 async function finalizarCadastro(){
   const termos      = document.getElementById('c-termos').checked;
@@ -1115,7 +1115,7 @@ async function finalizarCadastro(){
   // 2. Enviar para API Locaweb (principal)
   let apiOk = false;
   try {
-    const res = await fetch(`${API_BASE}/submit.php`, {
+    const res = await fetch(`${API_BASE}/submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
