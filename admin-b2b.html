@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin B2B — Banco de Talentos | Entre Escolhas</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.svg" />
+<style>
+  :root{--bg:#08080F;--bg-card:#0F0F1E;--bg-raised:#141428;--border:rgba(108,99,255,.15);
+    --border-hover:rgba(108,99,255,.4);--accent:#6C63FF;--accent-dim:rgba(108,99,255,.12);
+    --text:#F0EFF8;--text-2:#9490C0;--text-3:#5E5A8A;--green:#22C55E;--gold:#C9A84C;--red:#EF4444}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;font-weight:600}
+  input{font-family:inherit;background:var(--bg-raised);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 13px;font-size:14px;width:100%}
+  .btn{background:var(--accent);color:#fff;padding:11px 18px;font-size:14px}
+  header{display:flex;align-items:center;gap:14px;padding:14px 26px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(8,8,15,.9);backdrop-filter:blur(10px);z-index:5}
+  .brand{font-weight:800}.brand span{color:var(--accent)}
+  main{max-width:1180px;margin:0 auto;padding:26px}
+  .muted{color:var(--text-2)}.small{font-size:12px}.hide{display:none!important}
+  h2.sec{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:26px 0 12px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+  .kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px}
+  .kpi .v{font-size:30px;font-weight:800}.kpi .l{color:var(--text-2);font-size:12px;margin-top:2px}
+  .kpi .s{font-size:12px;margin-top:6px}
+  .accent{color:var(--accent)}.green{color:var(--green)}.gold{color:var(--gold)}.red{color:var(--red)}
+  table{width:100%;border-collapse:collapse;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-size:13px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border)}
+  th{color:var(--text-3);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  tr:last-child td{border:none}
+  .funnel-row{display:flex;align-items:center;gap:10px;margin:6px 0}
+  .funnel-row .fl{width:170px;font-size:13px;color:var(--text-2)}
+  .fbar{height:26px;border-radius:6px;background:var(--accent-dim);display:flex;align-items:center;padding:0 10px;color:#fff;font-weight:700;font-size:12px;min-width:42px}
+  .gate{max-width:380px;margin:80px auto;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:30px}
+  .spin{display:inline-block;width:18px;height:18px;border:2px solid var(--accent-dim);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header><div class="brand">Entre<span>Escolhas</span> · Admin B2B</div>
+  <div style="flex:1"></div>
+  <button class="btn" id="refreshBtn" onclick="load()" style="display:none">Atualizar</button>
+</header>
+
+<div id="gate" class="gate">
+  <h2 style="font-size:17px;margin-bottom:4px">Painel administrativo</h2>
+  <p class="muted small" style="margin-bottom:16px">Informe a ADMIN_API_KEY para acessar.</p>
+  <input id="key" type="password" placeholder="ADMIN_API_KEY" />
+  <button class="btn" style="width:100%;margin-top:12px" onclick="load()">Entrar</button>
+  <div id="gErr" class="red small" style="margin-top:10px"></div>
+</div>
+
+<main id="dash" class="hide"></main>
+
+<script>
+const $=id=>document.getElementById(id);let KEY='';
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function pct(n){return (n==null?0:n)+'%';}
+
+async function load(){
+  KEY=KEY||$('key').value.trim();
+  if(!KEY){$('gErr').textContent='Informe a chave';return;}
+  $('gErr').textContent='';
+  try{
+    const r=await fetch('/api/admin_b2b_stats',{headers:{'X-Api-Key':KEY}});
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||'Acesso negado');}
+    const d=await r.json();
+    $('gate').classList.add('hide');$('dash').classList.remove('hide');$('refreshBtn').style.display='';
+    render(d);
+  }catch(e){$('gErr').textContent=e.message;}
+}
+
+function kpi(v,l,s,cls){return `<div class="kpi"><div class="v ${cls||''}">${v}</div><div class="l">${l}</div>${s?'<div class="s muted">'+s+'</div>':''}</div>`;}
+
+function render(d){
+  const f=d.funil,cr=d.credits,b=d.base,r=d.responsividade,pv=d.privacidade;
+  const funnelData=[['Buscas (30d)',f.buscas_30d],['Desbloqueios',f.total],['Responderam',f.respondidos],['Estornados',f.estornados]];
+  const max=Math.max(...funnelData.map(x=>x[1]),1);
+  const funnel=funnelData.map(([l,v])=>`<div class="funnel-row"><span class="fl">${l}</span>
+    <span class="fbar" style="width:${Math.max(8,Math.round(v/max*100))}%">${v}</span></div>`).join('');
+
+  $('dash').innerHTML=`
+  <h2 class="sec">Visão geral</h2>
+  <div class="kpis">
+    ${kpi(d.companies.ativas,'Empresas ativas',d.companies.total+' no total','accent')}
+    ${kpi(pct(f.conversao_pct),'Conversão busca→desbloqueio','últimos 30 dias')}
+    ${kpi(pct(r.taxa_resposta_pct),'Taxa de resposta',r.responderam+'/'+r.convidados+' convites','green')}
+    ${kpi(pct(f.taxa_estorno_pct),'Taxa de estorno',f.estornados+' desbloqueios','gold')}
+    ${kpi(r.horas_medias||'—','Horas até responder','tempo médio')}
+  </div>
+
+  <h2 class="sec">Funil de valor (30 dias)</h2>
+  <div class="kpi" style="padding:18px">${funnel}</div>
+
+  <h2 class="sec">Créditos</h2>
+  <div class="kpis">
+    ${kpi(cr.emitidos,'Emitidos','compras + bônus','accent')}
+    ${kpi(cr.consumidos,'Consumidos','desbloqueios')}
+    ${kpi(cr.reembolsados,'Reembolsados','antifrustração','gold')}
+    ${kpi(cr.expirados,'Expirados','')}
+  </div>
+
+  <h2 class="sec">Qualidade da base</h2>
+  <div class="kpis">
+    ${kpi(b.total,'Candidatos','não arquivados')}
+    ${kpi(b.consentidos,'Consentidos B2B','')}
+    ${kpi(b.ativos,'Ativos','confirmados ≤45d','green')}
+    ${kpi(b.fantasmas,'Fantasmas','>90d ou nunca','red')}
+    ${kpi(b.email_ok,'E-mail verificado','')}
+    ${kpi(b.phone_ok,'Telefone verificado','')}
+  </div>
+
+  <h2 class="sec">Privacidade & risco</h2>
+  <div class="kpis">
+    ${kpi(pv.celulas_risco,'Células k<5','risco de reidentificação',pv.celulas_risco>0?'red':'green')}
+    ${kpi(pv.celulas_total,'Células totais','área+senioridade+cidade')}
+    ${kpi(pv.revogacoes,'Revogações de consentimento','')}
+  </div>
+
+  <h2 class="sec">Receita por cliente (top 10)</h2>
+  <table><thead><tr><th>Empresa</th><th>Plano</th><th>Créditos comprados</th><th>Desbloqueios</th></tr></thead><tbody>
+    ${d.top_clientes.map(c=>`<tr><td>${esc(c.nome)}</td><td>${esc(c.plan)}</td><td>${c.comprados}</td><td>${c.desbloqueios}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">Sem dados</td></tr>'}
+  </tbody></table>
+
+  <h2 class="sec">Auditoria — acessos a PII (recentes)</h2>
+  <table><thead><tr><th>Data</th><th>Ação</th><th>Empresa</th><th>Candidato</th><th>Detalhe</th></tr></thead><tbody>
+    ${d.logs.map(l=>`<tr><td>${new Date(l.created_at).toLocaleString('pt-BR')}</td>
+      <td>${esc(l.action)}</td><td>${esc(l.empresa||('#'+(l.company_id||'-')))}</td>
+      <td>${l.candidate_id?('#'+l.candidate_id):'—'}</td><td class="muted">${esc(l.purpose||'')}</td></tr>`).join('')||'<tr><td colspan="5" class="muted">Sem logs</td></tr>'}
+  </tbody></table>
+  <p class="muted small" style="margin:14px 0 40px">access_logs é append-only (imutável) — UPDATE/DELETE bloqueados por trigger no banco.</p>`;
+}
+</script>
+</body>
+</html>

@@ -8,8 +8,11 @@ deploy-sftp.py
 # macOS
 .DS_Store
 
-# Docs internas
+# Docs internas / entregáveis
 *.docx
+*.pptx
+*.xlsx
+.~lock.*#
 landing-page-preview.html
 src-app-page.tsx
 

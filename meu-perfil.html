@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Meu Perfil — Banco de Talentos | Entre Escolhas</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.svg" />
+<style>
+  :root{--bg:#08080F;--bg-card:#0F0F1E;--bg-raised:#141428;--border:rgba(108,99,255,.15);
+    --border-hover:rgba(108,99,255,.4);--accent:#6C63FF;--accent-dim:rgba(108,99,255,.12);
+    --text:#F0EFF8;--text-2:#9490C0;--text-3:#5E5A8A;--green:#22C55E;--green-dim:rgba(34,197,94,.10);
+    --gold:#C9A84C;--red:#EF4444}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
+    color:var(--text);line-height:1.5;padding:24px;display:flex;justify-content:center}
+  .wrap{max-width:620px;width:100%}
+  .brand{font-weight:800;margin-bottom:20px}.brand span{color:var(--accent)}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;font-weight:600;transition:.15s}
+  input{font-family:inherit;background:var(--bg-raised);border:1px solid var(--border);color:var(--text);
+    border-radius:10px;padding:11px 13px;font-size:14px;width:100%}
+  .btn{background:var(--accent);color:#fff;padding:11px 18px;font-size:14px}.btn:hover{filter:brightness(1.1)}
+  .btn-soft{background:var(--bg-raised);color:var(--text-2);border:1px solid var(--border);padding:9px 14px;font-size:13px}
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px}
+  .card h2{font-size:15px;margin-bottom:4px}.card p.sub{color:var(--text-2);font-size:13px;margin-bottom:14px}
+  .muted{color:var(--text-2)}.small{font-size:12px}.hide{display:none!important}
+  .badge{font-size:12px;font-weight:700;padding:4px 11px;border-radius:999px;display:inline-block}
+  .badge.active{background:var(--green-dim);color:var(--green)}
+  .badge.warm{background:rgba(201,168,76,.12);color:var(--gold)}
+  .badge.cold{background:rgba(239,68,68,.10);color:var(--red)}
+  .score{font-size:44px;font-weight:800;color:var(--accent)}
+  .bd-row{display:flex;align-items:center;gap:10px;font-size:13px;padding:5px 0}
+  .bd-row .bdl{flex:1;color:var(--text-2)}.bd-bar{width:90px;height:6px;background:var(--bg-raised);border-radius:4px;overflow:hidden}
+  .bd-bar i{display:block;height:100%;background:var(--accent)}.bdp{font-weight:700;width:42px;text-align:right}
+  .opt{display:flex;gap:10px;margin:8px 0}
+  .opt button{flex:1;background:var(--bg-raised);border:1px solid var(--border);color:var(--text-2);padding:11px}
+  .opt button.on{background:var(--accent-dim);color:var(--accent);border-color:var(--border-hover)}
+  .hidden-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .hidden-list span{background:var(--bg-raised);border:1px solid var(--border);border-radius:8px;padding:4px 9px;font-size:12px;color:var(--text-3)}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--bg-raised);
+    border:1px solid var(--border-hover);border-radius:12px;padding:13px 20px;font-size:14px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+  .row:last-child{border:none}
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid var(--accent-dim);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Entre<span>Escolhas</span> · Meu Perfil</div>
+
+  <div id="gate" class="card">
+    <h2>Acesse seu perfil</h2>
+    <p class="sub">Use o link que enviamos por e-mail, ou cole seu token de acesso.</p>
+    <input id="tokenInput" placeholder="Token de acesso" />
+    <button class="btn" style="width:100%;margin-top:12px" onclick="loadProfile()">Acessar</button>
+    <div id="gateErr" style="color:var(--red);font-size:13px;margin-top:10px"></div>
+  </div>
+
+  <div id="content" class="hide"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const API='/api';let TOKEN='';
+const $=id=>document.getElementById(id);
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000);}
+async function api(path,opt={}){const r=await fetch(API+path,{method:opt.method||'GET',
+  headers:{'Content-Type':'application/json'},body:opt.body?JSON.stringify(opt.body):undefined});
+  const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||('Erro '+r.status));return d;}
+
+const params=new URLSearchParams(location.search);
+if(params.get('token')){TOKEN=params.get('token');loadProfile();}
+
+async function loadProfile(){
+  TOKEN=TOKEN||$('tokenInput').value.trim();
+  if(!TOKEN){$('gateErr').textContent='Informe o token';return;}
+  try{ const d=await api('/cand_portal?token='+encodeURIComponent(TOKEN)); render(d); }
+  catch(e){ $('gateErr').textContent=e.message; }
+}
+function badge(t){return t==='ativo'?'<span class="badge active">● Ativo</span>':t==='morno'?'<span class="badge warm">● Morno</span>':'<span class="badge cold">● Frio</span>';}
+
+function render(d){
+  $('gate').classList.add('hide');
+  const c=$('content');c.classList.remove('hide');
+  const p=d.profile;
+  const bd=p.confidence_reasons.map(r=>{const pct=Math.round(r.pontos/r.max*100);
+    return `<div class="bd-row"><span class="bdl">${esc(r.fator)} <span class="small muted">(${esc(r.detalhe)})</span></span>
+      <span class="bd-bar"><i style="width:${pct}%"></i></span><span class="bdp">${r.pontos}/${r.max}</span></div>`;}).join('');
+  const conf=d.profile.last_confirmed_at?('há '+Math.floor((Date.now()-new Date(d.profile.last_confirmed_at))/86400000)+' dia(s)'):'nunca';
+  const convites=d.convites.filter(x=>x.status==='active').length;
+
+  c.innerHTML=`
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><h2>Olá, ${esc(p.nome||'candidato')} 👋</h2>
+        <p class="sub">${esc(p.cargo||'')} ${p.senioridade?'· '+esc(p.senioridade):''} ${p.cidade?'· '+esc(p.cidade):''}</p></div>
+      ${badge(p.thermal)}
+    </div>
+    <div style="display:flex;gap:20px;align-items:center;margin-top:8px">
+      <div><div class="muted small">Seu Score de Confiança</div><div class="score">${p.confidence}</div></div>
+      <div class="muted small" style="flex:1">Quanto mais alto, mais empresas confiam que você está ativo e vai responder. Última confirmação: <b>${conf}</b>.</div>
+    </div>
+    <div style="margin-top:12px">${bd}</div>
+  </div>
+
+  <div class="card">
+    <h2>Confirme seu interesse</h2>
+    <p class="sub">Confirmar a cada ~30 dias mantém seu selo “Ativo” e te coloca no topo das buscas.</p>
+    <button class="btn" style="width:100%" onclick="act('reconfirm')">Estou ativo e disponível ✓</button>
+  </div>
+
+  <div class="card">
+    <h2>Visibilidade do perfil</h2>
+    <p class="sub">Controle como empresas enxergam você no banco de talentos.</p>
+    <div class="opt">
+      <button data-v="visible" class="${p.visibility==='visible'?'on':''}" onclick="setVis('visible')">Visível</button>
+      <button data-v="anonymous" class="${p.visibility==='anonymous'?'on':''}" onclick="setVis('anonymous')">Só anônimo</button>
+      <button data-v="hidden" class="${p.visibility==='hidden'?'on':''}" onclick="setVis('hidden')">Oculto</button>
+    </div>
+    <p class="muted small">Antes de qualquer desbloqueio, empresas <b>nunca</b> veem: ${d.hidden_before_unlock.map(h=>'<span style="white-space:nowrap">'+esc(h)+'</span>').join(' · ')}.</p>
+  </div>
+
+  <div class="card">
+    <h2>Convites recebidos ${convites?'<span class="badge active" style="margin-left:6px">'+convites+' novo(s)</span>':''}</h2>
+    <p class="sub">Empresas que desbloquearam seu perfil e querem conversar.</p>
+    ${d.convites.length?d.convites.map(i=>`<div class="row"><span>Convite ${new Date(i.invited_at).toLocaleDateString('pt-BR')}<br>
+      <span class="muted small">${i.status==='responded'?'✓ você respondeu':i.status==='refunded'?'expirou':'aguardando sua resposta'}</span></span>
+      ${i.status==='active'?'<button class="btn-soft" onclick="act(\'respond\')">Responder</button>':''}</div>`).join('')
+      :'<p class="muted small">Nenhum convite ainda.</p>'}
+  </div>
+
+  <div class="card">
+    <h2>Consentimento (LGPD)</h2>
+    <p class="sub">${p.b2b_consent?'Você participa do Banco de Talentos.':'Você não está participando do Banco de Talentos.'}</p>
+    ${p.b2b_consent
+      ?'<button class="btn-soft" style="width:100%" onclick="consent(false)">Sair do Banco de Talentos (revogar)</button>'
+      :'<button class="btn" style="width:100%" onclick="consent(true)">Entrar no Banco de Talentos</button>'}
+    <p class="muted small" style="margin-top:8px">A revogação é imediata: seu perfil sai da base na hora.</p>
+  </div>`;
+}
+
+async function act(action){
+  try{ const d=await api('/cand_portal?action='+action,{method:'POST',body:{token:TOKEN}});
+    toast(d.message||'Feito'); loadProfile(); }
+  catch(e){ toast(e.message); }
+}
+async function setVis(v){
+  try{ await api('/cand_portal?action=visibility',{method:'POST',body:{token:TOKEN,value:v}});
+    toast('Visibilidade: '+v); loadProfile(); }catch(e){ toast(e.message); }
+}
+async function consent(on){
+  if(!on && !confirm('Tem certeza? Seu perfil sai da base imediatamente.'))return;
+  try{ const d=await api('/cand_portal?action=consent',{method:'POST',body:{token:TOKEN,value:on}});
+    toast(d.message); loadProfile(); }catch(e){ toast(e.message); }
+}
+</script>
+</body>
+</html>

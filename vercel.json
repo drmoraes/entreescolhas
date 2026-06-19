@@ -1,5 +1,8 @@
 {
   "rewrites": [
     { "source": "/api/:name.php", "destination": "/api/:name" }
+  ],
+  "crons": [
+    { "path": "/api/cron_sla", "schedule": "0 * * * *" }
   ]
 }
