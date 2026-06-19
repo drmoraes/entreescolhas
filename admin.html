@@ -367,6 +367,7 @@ function doLogin(){
   API_KEY  = apiKey;
   localStorage.setItem('ec_ats_api_base', API_BASE);
   localStorage.setItem('ec_ats_api_key',  API_KEY);
+  localStorage.setItem('ec_admin', 'true');
 
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
@@ -374,6 +375,7 @@ function doLogin(){
 }
 
 function doLogout(){
+  localStorage.removeItem('ec_admin');
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-password').value = '';
