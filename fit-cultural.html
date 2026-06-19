@@ -140,7 +140,7 @@
     }
     .btn-nav:hover { opacity: 0.85; color: var(--white); }
 
-    @media (max-width: 640px) {
+    @media (max-width: 900px) {
       .nav-links { gap: 16px; }
       .nav-links a:not(.btn-nav) { display: none; }
     }
@@ -731,9 +731,9 @@
     .nav-hamburger.open span:nth-child(2) { opacity: 0; }
     .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-    @media (max-width: 640px) {
+    @media (max-width: 900px) {
       .nav-hamburger { display: flex; }
-      .nav-links { display: none !important; } /* always hide inline links on mobile */
+      .nav-links { display: none !important; } /* colapsa no menu antes de estourar a largura */
     }
 
     /* ── Mobile Menu Overlay ────────────────────────────────────── */

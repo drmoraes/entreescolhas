@@ -235,8 +235,8 @@
       --accent-dim:   rgba(108, 99, 255, 0.12);
       --accent-glow:  rgba(108, 99, 255, 0.25);
       --text:         #F0EFF8;
-      --text-2:       #9490C0;
-      --text-3:       #5E5A8A;
+      --text-2:       #ABA6D4;
+      --text-3:       #8782B0;
       --white:        #FFFFFF;
       --gold:         #C9A84C;
       --green:        #22C55E;
@@ -332,7 +332,7 @@
     }
     .btn-nav:hover { opacity: 0.85; color: var(--white); }
 
-    @media (max-width: 640px) {
+    @media (max-width: 900px) {
       .nav-links { gap: 16px; }
       .nav-links a:not(.btn-nav) { display: none; }
     }
@@ -874,10 +874,22 @@
     /* ── Scroll animations ──────────────────────────────────────── */
     .fade-up {
       opacity: 0;
-      transform: translateY(32px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
+      transform: translateY(18px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
     }
     .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+    /* Acessibilidade: respeita quem prefere menos movimento e garante
+       que o conteúdo nunca fique invisível (sem depender de JS/scroll). */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+      }
+      .fade-up { opacity: 1 !important; transform: none !important; }
+    }
 
     @media (max-width: 768px) {
       .footer-inner { flex-direction: column; }
@@ -936,9 +948,9 @@
     .nav-hamburger.open span:nth-child(2) { opacity: 0; }
     .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-    @media (max-width: 640px) {
+    @media (max-width: 900px) {
       .nav-hamburger { display: flex; }
-      .nav-links { display: none !important; } /* always hide inline links on mobile */
+      .nav-links { display: none !important; } /* colapsa no menu antes de estourar a largura */
     }
 
     /* ── Mobile Menu Overlay ────────────────────────────────────── */
@@ -1656,9 +1668,17 @@
         });
       }
     });
-  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+  }, { threshold: 0.05, rootMargin: '0px 0px 120px 0px' });
 
-  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+  const fadeEls = document.querySelectorAll('.fade-up');
+  fadeEls.forEach(el => observer.observe(el));
+  // Failsafe: se algo não disparar (scroll muito rápido / observer indisponível),
+  // garante que tudo fique visível depois de um tempo curto.
+  setTimeout(() => fadeEls.forEach(el => el.classList.add('visible')), 2500);
+  // Reduced-motion: revela imediatamente, sem esperar o scroll.
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    fadeEls.forEach(el => el.classList.add('visible'));
+  }
 
   // Animate bars when report section is visible
   const reportObserver = new IntersectionObserver((entries) => {
