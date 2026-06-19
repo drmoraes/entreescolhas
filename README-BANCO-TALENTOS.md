@@ -85,8 +85,16 @@ Já integrada, reaproveitando o padrão do checkout existente:
 Testes: `node tests/mp_credits.test.js` (7 asserções — preference, crédito via webhook,
 idempotência e descarte de eventos que não são de crédito).
 
+## Convite ao candidato (e-mail + WhatsApp)
+
+`rh_invite` agora **envia e-mail real** ao candidato (Nodemailer / `_lib/mailer`, o mesmo SMTP do
+relatório), com link para o `meu-perfil.html?token=<confirm_token>` onde ele clica em **Responder**.
+Também devolve um `whatsapp_url` (`wa.me` com DDI 55) que o portal expõe como botão **WhatsApp** —
+gancho pronto sem depender de API. O envio nunca trava o convite: se o e-mail falhar, o SLA é
+registrado e o RH usa o WhatsApp. Template em `_lib/invite-email.js`. Testes: `tests/invite_email.test.js` (12 asserções).
+
 ## Pendências para produção (próximos passos)
 
-- Envio real de e-mail/WhatsApp no convite (reaproveitar `_lib/mailer`).
 - Verificação de contato via double opt-in / OTP de telefone para alimentar `email_verified`/`phone_verified`.
 - Criptografia de coluna para CPF (envelope/KMS) quando o campo for adicionado.
+- WhatsApp transacional via API oficial (hoje é link `wa.me`, acionado pelo recrutador).

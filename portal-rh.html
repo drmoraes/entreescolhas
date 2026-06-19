@@ -344,9 +344,11 @@ function renderCandidate(c){
       <div class="r"><span class="k">Status do convite</span><b>${slaTxt}</b></div>
     </div>`;
   }
+  const wa = c.revealed ? waLink(c.revealed.telefone, c.revealed.nome) : null;
   const foot = c.unlocked
     ? `<button class="btn-soft" onclick="openDispute('${c.token}')">Reportar problema</button>
-       ${c.unlock&&c.unlock.invited_at?'':'<button class="btn" onclick="sendInvite(\''+c.token+'\')">Enviar convite</button>'}`
+       ${wa?'<a class="btn-soft" style="text-decoration:none;display:inline-block" href="'+wa+'" target="_blank" rel="noopener">WhatsApp</a>':''}
+       ${c.unlock&&c.unlock.invited_at?'':'<button class="btn" onclick="sendInvite(\''+c.token+'\')">Enviar convite por e-mail</button>'}`
     : `<button class="btn-soft" onclick="closeModal()">Fechar</button>
        <button class="btn" id="unlockBtn" onclick="doUnlock('${c.token}')">Desbloquear · 1 crédito</button>`;
   root.innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal">
@@ -384,9 +386,15 @@ async function doUnlock(token){
   }catch(e){ toast(e.message); if(btn){btn.disabled=false;btn.textContent='Desbloquear · 1 crédito';}
     if(/insuficiente/i.test(e.message)) openWallet(); }
 }
+function waLink(tel,nome){
+  const d=String(tel||'').replace(/\D/g,'');if(d.length<10)return null;
+  const intl=d.startsWith('55')?d:'55'+d;
+  return 'https://wa.me/'+intl+'?text='+encodeURIComponent('Olá, '+(nome||'')+'! Encontramos seu perfil no Banco de Talentos do Entre Escolhas e gostaríamos de conversar sobre uma oportunidade.');
+}
 async function sendInvite(token){
   try{ const res=await api('/rh_invite',{method:'POST',body:{token,message:'Olá! Vi seu perfil e gostaria de conversar sobre uma oportunidade.'}});
-    toast('✓ '+res.message); openCandidate(token); }
+    toast(res.email_sent?'✓ Convite enviado por e-mail':'Convite registrado (e-mail indisponível — use o WhatsApp)');
+    openCandidate(token); }
   catch(e){ toast(e.message); }
 }
 function openDispute(token){

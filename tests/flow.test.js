@@ -22,6 +22,11 @@ require.cache[dbPath] = { id: dbPath, filename: dbPath, loaded: true, exports: {
   query: (text, params = []) => pool.query(text, params),
 } };
 
+// mock do mailer (evita dependência de nodemailer/SMTP no teste)
+const mailPath = require.resolve(path.join(API, '_lib', 'mailer.js'));
+require.cache[mailPath] = { id: mailPath, filename: mailPath, loaded: true, exports: {
+  send: async () => true, getLastError: () => '' } };
+
 const { hashPassword } = require(path.join(API, '_lib', 'b2b-auth'));
 
 // ── schema mínimo (sem plpgsql/pgcrypto) ─────────────────────
