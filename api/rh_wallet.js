@@ -6,6 +6,7 @@ const { setCors, json, err, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
 const { requireCompany, getBalance, logAccess } = require('./_lib/b2b-auth');
 const { getClientIp } = require('./_lib/rate-limit');
+const { genToken } = require('./_lib/tokens');
 
 const PACKAGES = {
   p10: { credits: 10, price: 290 },
@@ -55,13 +56,45 @@ module.exports = async (req, res) => {
     const pkg = PACKAGES[body.package];
     if (!pkg) return err(res, 'Pacote inválido');
 
-    // Sem gateway configurado → credita direto (dev). Com MP, criar preferência aqui.
+    // Com gateway configurado → cria pedido + preference do Mercado Pago.
     if (process.env.MP_ACCESS_TOKEN) {
-      return json(res, {
-        pending: true,
-        message: 'Redirecionar para o checkout do Mercado Pago (a confirmação credita via webhook).',
-        package: body.package, price: pkg.price,
-      });
+      const extRef = 'cred_' + genToken().slice(0, 40);
+      const ord = await query(
+        `INSERT INTO credit_orders (company_id, package, credits, price, external_reference, status)
+         VALUES ($1,$2,$3,$4,$5,'pending') RETURNING id`,
+        [ctx.company_id, body.package, pkg.credits, pkg.price, extRef]
+      );
+      const orderId = ord.rows[0].id;
+      const base = process.env.APP_BASE_URL || '';
+      const back = `${base}/portal-rh.html?pay=`;
+      const payload = {
+        items: [{
+          title: `Pacote de ${pkg.credits} créditos — Banco de Talentos`,
+          quantity: 1, currency_id: 'BRL', unit_price: Number(pkg.price),
+        }],
+        payer: { email: ctx.user_email },
+        external_reference: extRef,
+        back_urls: { success: back + 'success', pending: back + 'pending', failure: back + 'failure' },
+        auto_return: 'approved',
+        notification_url: `${base}/api/mp_webhook_credits`,
+      };
+      let response, result;
+      try {
+        response = await fetch('https://api.mercadopago.com/checkout/preferences', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` },
+          body: JSON.stringify(payload),
+        });
+        result = await response.json();
+      } catch (e) {
+        return err(res, 'Não foi possível iniciar o pagamento agora. Tente novamente.', 502);
+      }
+      if (!response.ok || !result.init_point) {
+        return err(res, 'Não foi possível iniciar o pagamento agora. Tente novamente.', 502);
+      }
+      await query('UPDATE credit_orders SET mp_preference_id = $1 WHERE id = $2', [result.id || null, orderId]);
+      await logAccess(ctx, null, 'purchase_init', body.package, getClientIp(req), { orderId, price: pkg.price });
+      return json(res, { pending: true, init_point: result.init_point, package: body.package, price: pkg.price });
     }
 
     const balance = await getBalance(ctx.company_id);

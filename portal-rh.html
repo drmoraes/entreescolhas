@@ -242,8 +242,17 @@ function enterApp(welcome){
   $('auth').classList.add('hide');$('app').classList.remove('hide');
   updateBalance(BALANCE);
   if(welcome) toast('Conta criada! 5 créditos de boas-vindas adicionados 🎉');
+  // retorno do checkout do Mercado Pago
+  const pay=new URLSearchParams(location.search).get('pay');
+  if(pay){
+    history.replaceState(null,'',location.pathname);
+    if(pay==='success'){ toast('✓ Pagamento aprovado! Os créditos aparecem em instantes.'); setTimeout(refreshBalance,2500); }
+    else if(pay==='pending') toast('Pagamento em análise. Avisaremos quando aprovar.');
+    else toast('Pagamento não concluído.');
+  }
   search();
 }
+async function refreshBalance(){ try{ const w=await api('/rh_wallet'); updateBalance(w.balance); }catch(e){} }
 function updateBalance(n){BALANCE=n;$('balNum').textContent=n;}
 
 /* ===== Search ===== */
@@ -433,7 +442,8 @@ async function openWallet(){
 function closeWallet(){$('walletRoot').innerHTML='';}
 async function buy(pkg){
   try{ const res=await api('/rh_wallet',{method:'POST',body:{package:pkg}});
-    if(res.pending){ toast('Redirecionando ao checkout…'); return; }
+    if(res.pending && res.init_point){ toast('Redirecionando ao checkout…'); location.href=res.init_point; return; }
+    if(res.pending){ toast('Pagamento em processamento…'); return; }
     updateBalance(res.balance); toast('✓ +'+res.credited+' créditos'); openWallet(); }
   catch(e){ toast(e.message); }
 }

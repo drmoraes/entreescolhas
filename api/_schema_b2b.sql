@@ -159,3 +159,22 @@ $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS trg_logs_immutable ON access_logs;
 CREATE TRIGGER trg_logs_immutable BEFORE UPDATE OR DELETE ON access_logs
   FOR EACH ROW EXECUTE FUNCTION block_mutation();
+
+-- ── Pedidos de compra de créditos (checkout Mercado Pago) ────
+-- Rastreia cada compra para creditar de forma idempotente via webhook.
+CREATE TABLE IF NOT EXISTS credit_orders (
+  id                 SERIAL PRIMARY KEY,
+  company_id         INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  package            VARCHAR(20) NOT NULL,
+  credits            INTEGER NOT NULL,
+  price              NUMERIC(10,2) NOT NULL,
+  external_reference VARCHAR(80) NOT NULL UNIQUE,
+  status             VARCHAR(20) NOT NULL DEFAULT 'pending'
+                       CHECK (status IN ('pending','paid','failed','canceled')),
+  mp_preference_id   VARCHAR(80),
+  mp_payment_id      VARCHAR(80),
+  created_at         TIMESTAMPTZ DEFAULT NOW(),
+  paid_at            TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_credit_orders_company ON credit_orders (company_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_credit_orders_extref  ON credit_orders (external_reference);

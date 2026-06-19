@@ -21,7 +21,8 @@ antifrustração → privacidade by design.
 | `rh_unlock` | Gasta 1 crédito, valida contato, revela PII, inicia antifrustração |
 | `rh_invite` | Envia convite e inicia o SLA de 7 dias |
 | `rh_dispute` | Abre disputa; reembolso automático nos casos elegíveis |
-| `rh_wallet` | Saldo, extrato, estatísticas e compra de pacotes |
+| `rh_wallet` | Saldo, extrato, estatísticas e compra de pacotes (checkout Mercado Pago) |
+| `mp_webhook_credits` | Webhook do Mercado Pago: credita a empresa após pagamento aprovado (idempotente) |
 | `cand_portal` | Autoatendimento do candidato (token privado) |
 | `admin_b2b_stats` | KPIs e auditoria (protegido por `ADMIN_API_KEY`) |
 | `cron_sla` | Varredura horária: estorno por sem-resposta + rebaixar perfis frios |
@@ -70,9 +71,22 @@ extrato da carteira e log imutável de `reveal_pii`.
 - **k-anonimato**: o Admin monitora células (área+senioridade+cidade) com menos de 5 perfis (risco de reidentificação).
 - **Scores sem viés**: nenhum atributo sensível (idade, gênero, PCD) entra no ranking; cada score expõe o “porquê”.
 
+## Compra de créditos (Mercado Pago)
+
+Já integrada, reaproveitando o padrão do checkout existente:
+
+- Com `MP_ACCESS_TOKEN` definido, `rh_wallet` (POST) cria um pedido em `credit_orders` e uma
+  *preference* do Checkout Pro, devolvendo `init_point` (o portal redireciona o RH).
+- Após o pagamento, o Mercado Pago chama `/api/mp_webhook_credits`, que **reconfere o pagamento
+  na API do MP** e credita a empresa de forma **idempotente** (não duplica em reenvios).
+- Sem `MP_ACCESS_TOKEN` (ambiente de dev), o `rh_wallet` credita direto para facilitar testes.
+- Pacotes em `rh_wallet.js` → `PACKAGES` (p10/p25/p50). Créditos avulsos expiram em 12 meses.
+
+Testes: `node tests/mp_credits.test.js` (7 asserções — preference, crédito via webhook,
+idempotência e descarte de eventos que não são de crédito).
+
 ## Pendências para produção (próximos passos)
 
-- Integração real do checkout (Mercado Pago) para `rh_wallet` — hoje credita direto sem `MP_ACCESS_TOKEN` (modo dev).
 - Envio real de e-mail/WhatsApp no convite (reaproveitar `_lib/mailer`).
 - Verificação de contato via double opt-in / OTP de telefone para alimentar `email_verified`/`phone_verified`.
 - Criptografia de coluna para CPF (envelope/KMS) quando o campo for adicionado.
