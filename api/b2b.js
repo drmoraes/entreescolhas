@@ -31,5 +31,10 @@ module.exports = async (req, res) => {
   if (!fn && req.headers && req.headers['x-vercel-cron']) fn = 'cron_sla';
   const handler = handlers[fn];
   if (!handler) return err(res, 'Endpoint B2B desconhecido: ' + fn, 404);
-  return handler(req, res);
+  try {
+    return await handler(req, res);
+  } catch (e) {
+    console.error('[b2b] erro em fn=' + fn + ':', e);
+    return err(res, e.message || 'Erro interno', 500);
+  }
 };
