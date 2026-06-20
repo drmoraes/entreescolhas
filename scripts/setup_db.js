@@ -20,8 +20,9 @@ const { Client } = require('pg');
 
 function findConnectionString() {
   const isPg = (v) => typeof v === 'string' && /^postgres(ql)?:\/\//i.test(v.replace(/^["']/, ''));
-  // ordem de preferência por nome
-  const prefer = ['DATABASE_URL', 'POSTGRES_URL', 'DATABASE_POSTGRES_URL',
+  // ordem de preferência por nome — IGUAL ao api/_lib/db.js (SUPABASE_DB_URL primeiro),
+  // pra garantir que a migração caia no MESMO banco que a produção lê.
+  const prefer = ['SUPABASE_DB_URL', 'DATABASE_URL', 'POSTGRES_URL', 'DATABASE_POSTGRES_URL',
     'DATABASE_URL_UNPOOLED', 'DATABASE_POSTGRES_URL_NON_POOLING', 'POSTGRES_URL_NON_POOLING'];
   for (const k of prefer) if (isPg(process.env[k])) return process.env[k].replace(/^["']|["']$/g, '');
   // fallback: QUALQUER variável cujo valor seja uma URL postgres (evita as do Prisma/pgbouncer)

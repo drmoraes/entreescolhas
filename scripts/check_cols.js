@@ -17,7 +17,7 @@ const { Client } = require('pg');
 
 function findConn() {
   const isPg = (v) => typeof v === 'string' && /^postgres(ql)?:\/\//i.test(v);
-  for (const k of ['DATABASE_URL', 'POSTGRES_URL', 'DATABASE_POSTGRES_URL']) if (isPg(process.env[k])) return process.env[k];
+  for (const k of ['SUPABASE_DB_URL', 'DATABASE_URL', 'POSTGRES_URL', 'DATABASE_POSTGRES_URL']) if (isPg(process.env[k])) return process.env[k];
   for (const [k, v] of Object.entries(process.env)) if (isPg(v) && !/PRISMA/i.test(k)) return v;
   return null;
 }
