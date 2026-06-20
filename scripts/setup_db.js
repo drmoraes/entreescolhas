@@ -39,11 +39,13 @@ if (!url) {
 }
 console.log('Usando connection string:', url.replace(/:[^:@/]+@/, ':****@').slice(0, 70) + '...');
 
+// Schemas sempre rodam. O seed demo (empresa + 6 candidatos fake) só com `--seed`.
 const FILES = [
-  'api/_schema.sql',        // tabelas base (candidates, leads, etc.)
-  'api/_schema_b2b.sql',    // camada B2B (empresas, créditos, desbloqueios, auditoria)
-  'scripts/seed_demo.sql',  // empresa demo + candidatos de teste
+  'api/_schema.sql',       // tabelas base (candidates, leads, etc.)
+  'api/_schema_b2b.sql',   // camada B2B (empresas, créditos, desbloqueios, auditoria)
+  'api/_schema_cep.sql',   // proximidade (cep/lat/lon) + idiomas/relocação/contrato
 ];
+if (process.argv.includes('--seed')) FILES.push('scripts/seed_demo.sql');
 
 (async () => {
   const client = new Client({ connectionString: url, ssl: { rejectUnauthorized: false } });
