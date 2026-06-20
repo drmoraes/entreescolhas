@@ -75,6 +75,14 @@ module.exports = async (req, res) => {
       FROM companies c LEFT JOIN credit_ledger l ON l.company_id = c.id
      GROUP BY c.id, c.nome, c.plan ORDER BY comprados DESC LIMIT 10`);
 
+  // ── Empresas (para conceder créditos / gestão) ─────────────
+  const empresas = await query(`
+    SELECT c.id, c.nome, c.email, c.plan, c.status,
+           COALESCE(SUM(l.delta),0)::int AS saldo
+      FROM companies c LEFT JOIN credit_ledger l ON l.company_id = c.id
+     GROUP BY c.id, c.nome, c.email, c.plan, c.status
+     ORDER BY c.nome LIMIT 200`);
+
   // ── Logs recentes de acesso a PII ──────────────────────────
   const logs = await query(`
     SELECT a.created_at, a.action, a.company_id, a.candidate_id, a.purpose, co.nome AS empresa
@@ -93,6 +101,7 @@ module.exports = async (req, res) => {
     responsividade: { ...resp, taxa_resposta_pct: respRate },
     privacidade: { ...krisk, revogacoes: revogacoes.n },
     top_clientes: topClients.rows,
+    empresas: empresas.rows,
     logs: logs.rows,
   });
 };

@@ -44,7 +44,8 @@ async function setup() {
     work_model text, availability text, salary_min int, salary_max int, skills jsonb, arquetipo text, arquetipo_scores jsonb,
     status text default 'novo', visibility text default 'visible', b2b_consent boolean default false, b2b_consent_at timestamptz,
     last_confirmed_at timestamptz, email_verified boolean default false, phone_verified boolean default false,
-    public_token text, confirm_token text, responses_received int default 0, invites_total int default 0, notes text)`);
+    public_token text, confirm_token text, responses_received int default 0, invites_total int default 0, notes text,
+    cep text, lat double precision, lon double precision, idiomas jsonb, aceita_relocacao boolean, contrato text)`);
   await pool.query(`CREATE TABLE unlocks(id serial primary key, company_id int, company_user_id int, candidate_id int,
     credits_spent int default 1, status text default 'active', contact_valid boolean, adherence_score int, confidence_score int,
     invited_at timestamptz, sla_deadline timestamptz, responded_at timestamptz, refunded_at timestamptz,

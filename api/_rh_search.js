@@ -7,6 +7,7 @@ const { query } = require('./_lib/db');
 const { requireCompany, logAccess } = require('./_lib/b2b-auth');
 const { anonymizeCandidate } = require('./_lib/anonymize');
 const { getClientIp } = require('./_lib/rate-limit');
+const { geocodeCep } = require('./_lib/geocode');
 
 const FETCH_CAP = 300; // janela máx. para ranqueamento em memória
 
@@ -54,6 +55,15 @@ module.exports = async (req, res) => {
     params
   );
 
+  // local da vaga (proximidade): usa lat/lon do cliente; se não vierem, geocodifica o CEP no servidor
+  let jobLat = q.job_lat ? Number(q.job_lat) : null;
+  let jobLon = q.job_lon ? Number(q.job_lon) : null;
+  let jobGeoAprox = false;
+  if ((jobLat == null || jobLon == null) && q.job_cep) {
+    const g = await geocodeCep(q.job_cep);
+    if (g) { jobLat = g.lat; jobLon = g.lon; jobGeoAprox = !g.exact; }
+  }
+
   // critérios para o Score de Aderência
   const criteria = {
     skills: q.skills ? String(q.skills).split(',').map((s) => s.trim()).filter(Boolean) : [],
@@ -61,8 +71,9 @@ module.exports = async (req, res) => {
     work_model: q.work_model || null,
     cidade: q.cidade || null,
     salary_max: q.salary_max ? Number(q.salary_max) : null,
-    job_lat: q.job_lat ? Number(q.job_lat) : null,   // local da vaga (proximidade)
-    job_lon: q.job_lon ? Number(q.job_lon) : null,
+    job_lat: jobLat,   // local da vaga (proximidade)
+    job_lon: jobLon,
+    job_geo_aprox: jobGeoAprox,
   };
 
   // desbloqueios já feitos por esta empresa

@@ -332,6 +332,30 @@
     }
     .btn-nav:hover { opacity: 0.85; color: var(--white); }
 
+    /* Dropdown "Entrar" (Empresas / Candidato / Admin) */
+    .nav-dd { position: relative; }
+    .nav-dd-btn {
+      background: transparent; border: 1px solid var(--border); color: var(--text-2);
+      padding: 8px 16px; border-radius: 8px; font-size: 0.875rem; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: color .2s, border-color .2s;
+    }
+    .nav-dd-btn:hover { color: var(--text); border-color: var(--border-hover); }
+    .nav-dd-menu {
+      position: absolute; right: 0; top: calc(100% + 10px); background: var(--bg-raised);
+      border: 1px solid var(--border); border-radius: 12px; padding: 6px; min-width: 220px;
+      display: none; flex-direction: column; gap: 2px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.5); z-index: 200;
+    }
+    .nav-dd-menu.open { display: flex; }
+    .nav-dd-menu a {
+      display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 8px;
+      color: var(--text-2); font-size: 0.9rem; text-decoration: none; transition: background .15s, color .15s;
+    }
+    .nav-dd-menu a:hover { background: var(--accent-dim); color: var(--text); }
+    .nav-dd-menu .dd-tx { display: flex; flex-direction: column; line-height: 1.25; }
+    .nav-dd-menu .dd-tx small { color: var(--text-3); font-size: 0.72rem; margin-top: 1px; }
+    .nav-dd-menu .dd-sep { height: 1px; background: var(--border); margin: 4px 6px; }
+
     @media (max-width: 900px) {
       .nav-links { gap: 16px; }
       .nav-links a:not(.btn-nav) { display: none; }
@@ -1084,6 +1108,15 @@
       <a href="#jornadas">Jornadas</a>
       <a href="#faq">FAQ</a>
       <a href="admin.html" id="nav-admin" class="nav-admin" aria-label="Painel Admin">Admin</a>
+      <div class="nav-dd">
+        <button type="button" class="nav-dd-btn" id="navEntrar" aria-haspopup="true" aria-expanded="false">Entrar ▾</button>
+        <div class="nav-dd-menu" id="navEntrarMenu" role="menu">
+          <a href="portal-rh.html" role="menuitem"><span>🏢</span><span class="dd-tx">Empresas (RH)<small>Buscar talentos no banco</small></span></a>
+          <a href="meu-perfil.html" role="menuitem"><span>👤</span><span class="dd-tx">Candidato<small>Meu perfil e convites</small></span></a>
+          <div class="dd-sep"></div>
+          <a href="admin-b2b.html" role="menuitem"><span>🔒</span><span class="dd-tx">Admin<small>Painel, métricas e créditos</small></span></a>
+        </div>
+      </div>
       <a href="banco-de-talentos.html" class="btn-nav">Banco de Talentos</a>
     </div>
     <button class="nav-hamburger" id="nav-hamburger" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-menu">
@@ -1098,8 +1131,20 @@
   <a href="#como-funciona" class="mobile-menu-link">Como funciona</a>
   <a href="#jornadas" class="mobile-menu-link">Jornadas</a>
   <a href="#faq" class="mobile-menu-link">FAQ</a>
+  <a href="portal-rh.html" class="mobile-menu-link">🏢 Empresas (RH)</a>
+  <a href="meu-perfil.html" class="mobile-menu-link">👤 Candidato</a>
+  <a href="admin-b2b.html" class="mobile-menu-link">🔒 Admin</a>
   <a href="banco-de-talentos.html" class="btn-nav-mobile">Banco de Talentos</a>
 </div>
+<script>
+  (function(){
+    var b=document.getElementById('navEntrar'), m=document.getElementById('navEntrarMenu');
+    if(!b||!m)return;
+    b.addEventListener('click',function(e){e.stopPropagation();var open=m.classList.toggle('open');b.setAttribute('aria-expanded',open?'true':'false');});
+    document.addEventListener('click',function(e){if(!m.contains(e.target)&&e.target!==b){m.classList.remove('open');b.setAttribute('aria-expanded','false');}});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'){m.classList.remove('open');b.setAttribute('aria-expanded','false');}});
+  })();
+</script>
 
 <!-- ═══════════════════════════════════════════════════════════════
      HERO

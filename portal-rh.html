@@ -269,8 +269,8 @@ async function geocodeJobCep(){
     const r=await fetch('https://brasilapi.com.br/api/cep/v2/'+cep);
     if(r.ok){const j=await r.json();const co=j.location&&j.location.coordinates;
       if(co&&co.latitude){jobCoords={lat:co.latitude,lon:co.longitude};$('cepInfo').textContent='📍 '+(j.city||'')+' '+(j.state||'');}
-      else $('cepInfo').textContent='CEP sem coordenadas';}
-    else $('cepInfo').textContent='CEP não encontrado';
+      else $('cepInfo').textContent=('📍 '+(j.city||'')+' '+(j.state||'')+' (aprox.)').trim();}
+    else $('cepInfo').textContent='';
   }catch(e){$('cepInfo').textContent='';}
 }
 function buildQuery(){
@@ -278,6 +278,8 @@ function buildQuery(){
   const map={cargo:'fCargo',skills:'fSkills',area:'fArea',senioridade:'fSen',work_model:'fModel',cidade:'fCidade',salary_max:'fSalary',min_confidence:'fConf'};
   for(const[k,id]of Object.entries(map)){const v=$(id).value.trim();if(v&&v!=='0')p.set(k,v);}
   if($('fCold').checked)p.set('include_cold','true');
+  const cepRaw=($('fCep').value||'').replace(/\D/g,'');
+  if(cepRaw.length===8)p.set('job_cep',cepRaw); // servidor geocodifica (com fallback) se preciso
   if(jobCoords){p.set('job_lat',jobCoords.lat);p.set('job_lon',jobCoords.lon);}
   return p;
 }
