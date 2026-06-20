@@ -71,6 +71,20 @@ extrato da carteira e log imutável de `reveal_pii`.
 - **k-anonimato**: o Admin monitora células (área+senioridade+cidade) com menos de 5 perfis (risco de reidentificação).
 - **Scores sem viés**: nenhum atributo sensível (idade, gênero, PCD) entra no ranking; cada score expõe o “porquê”.
 
+## Proximidade casa↔vaga (CEP)
+
+`cep` é PII (só pós-desbloqueio); `lat`/`lon` são derivados na importação (geocodificação BrasilAPI).
+Na busca, o RH informa o **CEP da vaga** → calcula-se a distância (Haversine) de cada candidato e
+exibe-se apenas a **faixa** ("até 5 km", "5–15 km"…), nunca a localização exata. A proximidade entra
+no Score de Aderência (fator localização). Importação: `scripts/import_candidates.js`.
+
+### Roadmap: tempo de deslocamento por transporte público (plus)
+Evolução natural da proximidade. Diretrizes definidas:
+- **Custo:** API de rotas (ex.: Google Distance Matrix `mode=transit`) é paga por consulta → calcular
+  **no momento do desbloqueio**, não em toda busca, para controlar gasto.
+- **Privacidade:** mostrar **faixa de tempo** ("até 30 min", "30–60 min"), nunca a rota exata.
+- Requer `GOOGLE_MAPS_API_KEY` (ou equivalente) em variável de ambiente.
+
 ## Compra de créditos (Mercado Pago)
 
 Já integrada, reaproveitando o padrão do checkout existente:
