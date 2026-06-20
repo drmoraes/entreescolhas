@@ -21,6 +21,26 @@ function norm(s) {
   return stripAccents(String(s || '').toLowerCase()).trim();
 }
 
+// Distância em km entre dois pontos (Haversine).
+function haversineKm(lat1, lon1, lat2, lon2) {
+  if ([lat1, lon1, lat2, lon2].some((v) => v == null || isNaN(v))) return null;
+  const R = 6371, toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+// Faixa de distância exibível ao RH (sem revelar localização exata).
+function distanceBucket(km) {
+  if (km == null) return null;
+  if (km <= 5) return 'até 5 km';
+  if (km <= 15) return '5–15 km';
+  if (km <= 30) return '15–30 km';
+  if (km <= 60) return '30–60 km';
+  return 'mais de 60 km';
+}
+
 function daysSince(date) {
   if (!date) return Infinity;
   const d = (date instanceof Date) ? date : new Date(date);
@@ -130,16 +150,23 @@ function adherenceScore(c, criteria = {}) {
   }
   score += senPts;
 
-  // Localização / modelo (15)
+  // Localização / proximidade (15)
   let locPts = 10;
+  const jobLat = criteria.job_lat != null ? Number(criteria.job_lat) : null;
+  const jobLon = criteria.job_lon != null ? Number(criteria.job_lon) : null;
+  const dist = (jobLat != null && jobLon != null) ? haversineKm(c.lat, c.lon, jobLat, jobLon) : null;
   if (criteria.work_model && norm(criteria.work_model) === 'remoto') {
     locPts = 15; // remoto: localização não restringe
-    reasons.push({ criterio: 'Localização/modelo', pontos: locPts, max: 15, detalhe: 'vaga remota' });
+    reasons.push({ criterio: 'Localização/proximidade', pontos: locPts, max: 15, detalhe: 'vaga remota' });
+  } else if (dist != null) {
+    // proximidade casa↔vaga (perto = mais pontos)
+    locPts = dist <= 5 ? 15 : dist <= 15 ? 12 : dist <= 30 ? 8 : dist <= 60 ? 4 : 2;
+    reasons.push({ criterio: 'Localização/proximidade', pontos: locPts, max: 15, detalhe: distanceBucket(dist) + ' da vaga' });
   } else if (criteria.cidade) {
     locPts = norm(c.cidade).includes(norm(criteria.cidade)) ? 15 : 5;
-    reasons.push({ criterio: 'Localização/modelo', pontos: locPts, max: 15, detalhe: `${c.cidade || '—'} vs ${criteria.cidade}` });
+    reasons.push({ criterio: 'Localização/proximidade', pontos: locPts, max: 15, detalhe: `${c.cidade || '—'} vs ${criteria.cidade}` });
   } else {
-    reasons.push({ criterio: 'Localização/modelo', pontos: locPts, max: 15, detalhe: 'sem exigência' });
+    reasons.push({ criterio: 'Localização/proximidade', pontos: locPts, max: 15, detalhe: 'sem exigência' });
   }
   score += locPts;
 
@@ -168,4 +195,4 @@ function adherenceScore(c, criteria = {}) {
   return { score, reasons };
 }
 
-module.exports = { confidenceScore, adherenceScore, isActive, thermalState, seniorityRank, daysSince };
+module.exports = { confidenceScore, adherenceScore, isActive, thermalState, seniorityRank, daysSince, haversineKm, distanceBucket };

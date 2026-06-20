@@ -5,10 +5,10 @@
 // revealCandidate(): devolve os dados completos (chamado SÓ após gasto de crédito).
 // ─────────────────────────────────────────────────────────────
 
-const { confidenceScore, adherenceScore, thermalState, isActive } = require('./scoring');
+const { confidenceScore, adherenceScore, thermalState, isActive, haversineKm, distanceBucket } = require('./scoring');
 
 // Campos que NUNCA podem sair antes do desbloqueio.
-const PII_FIELDS = ['nome', 'email', 'telefone', 'linkedin', 'empresa', 'confirm_token', 'notes'];
+const PII_FIELDS = ['nome', 'email', 'telefone', 'linkedin', 'empresa', 'confirm_token', 'notes', 'cep', 'lat', 'lon'];
 
 // Generaliza a cidade para região (reduz reidentificação por combinação).
 const REGIOES = {
@@ -49,7 +49,13 @@ function aliasFromToken(token, area) {
 function anonymizeCandidate(c, criteria = {}) {
   const conf = confidenceScore(c);
   const adh = adherenceScore(c, criteria);
+  // proximidade: só a FAIXA, nunca a localização exata
+  const jLat = criteria.job_lat != null ? Number(criteria.job_lat) : null;
+  const jLon = criteria.job_lon != null ? Number(criteria.job_lon) : null;
+  const dist = (jLat != null && jLon != null) ? haversineKm(c.lat, c.lon, jLat, jLon) : null;
   return {
+    proximidade: distanceBucket(dist),  // ex.: "até 5 km" | null se vaga sem local
+    aceita_relocacao: c.aceita_relocacao,
     token: c.public_token,                 // pseudônimo opaco (chave de referência)
     alias: aliasFromToken(c.public_token, c.area),
     area: c.area || null,
@@ -84,7 +90,11 @@ function revealCandidate(c) {
     email: c.email,
     telefone: c.telefone,
     cidade: c.cidade,
+    cep: c.cep,
     linkedin: c.linkedin,
+    idiomas: Array.isArray(c.idiomas) ? c.idiomas : [],
+    aceita_relocacao: c.aceita_relocacao,
+    contrato: c.contrato,
     cargo: c.cargo,
     empresa: c.empresa,
     area: c.area,
