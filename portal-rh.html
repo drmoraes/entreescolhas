@@ -169,6 +169,7 @@
       <div class="field"><label>Modelo</label><select id="fModel" onchange="search()"><option value="">Qualquer</option>
         <option value="remoto">Remoto</option><option value="hibrido">Híbrido</option><option value="presencial">Presencial</option></select></div>
       <div class="field"><label>Cidade/Região</label><input id="fCidade" placeholder="ex: São Paulo" oninput="debouncedSearch()" /></div>
+      <div class="field"><label>CEP da vaga (perto de casa)</label><input id="fCep" placeholder="ex: 01310-100" oninput="debouncedSearch()" /><span id="cepInfo" class="small muted"></span></div>
       <div class="field"><label>Budget máx. (R$)</label><input id="fSalary" type="number" placeholder="8000" oninput="debouncedSearch()" /></div>
       <div class="field"><label>Confiança mínima</label><select id="fConf" onchange="search()"><option value="0">Qualquer</option>
         <option value="50">≥ 50</option><option value="70">≥ 70</option><option value="85">≥ 85</option></select></div>
@@ -258,14 +259,30 @@ function updateBalance(n){BALANCE=n;$('balNum').textContent=n;}
 /* ===== Search ===== */
 let _t;
 function debouncedSearch(){clearTimeout(_t);_t=setTimeout(search,350);}
+let jobCoords=null, lastCep='';
+async function geocodeJobCep(){
+  const cep=($('fCep').value||'').replace(/\D/g,'');
+  if(cep.length!==8){jobCoords=null;lastCep='';$('cepInfo').textContent='';return;}
+  if(cep===lastCep)return;
+  lastCep=cep;jobCoords=null;$('cepInfo').textContent='localizando…';
+  try{
+    const r=await fetch('https://brasilapi.com.br/api/cep/v2/'+cep);
+    if(r.ok){const j=await r.json();const co=j.location&&j.location.coordinates;
+      if(co&&co.latitude){jobCoords={lat:co.latitude,lon:co.longitude};$('cepInfo').textContent='📍 '+(j.city||'')+' '+(j.state||'');}
+      else $('cepInfo').textContent='CEP sem coordenadas';}
+    else $('cepInfo').textContent='CEP não encontrado';
+  }catch(e){$('cepInfo').textContent='';}
+}
 function buildQuery(){
   const p=new URLSearchParams();
   const map={cargo:'fCargo',skills:'fSkills',area:'fArea',senioridade:'fSen',work_model:'fModel',cidade:'fCidade',salary_max:'fSalary',min_confidence:'fConf'};
   for(const[k,id]of Object.entries(map)){const v=$(id).value.trim();if(v&&v!=='0')p.set(k,v);}
   if($('fCold').checked)p.set('include_cold','true');
+  if(jobCoords){p.set('job_lat',jobCoords.lat);p.set('job_lon',jobCoords.lon);}
   return p;
 }
 async function search(){
+  await geocodeJobCep();
   const p=buildQuery();
   $('resState').innerHTML='<div class="empty"><span class="spin"></span></div>';
   $('results').innerHTML='';
@@ -298,7 +315,7 @@ function cardHTML(c){
       <div class="score-row"><span class="lbl">Confiança</span><span class="bar conf"><i style="width:${c.confidence}%"></i></span><span class="val">${c.confidence}</span></div>
     </div>
     <div class="skills">${skills}</div>
-    <div class="meta"><span>📍 ${esc(c.regiao||'—')}</span><span>💼 ${esc(c.work_model||'—')}</span><span>⏱ ${esc(c.availability||'—')}</span>${c.salary_band?'<span>💰 '+esc(c.salary_band)+'</span>':''}</div>
+    <div class="meta"><span>📍 ${esc(c.regiao||'—')}</span>${c.proximidade?'<span style="color:var(--green)">🏠 '+esc(c.proximidade)+'</span>':''}<span>💼 ${esc(c.work_model||'—')}</span><span>⏱ ${esc(c.availability||'—')}</span>${c.salary_band?'<span>💰 '+esc(c.salary_band)+'</span>':''}</div>
     <div class="actions">
       <button class="btn-ghost" style="flex:1;padding:9px" onclick="openCandidate('${c.token}')">Ver perfil</button>
       ${c.unlocked

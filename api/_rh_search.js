@@ -45,7 +45,7 @@ module.exports = async (req, res) => {
   const { rows } = await query(
     `SELECT id, public_token, area, cargo, senioridade, experiencia, escolaridade,
             cidade, work_model, availability, salary_min, salary_max, empresa,
-            skills, arquetipo, arquetipo_scores, last_confirmed_at,
+            skills, arquetipo, arquetipo_scores, last_confirmed_at, lat, lon, aceita_relocacao,
             email_verified, phone_verified, invites_total, responses_received
        FROM candidates
       WHERE ${whereSQL}
@@ -61,6 +61,8 @@ module.exports = async (req, res) => {
     work_model: q.work_model || null,
     cidade: q.cidade || null,
     salary_max: q.salary_max ? Number(q.salary_max) : null,
+    job_lat: q.job_lat ? Number(q.job_lat) : null,   // local da vaga (proximidade)
+    job_lon: q.job_lon ? Number(q.job_lon) : null,
   };
 
   // desbloqueios já feitos por esta empresa

@@ -20,6 +20,10 @@ src-app-page.tsx
 *.php
 *.save
 
+# Dados de candidatos (PII) — NUNCA versionar; só o modelo é permitido
+*.csv
+!scripts/candidatos-modelo.csv
+
 # Node / Vercel
 node_modules/
 .vercel/
