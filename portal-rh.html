@@ -226,10 +226,10 @@ async function doAuth(){
   try{
     let res;
     if(MODE==='register'){
-      res=await api('/rh_login?action=register',{method:'POST',auth:false,
+      res=await api('/b2b?fn=login&action=register',{method:'POST',auth:false,
         body:{email,password,company:$('rCompany').value.trim(),nome:$('rName').value.trim()}});
     }else{
-      res=await api('/rh_login',{method:'POST',auth:false,body:{email,password}});
+      res=await api('/b2b?fn=login',{method:'POST',auth:false,body:{email,password}});
     }
     SESSION=res.session;localStorage.setItem('rh_session',SESSION);
     BALANCE=res.balance;
@@ -252,7 +252,7 @@ function enterApp(welcome){
   }
   search();
 }
-async function refreshBalance(){ try{ const w=await api('/rh_wallet'); updateBalance(w.balance); }catch(e){} }
+async function refreshBalance(){ try{ const w=await api('/b2b?fn=wallet'); updateBalance(w.balance); }catch(e){} }
 function updateBalance(n){BALANCE=n;$('balNum').textContent=n;}
 
 /* ===== Search ===== */
@@ -270,7 +270,7 @@ async function search(){
   $('resState').innerHTML='<div class="empty"><span class="spin"></span></div>';
   $('results').innerHTML='';
   try{
-    const res=await api('/rh_search?'+p.toString());
+    const res=await api('/b2b?fn=search&'+p.toString());
     lastCriteria=res.criteria||{};
     $('resCount').textContent=res.total+' candidato(s) · ordenados por aderência';
     $('resState').innerHTML='';
@@ -314,7 +314,7 @@ async function openCandidate(token){
   root.innerHTML='<div class="modal-bg"><div class="modal"><div class="body"><div class="empty"><span class="spin"></span></div></div></div></div>';
   const p=buildQuery();
   let c;
-  try{ c=await api('/rh_candidate?token='+encodeURIComponent(token)+'&'+p.toString()); }
+  try{ c=await api('/b2b?fn=candidate&token='+encodeURIComponent(token)+'&'+p.toString()); }
   catch(e){ closeModal(); toast(e.message); return; }
   renderCandidate(c);
 }
@@ -378,7 +378,7 @@ function closeModal(){$('modalRoot').innerHTML='';}
 async function doUnlock(token){
   const btn=$('unlockBtn'); if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>';}
   try{
-    const res=await api('/rh_unlock',{method:'POST',body:{token,criteria:lastCriteria}});
+    const res=await api('/b2b?fn=unlock',{method:'POST',body:{token,criteria:lastCriteria}});
     updateBalance(res.balance);
     if(res.refunded){ toast('⚠ '+res.message); closeModal(); search(); return; }
     toast('✓ Candidato desbloqueado!');
@@ -392,7 +392,7 @@ function waLink(tel,nome){
   return 'https://wa.me/'+intl+'?text='+encodeURIComponent('Olá, '+(nome||'')+'! Encontramos seu perfil no Banco de Talentos do Entre Escolhas e gostaríamos de conversar sobre uma oportunidade.');
 }
 async function sendInvite(token){
-  try{ const res=await api('/rh_invite',{method:'POST',body:{token,message:'Olá! Vi seu perfil e gostaria de conversar sobre uma oportunidade.'}});
+  try{ const res=await api('/b2b?fn=invite',{method:'POST',body:{token,message:'Olá! Vi seu perfil e gostaria de conversar sobre uma oportunidade.'}});
     toast(res.email_sent?'✓ Convite enviado por e-mail':'Convite registrado (e-mail indisponível — use o WhatsApp)');
     openCandidate(token); }
   catch(e){ toast(e.message); }
@@ -414,7 +414,7 @@ function openDispute(token){
   </div></div>`;
 }
 async function submitDispute(token){
-  try{ const res=await api('/rh_dispute',{method:'POST',body:{token,reason:$('dReason').value,notes:$('dNotes').value}});
+  try{ const res=await api('/b2b?fn=dispute',{method:'POST',body:{token,reason:$('dReason').value,notes:$('dNotes').value}});
     if(res.refunded){updateBalance(res.balance);} toast(res.message); closeModal(); search(); }
   catch(e){ toast(e.message); }
 }
@@ -424,7 +424,7 @@ async function openWallet(){
   const root=$('walletRoot');
   root.innerHTML='<div class="drawer-bg" onclick="if(event.target===this)closeWallet()"><div class="drawer"><div class="empty"><span class="spin"></span></div></div></div>';
   try{
-    const w=await api('/rh_wallet');
+    const w=await api('/b2b?fn=wallet');
     updateBalance(w.balance);
     const pkgs=Object.entries(w.packages).map(([k,v])=>`<button onclick="buy('${k}')"><b>${v.credits}</b>créditos<br><span class="muted small">R$ ${v.price}</span></button>`).join('');
     const led=w.ledger.map(l=>{
@@ -449,7 +449,7 @@ async function openWallet(){
 }
 function closeWallet(){$('walletRoot').innerHTML='';}
 async function buy(pkg){
-  try{ const res=await api('/rh_wallet',{method:'POST',body:{package:pkg}});
+  try{ const res=await api('/b2b?fn=wallet',{method:'POST',body:{package:pkg}});
     if(res.pending && res.init_point){ toast('Redirecionando ao checkout…'); location.href=res.init_point; return; }
     if(res.pending){ toast('Pagamento em processamento…'); return; }
     updateBalance(res.balance); toast('✓ +'+res.credited+' créditos'); openWallet(); }
@@ -457,7 +457,7 @@ async function buy(pkg){
 }
 
 /* ===== Boot ===== */
-if(SESSION){ api('/rh_wallet').then(w=>{BALANCE=w.balance;enterApp(false);}).catch(()=>{localStorage.removeItem('rh_session');SESSION='';}); }
+if(SESSION){ api('/b2b?fn=wallet').then(w=>{BALANCE=w.balance;enterApp(false);}).catch(()=>{localStorage.removeItem('rh_session');SESSION='';}); }
 </script>
 </body>
 </html>

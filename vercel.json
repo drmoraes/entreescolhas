@@ -3,6 +3,6 @@
     { "source": "/api/:name.php", "destination": "/api/:name" }
   ],
   "crons": [
-    { "path": "/api/cron_sla", "schedule": "0 * * * *" }
+    { "path": "/api/b2b", "schedule": "0 6 * * *" }
   ]
 }

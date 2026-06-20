@@ -61,8 +61,8 @@ async function call(h, o) { const res = mkRes(); await h(mkReq(o), res); return 
   process.env.MP_ACCESS_TOKEN = 'TEST-TOKEN';
   process.env.APP_BASE_URL = 'https://site.com';
   await setup();
-  const wallet = require(path.join(API, 'rh_wallet.js'));
-  const webhook = require(path.join(API, 'mp_webhook_credits.js'));
+  const wallet = require(path.join(API, '_rh_wallet.js'));
+  const webhook = require(path.join(API, '_mp_webhook_credits.js'));
 
   console.log('\n# Compra cria preference (não credita ainda)');
   let r = await call(wallet, { method: 'POST', body: { package: 'p10' } });

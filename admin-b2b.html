@@ -63,7 +63,7 @@ async function load(){
   if(!KEY){$('gErr').textContent='Informe a chave';return;}
   $('gErr').textContent='';
   try{
-    const r=await fetch('/api/admin_b2b_stats',{headers:{'X-Api-Key':KEY}});
+    const r=await fetch('/api/b2b?fn=admin_stats',{headers:{'X-Api-Key':KEY}});
     if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||'Acesso negado');}
     const d=await r.json();
     $('gate').classList.add('hide');$('dash').classList.remove('hide');$('refreshBtn').style.display='';

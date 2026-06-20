@@ -50,7 +50,7 @@ async function call(h, o) { const res = mkRes(); await h(mkReq(o), res); return 
 (async () => {
   process.env.APP_BASE_URL = 'https://site.com';
   await setup();
-  const invite = require(path.join(API, 'rh_invite.js'));
+  const invite = require(path.join(API, '_rh_invite.js'));
 
   console.log('\n# Convite dispara e-mail + SLA + WhatsApp');
   let r = await call(invite, { body: { token: 'PUB_OK', message: 'Vi seu perfil, vamos conversar?' } });

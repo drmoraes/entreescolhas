@@ -89,13 +89,13 @@ async function call(handler, reqOpt) { const res = mkRes(); await handler(mkReq(
 
 (async () => {
   await setup();
-  const search = require(path.join(API, 'rh_search.js'));
-  const unlock = require(path.join(API, 'rh_unlock.js'));
-  const candidate = require(path.join(API, 'rh_candidate.js'));
-  const invite = require(path.join(API, 'rh_invite.js'));
-  const dispute = require(path.join(API, 'rh_dispute.js'));
-  const cand = require(path.join(API, 'cand_portal.js'));
-  const wallet = require(path.join(API, 'rh_wallet.js'));
+  const search = require(path.join(API, '_rh_search.js'));
+  const unlock = require(path.join(API, '_rh_unlock.js'));
+  const candidate = require(path.join(API, '_rh_candidate.js'));
+  const invite = require(path.join(API, '_rh_invite.js'));
+  const dispute = require(path.join(API, '_rh_dispute.js'));
+  const cand = require(path.join(API, '_cand_portal.js'));
+  const wallet = require(path.join(API, '_rh_wallet.js'));
 
   console.log('\n# Busca anônima');
   let r = await call(search, { query: { skills: 'React,Node' } });

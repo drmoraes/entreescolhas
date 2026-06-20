@@ -77,7 +77,7 @@ if(params.get('token')){TOKEN=params.get('token');loadProfile();}
 async function loadProfile(){
   TOKEN=TOKEN||$('tokenInput').value.trim();
   if(!TOKEN){$('gateErr').textContent='Informe o token';return;}
-  try{ const d=await api('/cand_portal?token='+encodeURIComponent(TOKEN)); render(d); }
+  try{ const d=await api('/b2b?fn=cand_portal&token='+encodeURIComponent(TOKEN)); render(d); }
   catch(e){ $('gateErr').textContent=e.message; }
 }
 function badge(t){return t==='ativo'?'<span class="badge active">● Ativo</span>':t==='morno'?'<span class="badge warm">● Morno</span>':'<span class="badge cold">● Frio</span>';}
@@ -143,17 +143,17 @@ function render(d){
 }
 
 async function act(action){
-  try{ const d=await api('/cand_portal?action='+action,{method:'POST',body:{token:TOKEN}});
+  try{ const d=await api('/b2b?fn=cand_portal&action='+action,{method:'POST',body:{token:TOKEN}});
     toast(d.message||'Feito'); loadProfile(); }
   catch(e){ toast(e.message); }
 }
 async function setVis(v){
-  try{ await api('/cand_portal?action=visibility',{method:'POST',body:{token:TOKEN,value:v}});
+  try{ await api('/b2b?fn=cand_portal&action=visibility',{method:'POST',body:{token:TOKEN,value:v}});
     toast('Visibilidade: '+v); loadProfile(); }catch(e){ toast(e.message); }
 }
 async function consent(on){
   if(!on && !confirm('Tem certeza? Seu perfil sai da base imediatamente.'))return;
-  try{ const d=await api('/cand_portal?action=consent',{method:'POST',body:{token:TOKEN,value:on}});
+  try{ const d=await api('/b2b?fn=cand_portal&action=consent',{method:'POST',body:{token:TOKEN,value:on}});
     toast(d.message); loadProfile(); }catch(e){ toast(e.message); }
 }
 </script>

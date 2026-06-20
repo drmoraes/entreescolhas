@@ -76,7 +76,7 @@ module.exports = async (req, res) => {
         external_reference: extRef,
         back_urls: { success: back + 'success', pending: back + 'pending', failure: back + 'failure' },
         auto_return: 'approved',
-        notification_url: `${base}/api/mp_webhook_credits`,
+        notification_url: `${base}/api/b2b?fn=mp_webhook_credits`,
       };
       let response, result;
       try {
