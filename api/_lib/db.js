@@ -5,7 +5,8 @@ let pool;
 
 function getDB() {
   if (!pool) {
-    const connectionString = process.env.DATABASE_URL;
+    // Prioriza SUPABASE_DB_URL (não é gerenciada por integração) e cai para DATABASE_URL.
+    const connectionString = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
     if (!connectionString) {
       throw new Error('DATABASE_URL não configurada');
     }
