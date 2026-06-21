@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin · Usuários — Entre Escolhas</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.svg" />
+<style>
+  :root{--bg:#08080F;--bg-card:#0F0F1E;--bg-raised:#141428;--border:rgba(108,99,255,.15);
+    --accent:#6C63FF;--accent-dim:rgba(108,99,255,.12);--text:#F0EFF8;--text-2:#9490C0;--text-3:#5E5A8A;
+    --green:#22C55E;--gold:#C9A84C;--red:#EF4444}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:14px}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;font-weight:600}
+  input,select{font-family:inherit;background:var(--bg-raised);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 12px;font-size:13px;width:100%}
+  label.fl{display:block;font-size:12px;color:var(--text-2);margin-bottom:4px}
+  .btn{background:var(--accent);color:#fff;padding:9px 16px;font-size:13px}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-2);padding:8px 13px;font-size:13px}
+  .btn-soft{background:var(--accent-dim);color:#cfcaff;padding:8px 13px;font-size:13px}
+  .muted{color:var(--text-2)}.small{font-size:12px}.t3{color:var(--text-3)}
+  .green{color:var(--green)}.red{color:var(--red)}.accent{color:var(--accent)}
+  header{display:flex;align-items:center;gap:14px;padding:13px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(8,8,15,.92);backdrop-filter:blur(10px);z-index:5}
+  .brand{font-weight:800}.brand span{color:var(--accent)}
+  main{max-width:1080px;margin:0 auto;padding:24px}
+  .gate{max-width:380px;margin:80px auto;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:30px}
+  h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:22px 0 12px;font-weight:700}
+  table{width:100%;border-collapse:collapse;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-size:13px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border)}
+  th{color:var(--text-3);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  tr:last-child td{border:none}
+  .tag{font-size:11px;padding:2px 9px;border-radius:20px;border:1px solid var(--border);white-space:nowrap}
+  .tag.g{color:#86efac;border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)}
+  .tag.r{color:#fca5a5;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+  .tag.b{color:#7dd3fc;border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.08)}
+  .tag.gold{color:#e6cf8b;border-color:rgba(201,168,76,.3);background:rgba(201,168,76,.08)}
+  .split{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px;max-width:640px;margin-bottom:14px}
+  .grid3{display:grid;grid-template-columns:1.3fr 1.3fr 1fr;gap:10px}
+  code{background:var(--bg-raised);padding:2px 7px;border-radius:6px;font-size:12px}
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid var(--accent-dim);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header><div class="brand">Entre<span>Escolhas</span> · Admin · Usuários</div>
+  <div style="flex:1"></div>
+  <a class="btn-ghost" href="/admin-b2b.html" style="text-decoration:none">Admin B2B</a>
+  <button class="btn" id="refreshBtn" onclick="load()" style="display:none">Atualizar</button>
+</header>
+
+<div id="gate" class="gate">
+  <h2 style="font-size:17px;margin-bottom:4px">Usuários & papéis</h2>
+  <p class="muted small" style="margin-bottom:16px">Informe a ADMIN_API_KEY (chave mestra) ou seu token de usuário.</p>
+  <input id="key" type="password" placeholder="Chave / token" onkeydown="if(event.key==='Enter')load()" />
+  <button class="btn" style="width:100%;margin-top:12px" onclick="load()">Entrar</button>
+  <div id="gErr" class="red small" style="margin-top:10px"></div>
+</div>
+
+<main id="dash" style="display:none"></main>
+
+<script>
+const $=id=>document.getElementById(id);let KEY='';let ME={};
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function api(path,opts={}){return fetch('/api/b2b?'+path,{...opts,headers:{'X-Api-Key':KEY,...(opts.headers||{})}}).then(async r=>{if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||('Erro '+r.status));}return r.json();});}
+const ROLE={owner:'Owner',financeiro:'Financeiro',suporte:'Suporte',leitura:'Leitura'};
+function fmt(s){return s?new Date(s).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';}
+
+async function load(){
+  KEY=KEY||$('key').value.trim();
+  if(!KEY){$('gErr').textContent='Informe a chave';return;}
+  $('gErr').textContent='';
+  try{
+    const [u,a]=await Promise.all([api('fn=admin_users&op=list').catch(e=>({err:e.message})), api('fn=admin_users&op=audit')]);
+    $('gate').style.display='none';$('dash').style.display='';$('refreshBtn').style.display='';
+    render(u,a.data||[]);
+  }catch(e){$('gErr').textContent=e.message;}
+}
+
+function render(u,audit){
+  ME=u.me||{};
+  const owner = u.me && (u.me.master || u.me.role==='owner');
+  const usersHtml = u.err
+    ? `<div class="card muted">${esc(u.err)} — você precisa ser owner para gerenciar usuários.</div>`
+    : `<h2 class="sec">Criar usuário</h2>
+      <div class="card">
+        <input type="hidden" id="f_id">
+        <div class="grid3">
+          <div><label class="fl">Nome</label><input id="f_nome" placeholder="Maria Silva"></div>
+          <div><label class="fl">E-mail</label><input id="f_email" placeholder="maria@empresa.com"></div>
+          <div><label class="fl">Papel</label><select id="f_role">
+            <option value="leitura">Leitura</option><option value="suporte">Suporte</option>
+            <option value="financeiro">Financeiro</option><option value="owner">Owner</option></select></div>
+        </div>
+        <div class="split" style="margin-top:12px"><button class="btn" onclick="salvar()">Salvar usuário</button>
+          <button class="btn-ghost" onclick="limpar()">Limpar</button><span id="fMsg" class="small"></span></div>
+        <p class="muted small" style="margin-top:8px">Ao criar, o token aparece UMA vez para você compartilhar. Cada pessoa usa o próprio token para acessar o painel — as ações ficam atribuídas a ela.</p>
+      </div>
+      <h2 class="sec">Usuários (${u.data.length})</h2>
+      <table><thead><tr><th>Nome</th><th>E-mail</th><th>Papel</th><th>Token</th><th>Status</th><th>Último acesso</th><th>Ações</th></tr></thead><tbody>
+        ${u.data.map(x=>`<tr>
+          <td><b>${esc(x.nome)}</b></td><td class="muted">${esc(x.email)}</td>
+          <td><span class="tag ${x.role==='owner'?'gold':'b'}">${ROLE[x.role]||x.role}</span></td>
+          <td><code>${esc(x.token_mask)}</code></td>
+          <td>${x.status==='ativo'?'<span class="tag g">ativo</span>':'<span class="tag r">inativo</span>'}</td>
+          <td class="muted small">${fmt(x.last_seen_at)}</td>
+          <td class="split">
+            <button class="btn-soft" onclick='editar(${JSON.stringify(x).replace(/'/g,"&#39;")})'>Editar</button>
+            <button class="btn-ghost" onclick="rotate(${x.id},'${esc(x.nome)}')">Girar token</button>
+            <button class="btn-ghost" onclick="toggle(${x.id})">${x.status==='ativo'?'Desativar':'Ativar'}</button>
+          </td></tr>`).join('')||'<tr><td colspan="7" class="muted">Só a chave mestra ainda. Crie o primeiro usuário.</td></tr>'}
+      </tbody></table>`;
+
+  $('dash').innerHTML=`
+    <p class="muted small" style="margin-bottom:6px">Conectado como <b>${esc(ME.nome||'—')}</b> ${ME.master?'<span class="tag gold">chave mestra</span>':('· '+(ROLE[ME.role]||ME.role||''))}</p>
+    ${usersHtml}
+    <h2 class="sec">Auditoria de ações (quem fez o quê)</h2>
+    <table><thead><tr><th>Quando</th><th>Ator</th><th>Ação</th><th>Detalhe</th></tr></thead><tbody>
+      ${audit.map(a=>`<tr><td class="muted small">${fmt(a.created_at)}</td><td><b>${esc(a.actor_nome)}</b></td>
+        <td><span class="tag b">${esc(a.action)}</span></td><td class="muted">${esc(a.detail||'')}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">Sem ações registradas ainda</td></tr>'}
+    </tbody></table>`;
+}
+
+function limpar(){['f_id','f_nome','f_email'].forEach(i=>{if($(i))$(i).value='';});if($('f_role'))$('f_role').value='leitura';if($('fMsg'))$('fMsg').textContent='';}
+function editar(x){$('f_id').value=x.id;$('f_nome').value=x.nome;$('f_email').value=x.email;$('f_role').value=x.role;window.scrollTo(0,0);}
+async function salvar(){
+  const body={id:$('f_id').value||undefined,nome:$('f_nome').value,email:$('f_email').value,role:$('f_role').value};
+  const msg=$('fMsg');msg.textContent='Salvando…';msg.className='small muted';
+  try{ const d=await api('fn=admin_users&op=save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(d.token)showToken(body.nome,d.token);
+    limpar();await load();
+  }catch(e){msg.textContent=e.message;msg.className='small red';}
+}
+async function toggle(id){ try{ await api('fn=admin_users&op=toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});await load();}catch(e){alert(e.message);} }
+async function rotate(id,nome){ if(!confirm('Girar o token de '+nome+'? O token atual deixa de funcionar.'))return;
+  try{ const d=await api('fn=admin_users&op=rotate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});showToken(nome,d.token);await load();}catch(e){alert(e.message);} }
+function showToken(nome,token){
+  prompt('Token de '+nome+' (copie agora — não será mostrado de novo):',token);
+}
+</script>
+</body>
+</html>

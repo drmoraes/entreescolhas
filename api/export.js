@@ -11,7 +11,7 @@ function csvField(v) {
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
-  if (!requireApiKey(req, res)) return;
+  if (!(await requireApiKey(req, res))) return;
 
   const q = req.query || {};
   const where = ['1=1'];

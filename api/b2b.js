@@ -24,6 +24,7 @@ const handlers = {
   admin_company:      require('./_admin_company'),
   admin_candidates:   require('./_admin_candidates'),
   admin_coupons:      require('./_admin_coupons'),
+  admin_users:        require('./_admin_users'),
   cand_portal:        require('./_cand_portal'),
   mp_webhook_credits: require('./_mp_webhook_credits'),
   cron_sla:           require('./_cron_sla'),

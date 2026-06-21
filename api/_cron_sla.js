@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
   if (setCors(req, res)) return;
   // permite cron interno da Vercel (header) ou chamada com ADMIN_API_KEY
   const isCron = req.headers['x-vercel-cron'] || req.headers['x-vercel-signature'];
-  if (!isCron && !requireApiKey(req, res)) return;
+  if (!isCron && !(await requireApiKey(req, res))) return;
 
   let refunded = 0, hidden = 0;
   const client = await getDB().connect();

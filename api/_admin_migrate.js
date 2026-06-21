@@ -52,6 +52,25 @@ const STATEMENTS = [
   "CREATE INDEX IF NOT EXISTS idx_redemptions_coupon ON coupon_redemptions (coupon_id)",
   "ALTER TABLE credit_orders ADD COLUMN IF NOT EXISTS coupon_code VARCHAR(40)",
   "ALTER TABLE credit_orders ADD COLUMN IF NOT EXISTS discount NUMERIC(10,2)",
+  // ── Governança: usuários admin + auditoria de ações (Rodada 6) ──
+  `CREATE TABLE IF NOT EXISTS admin_users (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(120) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    role VARCHAR(20) NOT NULL DEFAULT 'leitura' CHECK (role IN ('owner','financeiro','suporte','leitura')),
+    token VARCHAR(64) NOT NULL UNIQUE,
+    status VARCHAR(20) NOT NULL DEFAULT 'ativo' CHECK (status IN ('ativo','inativo')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    last_seen_at TIMESTAMPTZ)`,
+  `CREATE TABLE IF NOT EXISTS admin_audit (
+    id SERIAL PRIMARY KEY,
+    actor_id INTEGER,
+    actor_nome VARCHAR(120),
+    action VARCHAR(40) NOT NULL,
+    detail VARCHAR(240),
+    ip VARCHAR(45),
+    created_at TIMESTAMPTZ DEFAULT NOW())`,
+  "CREATE INDEX IF NOT EXISTS idx_admin_audit_created ON admin_audit (created_at DESC)",
 ];
 
 const NEEDED = ['cep', 'lat', 'lon', 'idiomas', 'aceita_relocacao', 'contrato'];
@@ -67,7 +86,7 @@ function maskConn() {
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
-  if (!requireApiKey(req, res)) return;
+  if (!(await requireApiKey(req, res))) return;
 
   const conn = maskConn();
   const applied = [];

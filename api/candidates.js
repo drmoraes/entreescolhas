@@ -9,7 +9,7 @@ const SORTABLE = ['nome', 'email', 'created_at', 'status', 'senioridade'];
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
-  if (!requireApiKey(req, res)) return;
+  if (!(await requireApiKey(req, res))) return;
 
   const method = req.method;
   const q = req.query || {};

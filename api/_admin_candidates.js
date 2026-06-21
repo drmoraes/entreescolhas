@@ -1,6 +1,6 @@
 // /api/b2b?fn=admin_candidates&op=list|get|save|archive — CRUD de candidatos (Admin).
 // Protegido por ADMIN_API_KEY. Soft-delete (status='arquivado'); nunca apaga duro.
-const { setCors, json, err, requireApiKey, getJsonBody } = require('./_lib/http');
+const { setCors, json, err, requireApiKey, logAdmin, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
 
 // campos que o admin pode editar/criar
@@ -19,7 +19,7 @@ function estadoOf(last) {
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
-  if (!requireApiKey(req, res)) return;
+  if (!(await requireApiKey(req, res))) return;
   const op = String((req.query && req.query.op) || 'list');
 
   // ── LISTAR ───────────────────────────────────────────────
@@ -132,6 +132,7 @@ module.exports = async (req, res) => {
       await query(`INSERT INTO access_logs (action, candidate_id, purpose) VALUES ($1,$2,$3)`,
         [novo === 'arquivado' ? 'cand_archive' : 'cand_unarchive', id, 'admin']);
     } catch (e) { /* não bloqueia */ }
+    await logAdmin(req, novo === 'arquivado' ? 'cand_archive' : 'cand_unarchive', `candidato#${id}`);
     return json(res, { ok: true, id, status: novo });
   }
 

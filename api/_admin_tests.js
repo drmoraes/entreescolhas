@@ -1,7 +1,7 @@
 // /api/b2b?fn=admin_tests&op=list|result|reset — gestão de testes (jornadas).
 // Protegido por ADMIN_API_KEY. Lista leads/tentativas, mostra resultado e
 // reinicia o teste de quem travou (libera novas tentativas).
-const { setCors, json, err, requireApiKey, getJsonBody } = require('./_lib/http');
+const { setCors, json, err, requireApiKey, logAdmin, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
 
 const MAX = () => Number(process.env.MAX_TEST_ATTEMPTS || 3);
@@ -18,7 +18,7 @@ function statusOf(l, max) {
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
-  if (!requireApiKey(req, res)) return;
+  if (!(await requireApiKey(req, res))) return;
 
   const op = String((req.query && req.query.op) || 'list');
   const max = MAX();
@@ -119,6 +119,7 @@ module.exports = async (req, res) => {
          VALUES ('test_reset', NULL, NULL, $1, $2)`,
         [`lead#${id} ${l.email} (${l.jornada})`, (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || null]);
     } catch (e) { /* tabela pode ter colunas diferentes; não bloqueia */ }
+    await logAdmin(req, 'test_reset', `lead#${id} ${l.email} (${l.jornada})`);
 
     return json(res, { ok: true, id, message: 'Teste reiniciado — novas tentativas liberadas.' });
   }

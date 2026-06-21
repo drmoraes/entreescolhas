@@ -4,7 +4,7 @@ const { query } = require('./_lib/db');
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
-  if (!requireApiKey(req, res)) return;
+  if (!(await requireApiKey(req, res))) return;
 
   const [byStatus, byObj, bySen, byArch, growth, recent, totals] = await Promise.all([
     query('SELECT status, COUNT(*)::int AS cnt FROM candidates GROUP BY status'),

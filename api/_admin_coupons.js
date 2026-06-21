@@ -1,11 +1,11 @@
 // /api/b2b?fn=admin_coupons&op=list|save|toggle — gestão de cupons & cortesia (Admin).
 // Protegido por ADMIN_API_KEY.
-const { setCors, json, err, requireApiKey, getJsonBody } = require('./_lib/http');
+const { setCors, json, err, requireApiKey, logAdmin, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
-  if (!requireApiKey(req, res)) return;
+  if (!(await requireApiKey(req, res))) return;
   const op = String((req.query && req.query.op) || 'list');
 
   if (op === 'list') {
@@ -42,12 +42,14 @@ module.exports = async (req, res) => {
              WHERE id=$8 RETURNING id`,
           [code, tipo, valor, maxUses, validUntil, status, desc, id]);
         if (!rows[0]) return err(res, 'Cupom não encontrado', 404);
+        await logAdmin(req, 'coupon_edit', `${code} (${tipo} ${valor})`);
         return json(res, { ok: true, id, updated: true });
       }
       const { rows } = await query(
         `INSERT INTO coupons (code, tipo, valor, max_uses, valid_until, status, description)
          VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
         [code, tipo, valor, maxUses, validUntil, status, desc]);
+      await logAdmin(req, 'coupon_create', `${code} (${tipo} ${valor})`);
       return json(res, { ok: true, id: rows[0].id, created: true });
     } catch (e) {
       if (/unique|duplicate/i.test(e.message)) return err(res, 'Já existe um cupom com esse código', 409);
@@ -64,6 +66,7 @@ module.exports = async (req, res) => {
       `UPDATE coupons SET status = CASE WHEN status='ativo' THEN 'inativo' ELSE 'ativo' END
          WHERE id = $1 RETURNING id, status`, [id]);
     if (!rows[0]) return err(res, 'Cupom não encontrado', 404);
+    await logAdmin(req, 'coupon_toggle', `#${id} → ${rows[0].status}`);
     return json(res, { ok: true, id, status: rows[0].status });
   }
 

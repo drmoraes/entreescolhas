@@ -8,7 +8,7 @@ async function one(sql, params = []) { const { rows } = await query(sql, params)
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
-  if (!requireApiKey(req, res)) return;
+  if (!(await requireApiKey(req, res))) return;
 
   // ── Empresas ───────────────────────────────────────────────
   const companies = await one(`

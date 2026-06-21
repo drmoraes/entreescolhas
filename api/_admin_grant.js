@@ -1,13 +1,13 @@
 // POST /api/b2b?fn=admin_grant_credits — credita (ou debita) uma empresa manualmente.
 // Protegido pela ADMIN_API_KEY. Lança um movimento 'bonus' na razão de créditos.
-const { setCors, json, err, requireApiKey, getJsonBody } = require('./_lib/http');
+const { setCors, json, err, requireApiKey, logAdmin, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
 const { postLedger, getBalance } = require('./_lib/b2b-auth');
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
   if (req.method !== 'POST') return err(res, 'Método não permitido', 405);
-  if (!requireApiKey(req, res)) return;
+  if (!(await requireApiKey(req, res))) return;
 
   const body = getJsonBody(req) || {};
   const amount = Math.trunc(Number(body.amount));
@@ -30,5 +30,6 @@ module.exports = async (req, res) => {
   if (saldoAntes + amount < 0) return err(res, `Operação deixaria o saldo negativo (saldo atual: ${saldoAntes}).`);
 
   const saldo = await postLedger(company.id, amount, 'bonus', 'admin_grant', null, { motivo, via: 'admin' });
+  await logAdmin(req, 'grant_credits', `${company.nome}: ${amount > 0 ? '+' : ''}${amount} créd. (${motivo})`);
   return json(res, { ok: true, empresa: company.nome, email: company.email, delta: amount, saldo_anterior: saldoAntes, saldo });
 };

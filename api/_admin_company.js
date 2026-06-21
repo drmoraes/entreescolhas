@@ -7,7 +7,7 @@ async function one(sql, p = []) { const { rows } = await query(sql, p); return r
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
-  if (!requireApiKey(req, res)) return;
+  if (!(await requireApiKey(req, res))) return;
 
   const id = Number(req.query && req.query.id);
   if (!id) return err(res, 'id obrigatório');
