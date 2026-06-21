@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin · Cupons — Entre Escolhas</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.svg" />
+<style>
+  :root{--bg:#08080F;--bg-card:#0F0F1E;--bg-raised:#141428;--border:rgba(108,99,255,.15);
+    --accent:#6C63FF;--accent-dim:rgba(108,99,255,.12);--text:#F0EFF8;--text-2:#9490C0;--text-3:#5E5A8A;
+    --green:#22C55E;--gold:#C9A84C;--red:#EF4444}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:14px}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;font-weight:600}
+  input,select{font-family:inherit;background:var(--bg-raised);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 12px;font-size:13px;width:100%}
+  label.fl{display:block;font-size:12px;color:var(--text-2);margin-bottom:4px}
+  .btn{background:var(--accent);color:#fff;padding:9px 16px;font-size:13px}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-2);padding:8px 13px;font-size:13px}
+  .btn-soft{background:var(--accent-dim);color:#cfcaff;padding:8px 13px;font-size:13px}
+  .muted{color:var(--text-2)}.small{font-size:12px}.t3{color:var(--text-3)}
+  .green{color:var(--green)}.red{color:var(--red)}.accent{color:var(--accent)}
+  header{display:flex;align-items:center;gap:14px;padding:13px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(8,8,15,.92);backdrop-filter:blur(10px);z-index:5}
+  .brand{font-weight:800}.brand span{color:var(--accent)}
+  main{max-width:1100px;margin:0 auto;padding:24px}
+  .gate{max-width:380px;margin:80px auto;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:30px}
+  h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:22px 0 12px;font-weight:700}
+  table{width:100%;border-collapse:collapse;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-size:13px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border)}
+  th{color:var(--text-3);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  tr:last-child td{border:none}
+  .tag{font-size:11px;padding:2px 9px;border-radius:20px;border:1px solid var(--border);white-space:nowrap}
+  .tag.g{color:#86efac;border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)}
+  .tag.r{color:#fca5a5;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+  .tag.b{color:#7dd3fc;border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.08)}
+  .split{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px;max-width:680px;margin-bottom:16px}
+  .grid3{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px}
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid var(--accent-dim);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header><div class="brand">Entre<span>Escolhas</span> · Admin · Cupons</div>
+  <div style="flex:1"></div>
+  <a class="btn-ghost" href="/admin-b2b.html" style="text-decoration:none">Admin B2B</a>
+  <button class="btn" id="refreshBtn" onclick="load()" style="display:none">Atualizar</button>
+</header>
+
+<div id="gate" class="gate">
+  <h2 style="font-size:17px;margin-bottom:4px">Cupons & cortesia</h2>
+  <p class="muted small" style="margin-bottom:16px">Informe a ADMIN_API_KEY para acessar.</p>
+  <input id="key" type="password" placeholder="ADMIN_API_KEY" onkeydown="if(event.key==='Enter')load()" />
+  <button class="btn" style="width:100%;margin-top:12px" onclick="load()">Entrar</button>
+  <div id="gErr" class="red small" style="margin-top:10px"></div>
+</div>
+
+<main id="dash" style="display:none"></main>
+
+<script>
+const $=id=>document.getElementById(id);let KEY='';
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function api(path,opts={}){return fetch('/api/b2b?'+path,{...opts,headers:{'X-Api-Key':KEY,...(opts.headers||{})}}).then(async r=>{if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||('Erro '+r.status));}return r.json();});}
+function vlabel(c){return c.tipo==='percent'?(Number(c.valor)+'% off'):('+'+Math.round(Number(c.valor))+' créditos');}
+function fmtD(s){return s?new Date(s).toLocaleDateString('pt-BR'):'—';}
+
+async function load(){
+  KEY=KEY||$('key').value.trim();
+  if(!KEY){$('gErr').textContent='Informe a chave';return;}
+  $('gErr').textContent='';
+  try{ const d=await api('fn=admin_coupons&op=list'); $('gate').style.display='none';$('dash').style.display='';$('refreshBtn').style.display='';render(d.data);}
+  catch(e){$('gErr').textContent=e.message;}
+}
+
+function render(rows){
+  $('dash').innerHTML=`
+    <h2 class="sec">Criar cupom</h2>
+    <div class="card">
+      <input type="hidden" id="f_id">
+      <div class="grid3">
+        <div><label class="fl">Código</label><input id="f_code" placeholder="BEMVINDO20" style="text-transform:uppercase"></div>
+        <div><label class="fl">Tipo</label><select id="f_tipo"><option value="percent">% desconto</option><option value="credits">Créditos cortesia</option></select></div>
+        <div><label class="fl">Valor</label><input id="f_valor" type="number" placeholder="20" step="0.01"></div>
+      </div>
+      <div class="grid3" style="margin-top:10px">
+        <div><label class="fl">Descrição (opcional)</label><input id="f_desc" placeholder="Campanha de boas-vindas"></div>
+        <div><label class="fl">Limite de usos</label><input id="f_max" type="number" placeholder="ilimitado"></div>
+        <div><label class="fl">Validade</label><input id="f_until" type="date"></div>
+      </div>
+      <div class="split" style="margin-top:12px">
+        <select id="f_status" style="max-width:160px"><option value="ativo">Ativo</option><option value="rascunho">Rascunho</option><option value="inativo">Inativo</option></select>
+        <button class="btn" onclick="salvar()">Salvar cupom</button>
+        <button class="btn-ghost" onclick="limpar()">Limpar</button>
+        <span id="fMsg" class="small"></span>
+      </div>
+      <p class="muted small" style="margin-top:8px">% aplica desconto no preço do pacote; créditos adicionam cortesia ao pacote. Usável pela empresa no checkout do portal.</p>
+    </div>
+
+    <h2 class="sec">Cupons (${rows.length})</h2>
+    <table><thead><tr><th>Código</th><th>Benefício</th><th>Usos</th><th>Validade</th><th>Concedido</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+      ${rows.map(c=>`<tr>
+        <td><b>${esc(c.code)}</b>${c.description?`<div class="t3 small">${esc(c.description)}</div>`:''}</td>
+        <td class="accent">${vlabel(c)}</td>
+        <td>${c.uses}${c.max_uses!=null?(' / '+c.max_uses):''}</td>
+        <td>${fmtD(c.valid_until)}</td>
+        <td class="small muted">${c.tipo==='percent'?('R$ '+Number(c.desconto_total).toFixed(2)):(c.creditos_dados+' créd.')}</td>
+        <td>${c.status==='ativo'?'<span class="tag g">ativo</span>':c.status==='rascunho'?'<span class="tag b">rascunho</span>':'<span class="tag r">inativo</span>'}</td>
+        <td class="split">
+          <button class="btn-soft" onclick='editar(${JSON.stringify(c).replace(/'/g,"&#39;")})'>Editar</button>
+          <button class="btn-ghost" onclick="toggle(${c.id})">${c.status==='ativo'?'Desativar':'Ativar'}</button>
+        </td></tr>`).join('')||'<tr><td colspan="7" class="muted">Nenhum cupom ainda</td></tr>'}
+    </tbody></table>`;
+}
+
+function limpar(){['f_id','f_code','f_valor','f_desc','f_max','f_until'].forEach(i=>$(i).value='');$('f_tipo').value='percent';$('f_status').value='ativo';$('fMsg').textContent='';}
+function editar(c){
+  $('f_id').value=c.id;$('f_code').value=c.code;$('f_tipo').value=c.tipo;$('f_valor').value=c.valor;
+  $('f_desc').value=c.description||'';$('f_max').value=c.max_uses??'';
+  $('f_until').value=c.valid_until?new Date(c.valid_until).toISOString().slice(0,10):'';$('f_status').value=c.status;
+  window.scrollTo(0,0);$('f_code').focus();
+}
+async function salvar(){
+  const body={id:$('f_id').value||undefined,code:$('f_code').value,tipo:$('f_tipo').value,valor:$('f_valor').value,
+    description:$('f_desc').value,max_uses:$('f_max').value,valid_until:$('f_until').value,status:$('f_status').value};
+  const msg=$('fMsg');msg.textContent='Salvando…';msg.className='small muted';
+  try{ await api('fn=admin_coupons&op=save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    limpar();await load();}catch(e){msg.textContent=e.message;msg.className='small red';}
+}
+async function toggle(id){ try{ await api('fn=admin_coupons&op=toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});await load();}catch(e){alert(e.message);} }
+</script>
+</body>
+</html>

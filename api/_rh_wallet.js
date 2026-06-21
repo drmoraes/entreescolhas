@@ -56,21 +56,43 @@ module.exports = async (req, res) => {
     const pkg = PACKAGES[body.package];
     if (!pkg) return err(res, 'Pacote inválido');
 
-    // Com gateway configurado → cria pedido + preference do Mercado Pago.
-    if (process.env.MP_ACCESS_TOKEN) {
+    // ── Cupom (opcional) ──
+    let coupon = null, finalPrice = pkg.price, finalCredits = pkg.credits, discount = 0;
+    if (body.coupon) {
+      const cr = await query('SELECT * FROM coupons WHERE LOWER(code) = LOWER($1)', [String(body.coupon).trim()]);
+      const cp = cr.rows[0];
+      if (!cp || cp.status !== 'ativo') return err(res, 'Cupom inválido ou inativo');
+      if (cp.valid_until && new Date(cp.valid_until) < new Date()) return err(res, 'Cupom expirado');
+      if (cp.max_uses != null && cp.uses >= cp.max_uses) return err(res, 'Cupom esgotado');
+      coupon = cp;
+      if (cp.tipo === 'percent') { discount = +(pkg.price * Number(cp.valor) / 100).toFixed(2); finalPrice = +(pkg.price - discount).toFixed(2); }
+      else { finalCredits = pkg.credits + Math.round(Number(cp.valor)); }
+    }
+    const registraResgate = async (orderId) => {
+      if (!coupon) return;
+      await query('UPDATE coupons SET uses = uses + 1 WHERE id = $1', [coupon.id]);
+      await query(
+        `INSERT INTO coupon_redemptions (coupon_id, company_id, order_id, discount, credits_granted)
+         VALUES ($1,$2,$3,$4,$5)`,
+        [coupon.id, ctx.company_id, orderId || null, discount, finalCredits - pkg.credits]);
+    };
+    const gratis = finalPrice < 1; // 100% off / cortesia total → credita direto
+
+    // Com gateway configurado e preço > 0 → cria pedido + preference do Mercado Pago.
+    if (process.env.MP_ACCESS_TOKEN && !gratis) {
       const extRef = 'cred_' + genToken().slice(0, 40);
       const ord = await query(
-        `INSERT INTO credit_orders (company_id, package, credits, price, external_reference, status)
-         VALUES ($1,$2,$3,$4,$5,'pending') RETURNING id`,
-        [ctx.company_id, body.package, pkg.credits, pkg.price, extRef]
+        `INSERT INTO credit_orders (company_id, package, credits, price, external_reference, status, coupon_code, discount)
+         VALUES ($1,$2,$3,$4,$5,'pending',$6,$7) RETURNING id`,
+        [ctx.company_id, body.package, finalCredits, finalPrice, extRef, coupon ? coupon.code : null, discount]
       );
       const orderId = ord.rows[0].id;
       const base = process.env.APP_BASE_URL || '';
       const back = `${base}/portal-rh.html?pay=`;
       const payload = {
         items: [{
-          title: `Pacote de ${pkg.credits} créditos — Banco de Talentos`,
-          quantity: 1, currency_id: 'BRL', unit_price: Number(pkg.price),
+          title: `Pacote de ${finalCredits} créditos — Banco de Talentos`,
+          quantity: 1, currency_id: 'BRL', unit_price: Number(finalPrice),
         }],
         payer: { email: ctx.user_email },
         external_reference: extRef,
@@ -93,20 +115,22 @@ module.exports = async (req, res) => {
         return err(res, 'Não foi possível iniciar o pagamento agora. Tente novamente.', 502);
       }
       await query('UPDATE credit_orders SET mp_preference_id = $1 WHERE id = $2', [result.id || null, orderId]);
-      await logAccess(ctx, null, 'purchase_init', body.package, getClientIp(req), { orderId, price: pkg.price });
-      return json(res, { pending: true, init_point: result.init_point, package: body.package, price: pkg.price });
+      await registraResgate(orderId);
+      await logAccess(ctx, null, 'purchase_init', body.package, getClientIp(req), { orderId, price: finalPrice, coupon: coupon ? coupon.code : null });
+      return json(res, { pending: true, init_point: result.init_point, package: body.package, price: finalPrice, credits: finalCredits, discount });
     }
 
     const balance = await getBalance(ctx.company_id);
-    const after = balance + pkg.credits;
+    const after = balance + finalCredits;
     const expires = new Date(Date.now() + 365 * 86400000); // avulso: 12 meses
     await query(
       `INSERT INTO credit_ledger (company_id, delta, reason, ref_type, balance_after, expires_at, meta)
        VALUES ($1,$2,'purchase','payment',$3,$4,$5)`,
-      [ctx.company_id, pkg.credits, after, expires, JSON.stringify({ package: body.package, price: pkg.price, dev: true })]
+      [ctx.company_id, finalCredits, after, expires, JSON.stringify({ package: body.package, price: finalPrice, coupon: coupon ? coupon.code : null, dev: !process.env.MP_ACCESS_TOKEN })]
     );
-    await logAccess(ctx, null, 'purchase', body.package, getClientIp(req), { credits: pkg.credits });
-    return json(res, { ok: true, credited: pkg.credits, balance: after });
+    await registraResgate(null);
+    await logAccess(ctx, null, 'purchase', body.package, getClientIp(req), { credits: finalCredits, coupon: coupon ? coupon.code : null });
+    return json(res, { ok: true, credited: finalCredits, balance: after, discount });
   }
 
   return err(res, 'Method not allowed', 405);

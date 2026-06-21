@@ -461,6 +461,7 @@ async function openWallet(){
         <span class="chip" style="color:var(--gold)">${st.estornados} estornados</span>
         <span class="chip">${st.aguardando} aguardando</span></div>
       <h3 style="font-size:12px;text-transform:uppercase;color:var(--text-3);margin-top:18px">Comprar créditos</h3>
+      <input id="couponInput" placeholder="Cupom (opcional)" style="text-transform:uppercase;margin-bottom:10px;width:100%;background:var(--bg-raised,#141428);border:1px solid var(--border,rgba(108,99,255,.15));color:inherit;border-radius:10px;padding:9px 12px;font:inherit">
       <div class="pkg">${pkgs}</div>
       <h3 style="font-size:12px;text-transform:uppercase;color:var(--text-3);margin-top:18px">Extrato</h3>
       ${led||'<p class="muted small">Sem movimentações ainda.</p>'}`;
@@ -468,10 +469,11 @@ async function openWallet(){
 }
 function closeWallet(){$('walletRoot').innerHTML='';}
 async function buy(pkg){
-  try{ const res=await api('/b2b?fn=wallet',{method:'POST',body:{package:pkg}});
-    if(res.pending && res.init_point){ toast('Redirecionando ao checkout…'); location.href=res.init_point; return; }
+  const ci=$('couponInput'); const coupon=ci?ci.value.trim():'';
+  try{ const res=await api('/b2b?fn=wallet',{method:'POST',body:{package:pkg,coupon:coupon||undefined}});
+    if(res.pending && res.init_point){ toast(res.discount?('Cupom aplicado! Desconto R$ '+Number(res.discount).toFixed(2)):'Redirecionando ao checkout…'); location.href=res.init_point; return; }
     if(res.pending){ toast('Pagamento em processamento…'); return; }
-    updateBalance(res.balance); toast('✓ +'+res.credited+' créditos'); openWallet(); }
+    updateBalance(res.balance); toast('✓ +'+res.credited+' créditos'+(res.discount?(' (desconto R$ '+Number(res.discount).toFixed(2)+')'):'')); openWallet(); }
   catch(e){ toast(e.message); }
 }
 
