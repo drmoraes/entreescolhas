@@ -71,6 +71,10 @@ const STATEMENTS = [
     ip VARCHAR(45),
     created_at TIMESTAMPTZ DEFAULT NOW())`,
   "CREATE INDEX IF NOT EXISTS idx_admin_audit_created ON admin_audit (created_at DESC)",
+  // ── Usuários da empresa: papéis ricos + status (Rodada 8) ──
+  "ALTER TABLE company_users ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'ativo'",
+  "ALTER TABLE company_users DROP CONSTRAINT IF EXISTS company_users_role_check",
+  "ALTER TABLE company_users ADD CONSTRAINT company_users_role_check CHECK (role IN ('owner','gestor','analista','recruiter','leitura'))",
 ];
 
 const NEEDED = ['cep', 'lat', 'lon', 'idiomas', 'aceita_relocacao', 'contrato'];

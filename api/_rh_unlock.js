@@ -4,6 +4,7 @@
 const { setCors, json, err, getJsonBody } = require('./_lib/http');
 const { getDB, query } = require('./_lib/db');
 const { requireCompany, logAccess } = require('./_lib/b2b-auth');
+const { can } = require('./_lib/perms');
 const { revealCandidate, validateContact } = require('./_lib/anonymize');
 const { confidenceScore, adherenceScore } = require('./_lib/scoring');
 const { getClientIp } = require('./_lib/rate-limit');
@@ -16,6 +17,7 @@ module.exports = async (req, res) => {
 
   const ctx = await requireCompany(req, res);
   if (!ctx) return;
+  if (!can(ctx.role, 'unlock')) return err(res, 'Seu perfil não tem permissão para desbloquear candidatos.', 403);
 
   const body = getJsonBody(req) || {};
   const token = String(body.token || '').trim();

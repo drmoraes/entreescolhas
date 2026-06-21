@@ -4,6 +4,7 @@
 const { setCors, json, err, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
 const { requireCompany, logAccess } = require('./_lib/b2b-auth');
+const { can } = require('./_lib/perms');
 const { getClientIp } = require('./_lib/rate-limit');
 const mailer = require('./_lib/mailer');
 const { buildInviteEmailHtml } = require('./_lib/invite-email');
@@ -25,6 +26,7 @@ module.exports = async (req, res) => {
 
   const ctx = await requireCompany(req, res);
   if (!ctx) return;
+  if (!can(ctx.role, 'invite')) return err(res, 'Seu perfil não tem permissão para enviar convites.', 403);
 
   const body = getJsonBody(req) || {};
   const token = String(body.token || '').trim();

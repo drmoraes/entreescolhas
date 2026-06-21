@@ -286,8 +286,64 @@ function renderEmpresa(d){
     <table><thead><tr><th>Data</th><th>Pacote</th><th>Valor</th><th>Status</th></tr></thead><tbody>${compras}</tbody></table>
     <h2 class="sec">Razão de créditos (recente)</h2>
     <table><thead><tr><th>Data</th><th>Motivo</th><th>Δ</th><th>Saldo</th></tr></thead><tbody>${ledger}</tbody></table>
+
+    <h2 class="sec">Usuários da empresa (RH)</h2>
+    <div class="kpi" style="padding:14px;margin-bottom:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input id="cuNome" placeholder="Nome">
+        <input id="cuEmail" placeholder="E-mail">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap">
+        <select id="cuRole" style="flex:1;min-width:150px">
+          <option value="gestor">Gestor de RH</option>
+          <option value="analista" selected>Analista / Recrutador</option>
+          <option value="owner">Owner (admin da empresa)</option>
+          <option value="leitura">Leitura</option>
+        </select>
+        <button class="btn" onclick="cuCreate(${c.id})">Criar usuário</button>
+      </div>
+      <span id="cuMsg" class="small"></span>
+    </div>
+    <div id="cuBox" class="muted small"><span class="spin"></span> Carregando usuários…</div>
     <div style="height:30px"></div>`;
+  loadCompanyUsers(c.id);
 }
+
+let CU_COMPANY=null;
+const CU_ROLES=[['owner','Owner'],['gestor','Gestor RH'],['analista','Analista'],['recruiter','Recrutador'],['leitura','Leitura']];
+async function loadCompanyUsers(companyId){
+  CU_COMPANY=companyId;
+  try{
+    const r=await fetch('/api/b2b?fn=admin_company_users&op=list&company_id='+companyId,{headers:{'X-Api-Key':KEY}});
+    const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
+    const box=$('cuBox'); if(!box)return;
+    box.classList.remove('muted','small');
+    box.innerHTML=`<table><thead><tr><th>Nome</th><th>Papel</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+      ${(d.data||[]).map(x=>`<tr>
+        <td><b>${esc(x.nome)}</b><div class="muted small">${esc(x.email)}</div></td>
+        <td><select onchange="cuUpdate(${x.id},this.value)" style="padding:5px 8px">${CU_ROLES.map(r=>`<option value="${r[0]}" ${x.role===r[0]?'selected':''}>${r[1]}</option>`).join('')}</select></td>
+        <td>${x.status==='ativo'?'<span style="color:var(--green)">ativo</span>':'<span class="red">inativo</span>'}</td>
+        <td class="split" style="display:flex;gap:5px">
+          <button class="btn" style="padding:5px 9px;background:var(--accent-dim);color:#cfcaff" onclick="cuReset(${x.id},'${esc(x.nome)}')">Resetar senha</button>
+          <button class="btn" style="padding:5px 9px;background:transparent;border:1px solid var(--border);color:var(--text-2)" onclick="cuToggle(${x.id})">${x.status==='ativo'?'Desativar':'Ativar'}</button>
+        </td></tr>`).join('')||'<tr><td colspan="4" class="muted">Sem usuários cadastrados</td></tr>'}
+    </tbody></table>`;
+  }catch(e){const box=$('cuBox');if(box)box.innerHTML='<span class="red small">'+esc(e.message)+'</span>';}
+}
+function cuApi(op,body){return fetch('/api/b2b?fn=admin_company_users&op='+op,{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':KEY},body:JSON.stringify(body)}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error||'Falha');return d;});}
+async function cuCreate(companyId){
+  const nome=$('cuNome').value.trim(),email=$('cuEmail').value.trim(),role=$('cuRole').value,msg=$('cuMsg');
+  if(!nome||!email){msg.textContent='Preencha nome e e-mail';msg.className='small red';return;}
+  msg.textContent='Criando…';msg.className='small muted';
+  try{ const d=await cuApi('create',{company_id:companyId,nome,email,role});
+    $('cuNome').value='';$('cuEmail').value='';msg.textContent='';
+    prompt(`Usuário criado! Senha temporária de ${nome} (entregue com segurança — ele troca depois no Portal RH):`,d.temp_password);
+    loadCompanyUsers(companyId);
+  }catch(e){msg.textContent=e.message;msg.className='small red';}
+}
+async function cuUpdate(id,role){ try{ await cuApi('update',{id,role}); }catch(e){alert(e.message);loadCompanyUsers(CU_COMPANY);} }
+async function cuToggle(id){ try{ await cuApi('toggle',{id}); loadCompanyUsers(CU_COMPANY);}catch(e){alert(e.message);} }
+async function cuReset(id,nome){ if(!confirm('Resetar a senha de '+nome+'?'))return; try{ const d=await cuApi('reset_password',{id}); prompt('Nova senha temporária de '+nome+':',d.temp_password);}catch(e){alert(e.message);} }
 
 /* auto-login dentro do painel unificado (chave compartilhada via sessionStorage) */
 (function(){try{var k=sessionStorage.getItem('ee_admin_key');if(k){KEY=k;load();}if(window.self!==window.top){var h=document.querySelector("header");if(h)h.style.display="none";}}catch(e){}})();

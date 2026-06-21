@@ -45,6 +45,7 @@ async function requireCompany(req, res) {
 
   const { rows } = await query(
     `SELECT u.id AS user_id, u.nome AS user_nome, u.email AS user_email, u.role,
+            COALESCE(u.status,'ativo') AS user_status,
             u.session_expires, c.id AS company_id, c.nome AS company_nome,
             c.plan, c.status, c.reputation
        FROM company_users u
@@ -57,6 +58,7 @@ async function requireCompany(req, res) {
   if (ctx.session_expires && new Date(ctx.session_expires) < new Date()) {
     err(res, 'Sessão expirada', 401); return null;
   }
+  if (ctx.user_status && ctx.user_status !== 'ativo') { err(res, 'Usuário desativado. Fale com o administrador da conta.', 403); return null; }
   if (ctx.status !== 'ativa') { err(res, 'Conta inativa ou suspensa', 403); return null; }
   return ctx;
 }

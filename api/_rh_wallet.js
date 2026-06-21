@@ -7,6 +7,7 @@ const { query } = require('./_lib/db');
 const { requireCompany, getBalance, logAccess } = require('./_lib/b2b-auth');
 const { getClientIp } = require('./_lib/rate-limit');
 const { genToken } = require('./_lib/tokens');
+const { can } = require('./_lib/perms');
 
 const PACKAGES = {
   p10: { credits: 10, price: 290 },
@@ -52,6 +53,7 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'POST') {
+    if (!can(ctx.role, 'buy')) return err(res, 'Seu perfil não tem permissão para comprar créditos.', 403);
     const body = getJsonBody(req) || {};
     const pkg = PACKAGES[body.package];
     if (!pkg) return err(res, 'Pacote inválido');
