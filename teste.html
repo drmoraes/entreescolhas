@@ -192,11 +192,21 @@
     <!-- PAYWALL (mostrado só se o relatório completo ainda não foi desbloqueado) -->
     <div id="paywall-box" style="display:none;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:32px;max-width:560px;margin:0 auto 32px;text-align:center;">
       <div style="font-size:2rem;margin-bottom:10px;">🔒</div>
-      <h3 style="font-size:1.2rem;margin-bottom:10px;">Seu relatório completo está pronto</h3>
-      <p style="color:var(--text-2);font-size:0.92rem;line-height:1.6;margin-bottom:20px;">Desbloqueie suas dimensões comportamentais detalhadas, os insights completos do seu perfil e receba tudo por e-mail — por apenas <strong style="color:var(--text);">R$ 7,97</strong>.</p>
+      <h3 style="font-size:1.25rem;margin-bottom:8px;">Seu relatório completo está pronto</h3>
+      <p style="color:var(--text-2);font-size:0.92rem;line-height:1.6;margin-bottom:18px;">Você já viu uma prévia. O relatório completo tem muito mais:</p>
+      <div style="text-align:left;max-width:380px;margin:0 auto 20px;display:grid;gap:10px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;"><span>📊</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Suas dimensões detalhadas</strong> — cada eixo do seu perfil pontuado de 0 a 100.</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start;"><span>💡</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Insights do seu arquétipo</strong> — como você decide sob pressão, na prática.</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start;"><span>📩</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Acesso permanente</strong> — recebe por e-mail e reabre quando quiser.</span></div>
+      </div>
+      <div style="font-size:0.85rem;color:var(--text-3);margin-bottom:6px;">Acesso único</div>
+      <div style="font-size:2rem;font-weight:800;line-height:1;margin-bottom:16px;">R$ 7,97</div>
       <button class="btn-primary" id="btn-unlock" style="width:100%;" onclick="unlockReport()">
-        Desbloquear relatório completo
+        Desbloquear meu relatório
       </button>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:14px;font-size:0.78rem;color:var(--text-3);">
+        <span>⚡ Pix libera na hora</span><span>💳 Cartão</span><span>🔒 Pagamento seguro</span>
+      </div>
       <p id="paywall-error" style="display:none;color:var(--red, #FF6B6B);font-size:0.85rem;margin-top:14px;"></p>
     </div>
     <p id="paid-note" style="display:none;text-align:center;color:var(--text-3);font-size:0.82rem;margin-bottom:24px;">✓ Relatório completo enviado para o seu e-mail.</p>
