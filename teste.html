@@ -1414,9 +1414,13 @@ function unlockReport() {
   const errEl = document.getElementById('paywall-error');
   errEl.style.display = 'none';
   btn.disabled = true;
-  btn.textContent = 'Redirecionando...';
+  btn.textContent = 'Abrindo pagamento...';
 
   if (typeof trackEvent === 'function') { trackEvent('start_checkout', { jornada: JORNADA_PARAM }); }
+
+  // Abre o popup JÁ no clique (síncrono) — evita bloqueio de pop-up do navegador.
+  // A plataforma continua viva nesta aba; o checkout abre numa janela separada.
+  const pop = window.open('about:blank', 'mp_checkout', 'width=480,height=760,menubar=no,toolbar=no');
 
   fetch('/api/mp_create_preference', {
     method: 'POST',
@@ -1427,17 +1431,51 @@ function unlockReport() {
     .then(({ ok, data }) => {
       if (!ok) throw new Error(data.error || 'Não foi possível iniciar o pagamento.');
       if (data.already_paid) {
+        if (pop) { try { pop.close(); } catch (e) {} }
         window.location.reload();
         return;
       }
-      window.location.href = data.init_point;
+      // direciona o popup ao checkout; se o popup foi bloqueado, cai no fluxo antigo
+      if (pop) { pop.location.href = data.init_point; }
+      else { window.location.href = data.init_point; return; }
+      btn.textContent = 'Aguardando pagamento...';
+      iniciarPollingPagamento(pop, btn);
     })
     .catch(err => {
+      if (pop) { try { pop.close(); } catch (e) {} }
       errEl.textContent = err.message;
       errEl.style.display = 'block';
       btn.disabled = false;
       btn.textContent = 'Desbloquear relatório completo';
     });
+}
+
+// Escuta o status do pagamento (webhook do MP marca 'paid' no servidor).
+// Quando aprovar: fecha o popup e recarrega — o gate da página mostra o relatório.
+function iniciarPollingPagamento(pop, btn) {
+  let achouPago = false;
+  const poll = setInterval(async () => {
+    try {
+      const d = await fetch('/api/lead_status?access=' + encodeURIComponent(ACCESS_TOKEN)).then(r => r.json());
+      if (d && d.paid) {
+        achouPago = true;
+        clearInterval(poll); clearInterval(watch);
+        if (pop) { try { pop.close(); } catch (e) {} }
+        window.location.reload();
+      }
+    } catch (e) { /* tenta de novo no próximo tick */ }
+  }, 3000);
+
+  // Se o usuário fechar o popup sem pagar, reabilita o botão.
+  const watch = setInterval(() => {
+    if (pop && pop.closed && !achouPago) {
+      clearInterval(watch); clearInterval(poll);
+      if (btn) { btn.disabled = false; btn.textContent = 'Desbloquear relatório completo'; }
+    }
+  }, 1000);
+
+  // Trava de segurança: para de escutar após 5 min.
+  setTimeout(() => { clearInterval(poll); clearInterval(watch); }, 300000);
 }
 </script>
 <script src="/analytics.js"></script>

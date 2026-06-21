@@ -41,6 +41,7 @@ module.exports = async (req, res) => {
     }],
     payer: { email: lead.email },
     external_reference: access,
+    statement_descriptor: 'ENTREESCOLHAS',
     back_urls: {
       success: backBase,
       pending: backBase,
