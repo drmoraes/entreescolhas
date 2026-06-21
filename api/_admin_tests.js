@@ -3,6 +3,7 @@
 // reinicia o teste de quem travou (libera novas tentativas).
 const { setCors, json, err, requireApiKey, logAdmin, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
+const { adminCan } = require('./_lib/admin-perms');
 
 const MAX = () => Number(process.env.MAX_TEST_ATTEMPTS || 3);
 
@@ -94,6 +95,7 @@ module.exports = async (req, res) => {
   // ── REINICIAR (libera novas tentativas para quem travou) ──
   if (op === 'reset') {
     if (req.method !== 'POST') return err(res, 'Use POST para reiniciar', 405);
+    if (!adminCan((req.actor || {}).role, 'tests')) return err(res, 'Seu perfil não tem permissão para reiniciar testes.', 403);
     const body = getJsonBody(req) || {};
     const id = Number(body.id || (req.query && req.query.id));
     if (!id) return err(res, 'id obrigatório');

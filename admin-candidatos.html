@@ -107,6 +107,7 @@ function render(d){
       <select id="fc" style="max-width:200px" onchange="filtra()">
         <option value="">Consentimento (todos)</option><option value="sim">Com consentimento</option><option value="nao">Sem consentimento</option>
       </select>
+      <button class="btn-ghost" onclick="exportCSV()">Exportar CSV</button>
     </div>
     <div id="bulkbar" class="split" style="display:none;margin-bottom:12px;padding:8px 12px;background:var(--accent-dim);border-radius:10px">
       <span class="small"><b id="bulkn">0</b> selecionados</span>
@@ -240,6 +241,16 @@ async function arquivar(id,nome){
 
 function openDrawer(){$('scrim').classList.add('on');$('drawer').classList.add('on');}
 function closeDrawer(){$('scrim').classList.remove('on');$('drawer').classList.remove('on');}
+
+function baixarCSV(nome,cols,rows){
+  const q=v=>{v=v==null?'':String(v);return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const csv=[cols.map(c=>q(c[1])).join(',')].concat(rows.map(r=>cols.map(c=>q(r[c[0]])).join(','))).join('\r\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nome;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function exportCSV(){
+  baixarCSV('candidatos.csv',[['nome','Nome'],['email','E-mail'],['area','Área'],['cargo','Cargo'],['senioridade','Senioridade'],['cidade','Cidade'],['estado','Estado'],['b2b_consent','Consentimento B2B'],['email_verified','E-mail verif.'],['phone_verified','Tel. verif.'],['status','Status']],ROWS);
+}
 (function(){try{var k=sessionStorage.getItem('ee_admin_key');if(k){KEY=k;load();}if(window.self!==window.top){var h=document.querySelector("header");if(h)h.style.display="none";}}catch(e){}})();
 </script>
 </body>

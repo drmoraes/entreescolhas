@@ -1114,6 +1114,15 @@ let LEAD_STATE = null;
         window.location.replace('/cadastro-teste.html?jornada=' + encodeURIComponent(JORNADA_PARAM));
         return;
       }
+      // ── Anti-F5: o estado é restaurado do servidor, nunca recomeça do zero ──
+      if (data.paid) {                 // já pagou → mostra o relatório completo de novo
+        showSavedFullReport();
+        return;
+      }
+      if (data.has_report) {           // já concluiu (não pagou) → oferta, sem reiniciar
+        showAlreadyCompleted(data);
+        return;
+      }
       if (data.attempts_used >= data.max_attempts) {
         showAttemptsLimitReached();
         return;
@@ -1124,6 +1133,21 @@ let LEAD_STATE = null;
       window.location.replace('/cadastro-teste.html?jornada=' + encodeURIComponent(JORNADA_PARAM));
     });
 })();
+
+// Já concluiu o teste mas ainda não pagou — mostra a oferta sem reiniciar o teste.
+function showAlreadyCompleted(data) {
+  const intro = document.querySelector('#screen-intro .intro');
+  showScreen('screen-intro');
+  if (!intro) return;
+  const podeRefazer = (data.attempts_used || 0) < (data.max_attempts || 0);
+  intro.innerHTML = `
+    <div class="intro-badge"><span class="intro-badge-dot"></span><span>Teste concluído</span></div>
+    <h1>Você já concluiu<br/><span class="grad serif">este teste</span></h1>
+    <p>Seu resultado está salvo. Desbloqueie o relatório completo para ver tudo${podeRefazer ? ', ou refaça o teste se quiser' : ''}.</p>
+    <button class="btn-primary" style="width:100%;" onclick="unlockReport()">Desbloquear relatório completo</button>
+    ${podeRefazer ? '<button class="btn-primary" style="width:100%;margin-top:10px;background:transparent;border:1px solid var(--border);color:var(--text-2);" onclick="startTest()">Refazer o teste</button>' : ''}
+  `;
+}
 
 function showAttemptsLimitReached() {
   const intro = document.querySelector('#screen-intro .intro');

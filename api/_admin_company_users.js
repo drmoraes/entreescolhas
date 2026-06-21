@@ -4,6 +4,7 @@ const { setCors, json, err, requireApiKey, logAdmin, getJsonBody } = require('./
 const { query } = require('./_lib/db');
 const { hashPassword } = require('./_lib/b2b-auth');
 const { ROLE_LABEL } = require('./_lib/perms');
+const { adminCan } = require('./_lib/admin-perms');
 
 const ROLES = ['owner', 'gestor', 'analista', 'recruiter', 'leitura'];
 function tempPass() {
@@ -18,7 +19,7 @@ module.exports = async (req, res) => {
   if (setCors(req, res)) return;
   if (!(await requireApiKey(req, res))) return;
   const actor = req.actor || {};
-  if (!(actor.master || actor.role === 'owner')) return err(res, 'Apenas o owner gerencia usuários de empresa', 403);
+  if (!adminCan(actor.role, 'company_users')) return err(res, 'Seu perfil não tem permissão para gerenciar usuários de empresa.', 403);
   const op = String((req.query && req.query.op) || 'list');
 
   if (op === 'list') {

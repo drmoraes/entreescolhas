@@ -4,6 +4,7 @@ const { setCors, json, err, requireApiKey, logAdmin, getJsonBody } = require('./
 const { query } = require('./_lib/db');
 const mailer = require('./_lib/mailer');
 const { geocodeCep } = require('./_lib/geocode');
+const { adminCan } = require('./_lib/admin-perms');
 
 // campos que o admin pode editar/criar
 const TEXT = ['nome','email','telefone','cidade','area','cargo','empresa','senioridade',
@@ -23,6 +24,8 @@ module.exports = async (req, res) => {
   if (setCors(req, res)) return;
   if (!(await requireApiKey(req, res))) return;
   const op = String((req.query && req.query.op) || 'list');
+  if (['save', 'archive', 'import', 'invite'].includes(op) && !adminCan((req.actor || {}).role, 'candidates'))
+    return err(res, 'Seu perfil não tem permissão para editar candidatos.', 403);
 
   // ── LISTAR ───────────────────────────────────────────────
   if (op === 'list') {

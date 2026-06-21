@@ -124,6 +124,7 @@ function render(d){
         <option value="concluido">Concluídos</option>
         <option value="pendente">Não confirmados</option>
       </select>
+      <button class="btn-ghost" onclick="exportCSV()">Exportar CSV</button>
     </div>
     <div id="tbl"></div>`;
   drawTable(ROWS);
@@ -219,6 +220,14 @@ function copy(t){navigator.clipboard.writeText(t).then(()=>alert('Link copiado:\
 
 function openDrawer(){$('scrim').classList.add('on');$('drawer').classList.add('on');}
 function closeDrawer(){$('scrim').classList.remove('on');$('drawer').classList.remove('on');}
+
+function exportCSV(){
+  const q=v=>{v=v==null?'':String(v);return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const cols=[['nome','Nome'],['email','E-mail'],['jornada','Jornada'],['status','Status'],['attempts_used','Tentativas'],['max_attempts','Máx'],['paid','Pago'],['updated_at','Atualizado']];
+  const csv=[cols.map(c=>q(c[1])).join(',')].concat(ROWS.map(r=>cols.map(c=>q(r[c[0]])).join(','))).join('\r\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='testes.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
 (function(){try{var k=sessionStorage.getItem('ee_admin_key');if(k){KEY=k;load();}if(window.self!==window.top){var h=document.querySelector("header");if(h)h.style.display="none";}}catch(e){}})();
 </script>
 </body>

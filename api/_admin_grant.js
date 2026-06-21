@@ -3,11 +3,13 @@
 const { setCors, json, err, requireApiKey, logAdmin, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
 const { postLedger, getBalance } = require('./_lib/b2b-auth');
+const { adminCan } = require('./_lib/admin-perms');
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
   if (req.method !== 'POST') return err(res, 'Método não permitido', 405);
   if (!(await requireApiKey(req, res))) return;
+  if (!adminCan((req.actor || {}).role, 'grant_credits')) return err(res, 'Seu perfil não tem permissão para conceder créditos.', 403);
 
   const body = getJsonBody(req) || {};
   const amount = Math.trunc(Number(body.amount));

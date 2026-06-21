@@ -2,11 +2,13 @@
 // Protegido por ADMIN_API_KEY.
 const { setCors, json, err, requireApiKey, logAdmin, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
+const { adminCan } = require('./_lib/admin-perms');
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
   if (!(await requireApiKey(req, res))) return;
   const op = String((req.query && req.query.op) || 'list');
+  if (op !== 'list' && !adminCan((req.actor || {}).role, 'coupons')) return err(res, 'Seu perfil não tem permissão para gerenciar cupons.', 403);
 
   if (op === 'list') {
     const { rows } = await query(`
