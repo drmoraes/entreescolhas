@@ -346,7 +346,12 @@ async function cuToggle(id){ try{ await cuApi('toggle',{id}); loadCompanyUsers(C
 async function cuReset(id,nome){ if(!confirm('Resetar a senha de '+nome+'?'))return; try{ const d=await cuApi('reset_password',{id}); prompt('Nova senha temporária de '+nome+':',d.temp_password);}catch(e){alert(e.message);} }
 
 /* auto-login dentro do painel unificado (chave compartilhada via sessionStorage) */
-(function(){try{var k=sessionStorage.getItem('ee_admin_key');if(k){KEY=k;load();}if(window.self!==window.top){var h=document.querySelector("header");if(h)h.style.display="none";}}catch(e){}})();
+(function(){try{
+  if(window.self===window.top){location.replace('/painel.html#overview');return;}
+  var h=document.querySelector("header");if(h)h.style.display="none";
+  var k=localStorage.getItem('ee_admin_key')||sessionStorage.getItem('ee_admin_key');
+  if(k){KEY=k;load();}
+}catch(e){}})();
 
 async function grantInDrawer(id){
   const amount=parseInt($('dvAmt').value,10), reason=($('dvReason').value||'').trim(), msg=$('dvMsg');

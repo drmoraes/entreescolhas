@@ -45,11 +45,11 @@
     <button class="logout" onclick="sair()">Sair</button>
   </header>
   <nav class="tabs" id="tabs">
-    <button data-src="/admin-b2b.html" class="on">Visão geral</button>
-    <button data-src="/admin-candidatos.html">Candidatos</button>
-    <button data-src="/admin-testes.html">Testes</button>
-    <button data-src="/admin-cupons.html">Cupons</button>
-    <button data-src="/admin-usuarios.html">Usuários</button>
+    <button data-tab="overview" data-src="/admin-b2b.html" class="on">Visão geral</button>
+    <button data-tab="candidatos" data-src="/admin-candidatos.html">Candidatos</button>
+    <button data-tab="testes" data-src="/admin-testes.html">Testes</button>
+    <button data-tab="cupons" data-src="/admin-cupons.html">Cupons</button>
+    <button data-tab="usuarios" data-src="/admin-usuarios.html">Usuários</button>
   </nav>
   <main><iframe id="frame" title="seção"></iframe></main>
 </div>
@@ -64,22 +64,28 @@ async function entrar(){
   try{
     const r=await fetch('/api/b2b?fn=admin_users&op=audit',{headers:{'X-Api-Key':key}});
     if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||'Chave inválida');}
-    sessionStorage.setItem('ee_admin_key',key);
+    // guarda no navegador (persiste entre sessões) — digita a senha UMA vez só
+    localStorage.setItem('ee_admin_key',key);
     abrir();
   }catch(e){$('gErr').textContent=e.message;}
 }
 function abrir(){
   $('gate').style.display='none';$('app').style.display='flex';
-  go(document.querySelector('#tabs button.on'));
+  // abre a aba pedida no #hash (ex.: painel.html#candidatos), senão a primeira
+  const tab=(location.hash||'').replace('#','');
+  const btn=document.querySelector('#tabs button[data-tab="'+tab+'"]')||document.querySelector('#tabs button.on');
+  go(btn);
 }
 function go(btn){
+  if(!btn)return;
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b===btn));
+  if(btn.dataset.tab){ try{history.replaceState(null,'','#'+btn.dataset.tab);}catch(e){} }
   $('frame').src=btn.dataset.src;
 }
 $('tabs').addEventListener('click',e=>{if(e.target.dataset.src)go(e.target);});
-function sair(){sessionStorage.removeItem('ee_admin_key');location.reload();}
-// auto-entra se já houver chave na sessão
-(function(){try{if(sessionStorage.getItem('ee_admin_key'))abrir();}catch(e){}})();
+function sair(){localStorage.removeItem('ee_admin_key');sessionStorage.removeItem('ee_admin_key');location.hash='';location.reload();}
+// auto-entra se já houver chave salva (não pede senha de novo)
+(function(){try{var k=localStorage.getItem('ee_admin_key')||sessionStorage.getItem('ee_admin_key');if(k){localStorage.setItem('ee_admin_key',k);abrir();}}catch(e){}})();
 </script>
 </body>
 </html>
