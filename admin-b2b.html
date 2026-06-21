@@ -92,14 +92,62 @@ async function grantCredits(){
   }catch(e){msg.textContent=e.message;msg.className='small red';}
 }
 
+function brl(n){return 'R$ '+Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function brlShort(n){n=Number(n||0);return n>=1000?'R$ '+(n/1000).toFixed(1)+'k':'R$ '+n.toFixed(0);}
+
 function render(d){
   const f=d.funil,cr=d.credits,b=d.base,r=d.responsividade,pv=d.privacidade;
+  const rec=d.receita||{},alertas=d.alertas||[];
   const funnelData=[['Buscas (30d)',f.buscas_30d],['Desbloqueios',f.total],['Responderam',f.respondidos],['Estornados',f.estornados]];
   const max=Math.max(...funnelData.map(x=>x[1]),1);
   const funnel=funnelData.map(([l,v])=>`<div class="funnel-row"><span class="fl">${l}</span>
     <span class="fbar" style="width:${Math.max(8,Math.round(v/max*100))}%">${v}</span></div>`).join('');
 
+  // Alertas
+  const sevc={alto:'red',medio:'gold',baixo:'accent'};
+  const alertasHtml = alertas.length
+    ? alertas.map(a=>`<div class="kpi" style="padding:12px 14px;display:flex;gap:10px;align-items:flex-start;border-color:${a.sev==='alto'?'rgba(239,68,68,.3)':'rgba(201,168,76,.3)'}">
+        <span class="${sevc[a.sev]}" style="font-weight:800">●</span>
+        <div><b>${esc(a.tipo)} — ${esc(a.empresa)}</b><div class="muted small">${esc(a.detalhe)}</div></div></div>`).join('')
+    : '<div class="kpi muted" style="padding:14px">Nenhum alerta no momento ✓</div>';
+
+  // Série mensal (barras)
+  const serie=rec.serie||[];
+  const smax=Math.max(...serie.map(x=>x.receita),1);
+  const serieBars=serie.length?serie.map(s=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div style="font-size:10px;color:var(--text-2)">${brlShort(s.receita)}</div>
+      <div style="width:100%;background:linear-gradient(180deg,#6C63FF,rgba(108,99,255,.2));border-radius:5px 5px 0 0;height:${Math.max(4,Math.round(s.receita/smax*120))}px"></div>
+      <div style="font-size:10px;color:var(--text-3)">${s.mes.slice(5)}</div></div>`).join(''):'<span class="muted small">Sem vendas pagas ainda.</span>';
+
   $('dash').innerHTML=`
+  ${alertas.length?`<h2 class="sec">Alertas (${alertas.length})</h2><div class="kpis">${alertasHtml}</div>`:''}
+
+  <h2 class="sec">Receita (R$)</h2>
+  <div class="kpis">
+    ${kpi(brl(rec.gmv),'Receita paga (GMV)','total recebido','green')}
+    ${kpi(brl(rec.pendente),'Pendente','aguardando pagamento','gold')}
+    ${kpi(brl(rec.ticket_medio),'Ticket médio',rec.pedidos_pagos+' pedidos pagos')}
+    ${kpi(brl(rec.arpa),'Receita por empresa','GMV ÷ ativas')}
+    ${kpi(rec.creditos_vendidos,'Créditos vendidos',brl(rec.receita_por_credito)+'/crédito','accent')}
+  </div>
+  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-top:12px">
+    <div class="kpi" style="padding:16px">
+      <div class="muted small" style="margin-bottom:8px">Receita por mês (pagos)</div>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:150px">${serieBars}</div>
+    </div>
+    <div class="kpi" style="padding:0;overflow:hidden">
+      <table><thead><tr><th>Pacote</th><th>Vendidos</th><th>Receita</th></tr></thead><tbody>
+        ${(rec.mix||[]).map(m=>`<tr><td>${esc(m.package)}</td><td>${m.vendidos}</td><td class="green">${brl(m.receita)}</td></tr>`).join('')||'<tr><td colspan="3" class="muted">Sem dados</td></tr>'}
+      </tbody></table>
+    </div>
+  </div>
+  <h2 class="sec">Pedidos recentes</h2>
+  <table><thead><tr><th>Data</th><th>Empresa</th><th>Pacote</th><th>Valor</th><th>Status</th></tr></thead><tbody>
+    ${(rec.pedidos||[]).map(p=>`<tr><td>${new Date(p.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</td>
+      <td>${esc(p.empresa||'—')}</td><td>${esc(p.package)}</td><td>${brl(p.price)}</td>
+      <td><span class="${p.status==='paid'?'green':p.status==='pending'?'gold':'red'}">${p.status}</span></td></tr>`).join('')||'<tr><td colspan="5" class="muted">Sem pedidos</td></tr>'}
+  </tbody></table>
+
   <h2 class="sec">Visão geral</h2>
   <div class="kpis">
     ${kpi(d.companies.ativas,'Empresas ativas',d.companies.total+' no total','accent')}
