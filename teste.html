@@ -1473,7 +1473,7 @@ async function unlockReport() {
       callbacks: {
         onReady: () => {},
         onError: (e) => { console.error('brick', e); },
-        onSubmit: ({ formData }) => fetch('/api/mp_process_payment', {
+        onSubmit: ({ formData }) => fetch('/api/b2b?fn=mp_process_payment', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(Object.assign({ access: ACCESS_TOKEN }, formData)),
         }).then(r => r.json()).then(d => {
