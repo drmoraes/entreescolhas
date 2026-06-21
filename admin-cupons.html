@@ -127,6 +127,7 @@ async function salvar(){
     limpar();await load();}catch(e){msg.textContent=e.message;msg.className='small red';}
 }
 async function toggle(id){ try{ await api('fn=admin_coupons&op=toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});await load();}catch(e){alert(e.message);} }
+(function(){try{var k=sessionStorage.getItem('ee_admin_key');if(k){KEY=k;load();}if(window.self!==window.top){var h=document.querySelector("header");if(h)h.style.display="none";}}catch(e){}})();
 </script>
 </body>
 </html>

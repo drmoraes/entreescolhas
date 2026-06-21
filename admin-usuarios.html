@@ -137,6 +137,7 @@ async function rotate(id,nome){ if(!confirm('Girar o token de '+nome+'? O token 
 function showToken(nome,token){
   prompt('Token de '+nome+' (copie agora — não será mostrado de novo):',token);
 }
+(function(){try{var k=sessionStorage.getItem('ee_admin_key');if(k){KEY=k;load();}if(window.self!==window.top){var h=document.querySelector("header");if(h)h.style.display="none";}}catch(e){}})();
 </script>
 </body>
 </html>

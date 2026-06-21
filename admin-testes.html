@@ -219,6 +219,7 @@ function copy(t){navigator.clipboard.writeText(t).then(()=>alert('Link copiado:\
 
 function openDrawer(){$('scrim').classList.add('on');$('drawer').classList.add('on');}
 function closeDrawer(){$('scrim').classList.remove('on');$('drawer').classList.remove('on');}
+(function(){try{var k=sessionStorage.getItem('ee_admin_key');if(k){KEY=k;load();}if(window.self!==window.top){var h=document.querySelector("header");if(h)h.style.display="none";}}catch(e){}})();
 </script>
 </body>
 </html>

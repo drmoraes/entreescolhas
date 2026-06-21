@@ -289,6 +289,9 @@ function renderEmpresa(d){
     <div style="height:30px"></div>`;
 }
 
+/* auto-login dentro do painel unificado (chave compartilhada via sessionStorage) */
+(function(){try{var k=sessionStorage.getItem('ee_admin_key');if(k){KEY=k;load();}if(window.self!==window.top){var h=document.querySelector("header");if(h)h.style.display="none";}}catch(e){}})();
+
 async function grantInDrawer(id){
   const amount=parseInt($('dvAmt').value,10), reason=($('dvReason').value||'').trim(), msg=$('dvMsg');
   if(!amount){msg.textContent='Informe uma quantidade (≠ 0)';msg.className='small red';return;}
