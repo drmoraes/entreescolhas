@@ -55,7 +55,9 @@
   <div style="flex:1"></div>
   <a class="btn-ghost" href="/admin-b2b.html" style="text-decoration:none">Admin B2B</a>
   <a class="btn-ghost" href="/admin-testes.html" style="text-decoration:none">Testes</a>
+  <button class="btn-ghost" id="impBtn" onclick="$('csvFile').click()" style="display:none">Importar CSV</button>
   <button class="btn" id="newBtn" onclick="novo()" style="display:none">+ Incluir</button>
+  <input type="file" id="csvFile" accept=".csv,text/csv" style="display:none" onchange="importCSV(this)">
 </header>
 
 <div id="gate" class="gate">
@@ -82,7 +84,7 @@ async function load(){
   KEY=KEY||$('key').value.trim();
   if(!KEY){$('gErr').textContent='Informe a chave';return;}
   $('gErr').textContent='';
-  try{ const d=await api('fn=admin_candidates&op=list'); $('gate').style.display='none';$('dash').style.display='';$('newBtn').style.display='';ROWS=d.data;render(d);}
+  try{ const d=await api('fn=admin_candidates&op=list'); $('gate').style.display='none';$('dash').style.display='';$('newBtn').style.display='';$('impBtn').style.display='';ROWS=d.data;render(d);}
   catch(e){$('gErr').textContent=e.message;}
 }
 
@@ -106,6 +108,10 @@ function render(d){
         <option value="">Consentimento (todos)</option><option value="sim">Com consentimento</option><option value="nao">Sem consentimento</option>
       </select>
     </div>
+    <div id="bulkbar" class="split" style="display:none;margin-bottom:12px;padding:8px 12px;background:var(--accent-dim);border-radius:10px">
+      <span class="small"><b id="bulkn">0</b> selecionados</span>
+      <button class="btn-soft" onclick="convidarSel()">✉️ Convidar selecionados</button>
+    </div>
     <div id="tbl"></div>`;
   drawTable(ROWS);
 }
@@ -117,8 +123,9 @@ function filtra(){
 }
 function drawTable(rows){
   $('tbl').innerHTML=`<table>
-    <thead><tr><th>Candidato</th><th>Área / cargo</th><th>Cidade</th><th>Estado</th><th>Consent.</th><th>Verif.</th><th>Ações</th></tr></thead>
+    <thead><tr><th style="width:28px"><input type="checkbox" style="width:auto" onclick="toggleAll(this)"></th><th>Candidato</th><th>Área / cargo</th><th>Cidade</th><th>Estado</th><th>Consent.</th><th>Verif.</th><th>Ações</th></tr></thead>
     <tbody>${rows.map(r=>`<tr>
+      <td><input type="checkbox" class="rowchk" style="width:auto" value="${r.id}" onclick="bulkCount()"></td>
       <td><b>${esc(r.nome)}</b><div class="t3 small">${esc(r.email)}</div></td>
       <td>${esc(r.area||'—')}<div class="t3 small">${esc(r.cargo||'')}</div></td>
       <td>${esc(r.cidade||'—')}</td>
@@ -127,7 +134,39 @@ function drawTable(rows){
       <td class="small">${r.email_verified?'✉︎':'·'} ${r.phone_verified?'☎︎':'·'}</td>
       <td class="split"><button class="btn-soft" onclick="editar(${r.id})">Editar</button>
         <button class="btn-danger" onclick="arquivar(${r.id},'${esc(r.nome)}')">Arquivar</button></td>
-    </tr>`).join('')||'<tr><td colspan="7" class="muted">Nenhum candidato</td></tr>'}</tbody></table>`;
+    </tr>`).join('')||'<tr><td colspan="8" class="muted">Nenhum candidato</td></tr>'}</tbody></table>`;
+}
+
+function toggleAll(box){document.querySelectorAll('.rowchk').forEach(c=>c.checked=box.checked);bulkCount();}
+function bulkCount(){const n=document.querySelectorAll('.rowchk:checked').length;const bar=$('bulkbar');if(bar){bar.style.display=n?'flex':'none';$('bulkn').textContent=n;}}
+function selIds(){return [...document.querySelectorAll('.rowchk:checked')].map(c=>Number(c.value));}
+async function convidarSel(){
+  const ids=selIds(); if(!ids.length)return;
+  const message=prompt('Mensagem do convite (opcional):','Atualize seu perfil no Entre Escolhas e fique visível para empresas que estão contratando.');
+  if(message===null)return;
+  try{ const d=await api('fn=admin_candidates&op=invite',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids,message})});
+    alert(`Convites: ${d.enviados} enviados, ${d.falhas} falhas (de ${d.total}).`);}
+  catch(e){alert('Erro: '+e.message);}
+}
+
+// --- Importação CSV (parse no cliente) ---
+function parseCSV(text){
+  const lines=text.replace(/\r/g,'').split('\n').filter(l=>l.trim());
+  if(!lines.length)return [];
+  const split=l=>{const out=[],re=/("([^"]*(""[^"]*)*)"|[^,]*)(,|$)/g;let m;while((m=re.exec(l))){out.push((m[2]!==undefined?m[2].replace(/""/g,'"'):m[1]).trim());if(m[4]==='')break;}return out;};
+  const head=split(lines[0]).map(h=>h.toLowerCase().trim());
+  const map={'nome':'nome','name':'nome','e-mail':'email','email':'email','telefone':'telefone','fone':'telefone','celular':'telefone','cidade':'cidade','area':'area','área':'area','cargo':'cargo','senioridade':'senioridade','cep':'cep','lat':'lat','lon':'lon','long':'lon'};
+  return lines.slice(1).map(l=>{const cells=split(l);const o={};head.forEach((h,i)=>{const k=map[h];if(k)o[k]=cells[i];});return o;}).filter(o=>o.email||o.nome);
+}
+async function importCSV(inp){
+  const f=inp.files&&inp.files[0]; if(!f)return; inp.value='';
+  const text=await f.text(); const rows=parseCSV(text);
+  if(!rows.length){alert('CSV vazio ou sem colunas reconhecidas.\nUse cabeçalhos: nome, email, telefone, cidade, area, cargo, senioridade, cep.');return;}
+  if(!confirm(`Importar ${rows.length} candidato(s)?\nColunas detectadas: ${Object.keys(rows[0]).join(', ')}\n(CEP é geocodificado automaticamente quando presente.)`))return;
+  try{ const d=await api('fn=admin_candidates&op=import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rows})});
+    alert(`Importação concluída:\n✓ ${d.criados} criados\n• ${d.pulados} já existiam\n✗ ${d.erros} com erro`+(d.detalhes&&d.detalhes.length?'\n\n'+d.detalhes.slice(0,10).join('\n'):''));
+    await load();
+  }catch(e){alert('Erro: '+e.message);}
 }
 
 function field(l,id,v,ph){return `<div><label class="fl">${l}</label><input id="${id}" value="${esc(v||'')}" placeholder="${ph||''}"></div>`;}

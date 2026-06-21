@@ -1,7 +1,9 @@
-// /api/b2b?fn=admin_candidates&op=list|get|save|archive — CRUD de candidatos (Admin).
+// /api/b2b?fn=admin_candidates&op=list|get|save|archive|import|invite — CRUD de candidatos (Admin).
 // Protegido por ADMIN_API_KEY. Soft-delete (status='arquivado'); nunca apaga duro.
 const { setCors, json, err, requireApiKey, logAdmin, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
+const mailer = require('./_lib/mailer');
+const { geocodeCep } = require('./_lib/geocode');
 
 // campos que o admin pode editar/criar
 const TEXT = ['nome','email','telefone','cidade','area','cargo','empresa','senioridade',
@@ -136,5 +138,67 @@ module.exports = async (req, res) => {
     return json(res, { ok: true, id, status: novo });
   }
 
-  return err(res, 'op inválida (use list|get|save|archive)');
+  // ── IMPORTAR EM MASSA (CSV já parseado no cliente) ───────
+  if (op === 'import') {
+    if (req.method !== 'POST') return err(res, 'Use POST', 405);
+    const body = getJsonBody(req) || {};
+    const rows = Array.isArray(body.rows) ? body.rows.slice(0, 500) : [];
+    if (!rows.length) return err(res, 'Nenhuma linha para importar');
+    const geo = body.geocode !== false;
+    let criados = 0, pulados = 0, erros = 0;
+    const detalhes = [];
+    for (const r of rows) {
+      const nome = String(r.nome || '').trim();
+      const email = String(r.email || '').toLowerCase().trim();
+      if (nome.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { erros++; detalhes.push(`${email || '(sem e-mail)'}: inválido`); continue; }
+      const cep = String(r.cep || '').replace(/\D/g, '').slice(0, 8) || null;
+      let lat = r.lat != null && r.lat !== '' ? Number(r.lat) : null;
+      let lon = r.lon != null && r.lon !== '' ? Number(r.lon) : null;
+      if (geo && cep && (lat == null || lon == null)) {
+        try { const g = await geocodeCep(cep); if (g) { lat = g.lat; lon = g.lon; } } catch (e) { /* segue sem geo */ }
+      }
+      try {
+        await query(
+          `INSERT INTO candidates (nome, email, telefone, cidade, area, cargo, senioridade, cep, lat, lon, source, public_token)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'admin-import', encode(gen_random_bytes(16),'hex'))`,
+          [nome, email, String(r.telefone || '') || null, String(r.cidade || '') || null,
+           String(r.area || '') || null, String(r.cargo || '') || null, String(r.senioridade || '') || null,
+           cep ? (cep.length === 8 ? cep.slice(0, 5) + '-' + cep.slice(5) : cep) : null, lat, lon]);
+        criados++;
+      } catch (e) {
+        if (/unique|duplicate/i.test(e.message)) { pulados++; detalhes.push(`${email}: já existe`); }
+        else { erros++; detalhes.push(`${email}: ${e.message}`); }
+      }
+    }
+    await logAdmin(req, 'cand_import', `${criados} criados, ${pulados} dup, ${erros} erros`);
+    return json(res, { ok: true, criados, pulados, erros, detalhes: detalhes.slice(0, 40) });
+  }
+
+  // ── CONVIDAR (e-mail para 1+ candidatos) ─────────────────
+  if (op === 'invite') {
+    if (req.method !== 'POST') return err(res, 'Use POST', 405);
+    const body = getJsonBody(req) || {};
+    const ids = Array.isArray(body.ids) ? body.ids.map(Number).filter(Boolean).slice(0, 100) : [];
+    if (!ids.length) return err(res, 'Selecione ao menos um candidato');
+    const msg = String(body.message || '').trim()
+      || 'Atualize seu perfil no Entre Escolhas e fique visível para empresas que estão contratando.';
+    const base = process.env.APP_BASE_URL || 'https://www.entreescolhas.com.br';
+    const { rows } = await query('SELECT id, nome, email FROM candidates WHERE id = ANY($1::int[])', [ids]);
+    let enviados = 0, falhas = 0;
+    for (const c of rows) {
+      if (!c.email) { falhas++; continue; }
+      const html = `<p>Olá, ${String(c.nome || '').replace(/[<>&]/g, '')}!</p><p>${msg.replace(/[<>]/g, '')}</p>
+        <p><a href="${base}/meu-perfil.html">Atualizar meu perfil</a></p>
+        <p style="color:#888;font-size:12px">Entre Escolhas · Banco de Talentos</p>`;
+      try {
+        const ok = await mailer.send(c.email, 'Atualize seu perfil — Entre Escolhas', html);
+        if (ok) { enviados++; await query('UPDATE candidates SET invites_total = COALESCE(invites_total,0) + 1 WHERE id = $1', [c.id]); }
+        else falhas++;
+      } catch (e) { falhas++; }
+    }
+    await logAdmin(req, 'cand_invite', `${enviados} enviados, ${falhas} falhas`);
+    return json(res, { ok: true, enviados, falhas, total: rows.length });
+  }
+
+  return err(res, 'op inválida (use list|get|save|archive|import|invite)');
 };
