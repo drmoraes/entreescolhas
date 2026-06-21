@@ -36,6 +36,12 @@
   .gate{max-width:380px;margin:80px auto;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:30px}
   .spin{display:inline-block;width:18px;height:18px;border:2px solid var(--accent-dim);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite}
   @keyframes s{to{transform:rotate(360deg)}}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+  .scrim.on{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;right:0;height:100%;width:min(600px,96vw);background:var(--bg-card);border-left:1px solid var(--border);transform:translateX(100%);transition:.22s;z-index:41;overflow-y:auto;padding:24px}
+  .drawer.on{transform:none}
+  .drawer .x{position:absolute;top:16px;right:18px;font-size:20px;color:var(--text-2);background:none;border:none;cursor:pointer}
+  .albox{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border-radius:11px;border:1px solid var(--border);margin-bottom:8px}
 </style>
 </head>
 <body>
@@ -54,6 +60,9 @@
 </div>
 
 <main id="dash" class="hide"></main>
+
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer"><button class="x" onclick="closeDrawer()">✕</button><div id="drawerBody"></div></div>
 
 <script>
 const $=id=>document.getElementById(id);let KEY='';
@@ -186,6 +195,14 @@ function render(d){
     <p class="muted small" style="margin-top:10px">Use número negativo para debitar. Cada lançamento fica na razão de créditos (auditável).</p>
   </div>
 
+  <h2 class="sec">Empresas — clique para o painel 360</h2>
+  <table><thead><tr><th>Empresa</th><th>Plano</th><th>Status</th><th>Saldo</th></tr></thead><tbody>
+    ${(d.empresas||[]).map(e=>`<tr style="cursor:pointer" onclick="empresa360(${e.id})">
+      <td><b>${esc(e.nome)}</b><div class="muted small">${esc(e.email)}</div></td>
+      <td>${esc(e.plan)}</td><td>${esc(e.status)}</td>
+      <td class="${e.saldo<5?'red':''}">${e.saldo}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">Sem empresas</td></tr>'}
+  </tbody></table>
+
   <h2 class="sec">Qualidade da base</h2>
   <div class="kpis">
     ${kpi(b.total,'Candidatos','não arquivados')}
@@ -215,6 +232,72 @@ function render(d){
       <td>${l.candidate_id?('#'+l.candidate_id):'—'}</td><td class="muted">${esc(l.purpose||'')}</td></tr>`).join('')||'<tr><td colspan="5" class="muted">Sem logs</td></tr>'}
   </tbody></table>
   <p class="muted small" style="margin:14px 0 40px">access_logs é append-only (imutável) — UPDATE/DELETE bloqueados por trigger no banco.</p>`;
+}
+
+/* ---------- Empresa 360 (drawer) ---------- */
+function openDrawer(){$('scrim').classList.add('on');$('drawer').classList.add('on');}
+function closeDrawer(){$('scrim').classList.remove('on');$('drawer').classList.remove('on');}
+function fmtDt(s){return s?new Date(s).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';}
+
+async function empresa360(id){
+  openDrawer();
+  $('drawerBody').innerHTML='<div style="margin-top:30px" class="muted"><span class="spin"></span> Carregando…</div>';
+  try{
+    const r=await fetch('/api/b2b?fn=admin_company&id='+id,{headers:{'X-Api-Key':KEY}});
+    const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
+    renderEmpresa(d);
+  }catch(e){$('drawerBody').innerHTML='<p class="red" style="margin-top:30px">'+esc(e.message)+'</p>';}
+}
+
+function renderEmpresa(d){
+  const c=d.company,w=d.wallet,u=d.uso,rc=d.receita;
+  const sevc={alto:'red',medio:'gold',baixo:'accent'};
+  const al=(d.alertas||[]).map(a=>`<div class="albox" style="border-color:${a.sev==='alto'?'rgba(239,68,68,.3)':'rgba(201,168,76,.3)'}"><span class="${sevc[a.sev]}" style="font-weight:800">●</span><div><b>${esc(a.tipo)}</b><div class="muted small">${esc(a.detalhe)}</div></div></div>`).join('')
+    || '<div class="albox"><span class="green">●</span><div class="muted small">Conta saudável, sem alertas.</div></div>';
+  const compras=(d.compras||[]).map(x=>`<tr><td>${fmtDt(x.created_at)}</td><td>${esc(x.package)}</td><td>${brl(x.price)}</td><td><span class="${x.status==='paid'?'green':x.status==='pending'?'gold':'red'}">${x.status}</span></td></tr>`).join('')||'<tr><td colspan="4" class="muted">Sem compras</td></tr>';
+  const ledger=(d.ledger||[]).map(x=>`<tr><td>${fmtDt(x.created_at)}</td><td>${esc(x.reason)}</td><td class="${x.delta>0?'green':'red'}">${x.delta>0?'+':''}${x.delta}</td><td class="muted">${x.balance_after??'—'}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">Sem lançamentos</td></tr>';
+
+  $('drawerBody').innerHTML=`
+    <div style="margin-bottom:6px"><b style="font-size:17px">${esc(c.nome)}</b> <span class="muted small">· ${esc(c.plan)} · ${esc(c.status)}</span></div>
+    <div class="muted small" style="margin-bottom:14px">${esc(c.email)} · empresa #${c.id}</div>
+    ${al}
+    <div class="kpis" style="grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
+      ${kpi(w.saldo,'Saldo de créditos','',w.saldo<5?'red':'accent')}
+      ${kpi(brl(rc.pago),'Receita paga','','green')}
+      ${kpi(w.comprados+' / '+w.gastos,'Comprados / gastos','')}
+      ${kpi(u.taxa_resposta+'%','Taxa de resposta',u.responderam+'/'+u.unlocks+' desbloqueios')}
+    </div>
+
+    <h2 class="sec">Conceder créditos / cortesia</h2>
+    <div class="kpi" style="padding:14px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input id="dvAmt" type="number" value="5" style="width:90px">
+        <input id="dvReason" placeholder="motivo (ex.: cortesia, ativação)" style="flex:1;min-width:150px">
+        <button class="btn" onclick="grantInDrawer(${c.id})">Conceder</button>
+      </div>
+      <span id="dvMsg" class="small"></span>
+      <p class="muted small" style="margin-top:8px">Negativo debita. Fica auditável na razão de créditos.</p>
+    </div>
+
+    <h2 class="sec">Histórico de compras (R$)</h2>
+    <table><thead><tr><th>Data</th><th>Pacote</th><th>Valor</th><th>Status</th></tr></thead><tbody>${compras}</tbody></table>
+    <h2 class="sec">Razão de créditos (recente)</h2>
+    <table><thead><tr><th>Data</th><th>Motivo</th><th>Δ</th><th>Saldo</th></tr></thead><tbody>${ledger}</tbody></table>
+    <div style="height:30px"></div>`;
+}
+
+async function grantInDrawer(id){
+  const amount=parseInt($('dvAmt').value,10), reason=($('dvReason').value||'').trim(), msg=$('dvMsg');
+  if(!amount){msg.textContent='Informe uma quantidade (≠ 0)';msg.className='small red';return;}
+  msg.textContent='Processando…';msg.className='small muted';
+  try{
+    const r=await fetch('/api/b2b?fn=admin_grant_credits',{method:'POST',
+      headers:{'Content-Type':'application/json','X-Api-Key':KEY},
+      body:JSON.stringify({company_id:id,amount,reason})});
+    const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
+    msg.textContent=`✓ ${d.delta>0?'+':''}${d.delta} → saldo ${d.saldo}`;msg.className='small green';
+    setTimeout(()=>empresa360(id),700);
+  }catch(e){msg.textContent=e.message;msg.className='small red';}
 }
 </script>
 </body>
