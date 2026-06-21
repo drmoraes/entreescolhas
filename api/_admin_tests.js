@@ -8,8 +8,9 @@ const MAX = () => Number(process.env.MAX_TEST_ATTEMPTS || 3);
 
 // status derivado para a UI
 function statusOf(l, max) {
+  const hasReport = l.has_report || l.report_json != null;
   if (!l.confirmed_at) return 'pendente';            // não confirmou e-mail
-  if (l.report_json) return 'concluido';             // tem resultado salvo
+  if (hasReport) return 'concluido';                 // tem resultado salvo
   if (Number(l.attempts_used) >= max) return 'travado'; // estourou tentativas sem resultado
   if (Number(l.attempts_used) > 0) return 'incompleto';
   return 'confirmado';                               // confirmou, ainda não fez
