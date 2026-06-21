@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin · Candidatos — Entre Escolhas</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.svg" />
+<style>
+  :root{--bg:#08080F;--bg-card:#0F0F1E;--bg-raised:#141428;--border:rgba(108,99,255,.15);
+    --accent:#6C63FF;--accent-dim:rgba(108,99,255,.12);--text:#F0EFF8;--text-2:#9490C0;--text-3:#5E5A8A;
+    --green:#22C55E;--gold:#C9A84C;--red:#EF4444;--blue:#38BDF8}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:14px}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;font-weight:600}
+  input,select,textarea{font-family:inherit;background:var(--bg-raised);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 12px;font-size:13px;width:100%}
+  label.fl{display:block;font-size:12px;color:var(--text-2);margin-bottom:4px}
+  .btn{background:var(--accent);color:#fff;padding:9px 16px;font-size:13px}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-2);padding:8px 13px;font-size:13px}
+  .btn-soft{background:var(--accent-dim);color:#cfcaff;padding:8px 13px;font-size:13px}
+  .btn-danger{background:rgba(239,68,68,.12);color:#fca5a5;padding:8px 13px;font-size:13px}
+  .muted{color:var(--text-2)}.small{font-size:12px}.t3{color:var(--text-3)}
+  .green{color:var(--green)}.red{color:var(--red)}.accent{color:var(--accent)}
+  header{display:flex;align-items:center;gap:14px;padding:13px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(8,8,15,.92);backdrop-filter:blur(10px);z-index:5}
+  .brand{font-weight:800}.brand span{color:var(--accent)}
+  main{max-width:1200px;margin:0 auto;padding:24px}
+  .gate{max-width:380px;margin:80px auto;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:30px}
+  h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:22px 0 12px;font-weight:700}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:14px}
+  .kpi .v{font-size:26px;font-weight:800}.kpi .l{color:var(--text-2);font-size:12px;margin-top:2px}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:6px 0 14px}
+  table{width:100%;border-collapse:collapse;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-size:13px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border)}
+  th{color:var(--text-3);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  tr:last-child td{border:none}
+  tbody tr:hover{background:rgba(108,99,255,.05)}
+  .tag{font-size:11px;padding:2px 9px;border-radius:20px;border:1px solid var(--border);white-space:nowrap}
+  .tag.g{color:#86efac;border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)}
+  .tag.r{color:#fca5a5;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+  .tag.gold{color:#e6cf8b;border-color:rgba(201,168,76,.3);background:rgba(201,168,76,.08)}
+  .split{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+  .scrim.on{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;right:0;height:100%;width:min(560px,96vw);background:var(--bg-card);border-left:1px solid var(--border);transform:translateX(100%);transition:.22s;z-index:41;overflow-y:auto;padding:24px}
+  .drawer.on{transform:none}
+  .drawer .x{position:absolute;top:16px;right:18px;font-size:20px;color:var(--text-2);background:none}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid var(--accent-dim);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header><div class="brand">Entre<span>Escolhas</span> · Admin · Candidatos</div>
+  <div style="flex:1"></div>
+  <a class="btn-ghost" href="/admin-b2b.html" style="text-decoration:none">Admin B2B</a>
+  <a class="btn-ghost" href="/admin-testes.html" style="text-decoration:none">Testes</a>
+  <button class="btn" id="newBtn" onclick="novo()" style="display:none">+ Incluir</button>
+</header>
+
+<div id="gate" class="gate">
+  <h2 style="font-size:17px;margin-bottom:4px">Candidatos</h2>
+  <p class="muted small" style="margin-bottom:16px">Informe a ADMIN_API_KEY para acessar.</p>
+  <input id="key" type="password" placeholder="ADMIN_API_KEY" onkeydown="if(event.key==='Enter')load()" />
+  <button class="btn" style="width:100%;margin-top:12px" onclick="load()">Entrar</button>
+  <div id="gErr" class="red small" style="margin-top:10px"></div>
+</div>
+
+<main id="dash" style="display:none"></main>
+
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer"><button class="x" onclick="closeDrawer()">✕</button><div id="drawerBody"></div></div>
+
+<script>
+const $=id=>document.getElementById(id);let KEY='';let ROWS=[];
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function api(path,opts={}){return fetch('/api/b2b?'+path,{...opts,headers:{'X-Api-Key':KEY,...(opts.headers||{})}}).then(async r=>{if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||('Erro '+r.status));}return r.json();});}
+const EST={ativo:{t:'Ativo',c:'g'},frio:{t:'Frio',c:'gold'},fantasma:{t:'Fantasma',c:'r'}};
+function etag(e){const o=EST[e]||{t:e,c:''};return `<span class="tag ${o.c}">${o.t}</span>`;}
+
+async function load(){
+  KEY=KEY||$('key').value.trim();
+  if(!KEY){$('gErr').textContent='Informe a chave';return;}
+  $('gErr').textContent='';
+  try{ const d=await api('fn=admin_candidates&op=list'); $('gate').style.display='none';$('dash').style.display='';$('newBtn').style.display='';ROWS=d.data;render(d);}
+  catch(e){$('gErr').textContent=e.message;}
+}
+
+function render(d){
+  const k=d.kpis;
+  $('dash').innerHTML=`
+    <h2 class="sec">Base de candidatos</h2>
+    <div class="kpis">
+      <div class="kpi"><div class="v">${k.total}</div><div class="l">Listados</div></div>
+      <div class="kpi"><div class="v green">${k.ativos}</div><div class="l">Ativos ≤45d</div></div>
+      <div class="kpi"><div class="v" style="color:var(--gold)">${k.frios}</div><div class="l">Frios 45–90d</div></div>
+      <div class="kpi"><div class="v red">${k.fantasmas}</div><div class="l">Fantasmas</div></div>
+      <div class="kpi"><div class="v accent">${k.consentidos}</div><div class="l">Consentidos B2B</div></div>
+    </div>
+    <div class="toolbar">
+      <input id="q" placeholder="Buscar nome, e-mail, cargo, área, cidade…" style="max-width:320px" oninput="filtra()">
+      <select id="fe" style="max-width:170px" onchange="filtra()">
+        <option value="">Todos os estados</option><option value="ativo">Ativos</option><option value="frio">Frios</option><option value="fantasma">Fantasmas</option>
+      </select>
+      <select id="fc" style="max-width:200px" onchange="filtra()">
+        <option value="">Consentimento (todos)</option><option value="sim">Com consentimento</option><option value="nao">Sem consentimento</option>
+      </select>
+    </div>
+    <div id="tbl"></div>`;
+  drawTable(ROWS);
+}
+function filtra(){
+  const q=($('q').value||'').toLowerCase(),e=$('fe').value,c=$('fc').value;
+  let r=ROWS.filter(x=>(!q||(x.nome+' '+x.email+' '+(x.cargo||'')+' '+(x.area||'')+' '+(x.cidade||'')).toLowerCase().includes(q))
+    &&(!e||x.estado===e)&&(!c||(c==='sim'?x.b2b_consent:!x.b2b_consent)));
+  drawTable(r);
+}
+function drawTable(rows){
+  $('tbl').innerHTML=`<table>
+    <thead><tr><th>Candidato</th><th>Área / cargo</th><th>Cidade</th><th>Estado</th><th>Consent.</th><th>Verif.</th><th>Ações</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td><b>${esc(r.nome)}</b><div class="t3 small">${esc(r.email)}</div></td>
+      <td>${esc(r.area||'—')}<div class="t3 small">${esc(r.cargo||'')}</div></td>
+      <td>${esc(r.cidade||'—')}</td>
+      <td>${etag(r.estado)}</td>
+      <td>${r.b2b_consent?'<span class="tag g">sim</span>':'<span class="tag">não</span>'}</td>
+      <td class="small">${r.email_verified?'✉︎':'·'} ${r.phone_verified?'☎︎':'·'}</td>
+      <td class="split"><button class="btn-soft" onclick="editar(${r.id})">Editar</button>
+        <button class="btn-danger" onclick="arquivar(${r.id},'${esc(r.nome)}')">Arquivar</button></td>
+    </tr>`).join('')||'<tr><td colspan="7" class="muted">Nenhum candidato</td></tr>'}</tbody></table>`;
+}
+
+function field(l,id,v,ph){return `<div><label class="fl">${l}</label><input id="${id}" value="${esc(v||'')}" placeholder="${ph||''}"></div>`;}
+function sel(l,id,v,opts){return `<div><label class="fl">${l}</label><select id="${id}">${opts.map(o=>`<option value="${o[0]}" ${v===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></div>`;}
+function chk(l,id,v){return `<label class="split small" style="margin:4px 0"><input type="checkbox" id="${id}" ${v?'checked':''} style="width:auto"> ${l}</label>`;}
+
+function novo(){abreForm({});}
+async function editar(id){
+  openDrawer();$('drawerBody').innerHTML='<div style="margin-top:30px" class="muted"><span class="spin"></span> Carregando…</div>';
+  try{ const d=await api('fn=admin_candidates&op=get&id='+id); abreForm(d.candidate);}catch(e){$('drawerBody').innerHTML='<p class="red">'+esc(e.message)+'</p>';}
+}
+function abreForm(c){
+  const isNew=!c.id;
+  const skills=Array.isArray(c.skills)?c.skills.join(', '):(c.skills||'');
+  $('drawerBody').innerHTML=`
+    <h3 style="font-size:18px;margin-bottom:2px">${isNew?'Incluir candidato':esc(c.nome)}</h3>
+    <div class="t3 small" style="margin-bottom:14px">${isNew?'Novo cadastro manual':('#'+c.id+' · '+esc(c.email))}</div>
+    <input type="hidden" id="f_id" value="${c.id||''}">
+    <div class="grid2">
+      ${field('Nome','f_nome',c.nome)}
+      ${field('E-mail','f_email',c.email)}
+      ${field('Telefone','f_telefone',c.telefone)}
+      ${field('Cidade','f_cidade',c.cidade)}
+      ${field('Área','f_area',c.area)}
+      ${field('Cargo','f_cargo',c.cargo)}
+      ${sel('Senioridade','f_senioridade',c.senioridade||'',[['','—'],['Júnior','Júnior'],['Pleno','Pleno'],['Sênior','Sênior'],['Especialista','Especialista'],['Liderança','Liderança']])}
+      ${sel('Modelo','f_work_model',c.work_model||'',[['','—'],['remoto','Remoto'],['hibrido','Híbrido'],['presencial','Presencial']])}
+      ${sel('Disponibilidade','f_availability',c.availability||'',[['','—'],['imediata','Imediata'],['30d','30 dias'],['60d','60 dias'],['90d','90 dias']])}
+      ${field('Arquétipo','f_arquetipo',c.arquetipo)}
+      ${field('Salário mín.','f_salary_min',c.salary_min)}
+      ${field('Salário máx.','f_salary_max',c.salary_max)}
+    </div>
+    <div style="margin-top:10px"><label class="fl">Skills (separe por vírgula)</label><input id="f_skills" value="${esc(skills)}" placeholder="React, Node, AWS"></div>
+    <div class="grid2" style="margin-top:10px">
+      ${sel('Status','f_status',c.status||'novo',[['novo','Novo'],['triagem','Triagem'],['entrevista','Entrevista'],['aprovado','Aprovado'],['arquivado','Arquivado']])}
+      ${sel('Visibilidade','f_visibility',c.visibility||'visible',[['visible','Visível'],['hidden','Oculto']])}
+    </div>
+    <h2 class="sec">Consentimento & verificação</h2>
+    <div class="split">${chk('Consentimento B2B','f_b2b_consent',c.b2b_consent)}${chk('E-mail verificado','f_email_verified',c.email_verified)}${chk('Telefone verificado','f_phone_verified',c.phone_verified)}</div>
+    <div class="split" style="margin-top:16px">
+      <button class="btn" onclick="salvar()">Salvar</button>
+      <span id="fMsg" class="small"></span>
+    </div>
+    <p class="muted small" style="margin-top:10px">PII é editável só aqui no admin. Arquivar é soft-delete (preserva auditoria).</p>`;
+  openDrawer();
+}
+
+async function salvar(){
+  const g=id=>$(id)?$(id).value:undefined, c=id=>$(id)?$(id).checked:false;
+  const body={
+    nome:g('f_nome'),email:g('f_email'),telefone:g('f_telefone'),cidade:g('f_cidade'),area:g('f_area'),
+    cargo:g('f_cargo'),senioridade:g('f_senioridade'),work_model:g('f_work_model'),availability:g('f_availability'),
+    arquetipo:g('f_arquetipo'),salary_min:g('f_salary_min'),salary_max:g('f_salary_max'),skills:g('f_skills'),
+    status:g('f_status'),visibility:g('f_visibility'),
+    b2b_consent:c('f_b2b_consent'),email_verified:c('f_email_verified'),phone_verified:c('f_phone_verified'),
+  };
+  const id=g('f_id'); if(id)body.id=Number(id);
+  const msg=$('fMsg');msg.textContent='Salvando…';msg.className='small muted';
+  try{
+    const d=await api('fn=admin_candidates&op=save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    msg.textContent='✓ Salvo';msg.className='small green';
+    await load(); setTimeout(closeDrawer,500);
+  }catch(e){msg.textContent=e.message;msg.className='small red';}
+}
+
+async function arquivar(id,nome){
+  if(!confirm(`Arquivar ${nome}? (some das buscas; pode ser desarquivado)`))return;
+  try{ await api('fn=admin_candidates&op=archive',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}); await load(); }
+  catch(e){alert('Erro: '+e.message);}
+}
+
+function openDrawer(){$('scrim').classList.add('on');$('drawer').classList.add('on');}
+function closeDrawer(){$('scrim').classList.remove('on');$('drawer').classList.remove('on');}
+</script>
+</body>
+</html>
