@@ -35,6 +35,18 @@ module.exports = async (req, res) => {
   const novasTentativas = Number(lead.attempts_used) + 1;
   const jaPago = lead.payment_status === 'paid';
 
+  // Registro histórico da tentativa (não bloqueia o fluxo se falhar)
+  try {
+    const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || null;
+    await query(
+      `INSERT INTO test_attempts (lead_id, jornada, attempt_no, report_json, arquetipo, paid, ip)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      [lead.id, lead.jornada, novasTentativas, JSON.stringify(report),
+       (report && report.arch && report.arch.name) ? String(report.arch.name).slice(0, 120) : null,
+       jaPago, ip]
+    );
+  } catch (e) { console.error('test_attempts insert falhou:', e.message); }
+
   if (jaPago) {
     await query(
       `UPDATE leads SET report_json = $1, attempts_used = $2, report_sent_at = NOW(), updated_at = NOW()

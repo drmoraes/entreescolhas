@@ -20,6 +20,7 @@ const handlers = {
   admin_stats:        require('./_admin_b2b_stats'),
   admin_grant_credits: require('./_admin_grant'),
   admin_migrate:      require('./_admin_migrate'),
+  admin_tests:        require('./_admin_tests'),
   cand_portal:        require('./_cand_portal'),
   mp_webhook_credits: require('./_mp_webhook_credits'),
   cron_sla:           require('./_cron_sla'),

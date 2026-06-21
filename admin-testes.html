@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin · Testes — Entre Escolhas</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.svg" />
+<style>
+  :root{--bg:#08080F;--bg-card:#0F0F1E;--bg-raised:#141428;--border:rgba(108,99,255,.15);
+    --border-hover:rgba(108,99,255,.4);--accent:#6C63FF;--accent-dim:rgba(108,99,255,.12);
+    --text:#F0EFF8;--text-2:#9490C0;--text-3:#5E5A8A;--green:#22C55E;--gold:#C9A84C;--red:#EF4444;--blue:#38BDF8}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:14px}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;font-weight:600}
+  input,select{font-family:inherit;background:var(--bg-raised);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-size:14px;width:100%}
+  .btn{background:var(--accent);color:#fff;padding:9px 16px;font-size:13px}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-2);padding:8px 13px;font-size:13px}
+  .btn-soft{background:var(--accent-dim);color:#cfcaff;padding:8px 13px;font-size:13px}
+  .btn-gold{background:rgba(201,168,76,.14);color:#e6cf8b;padding:8px 13px;font-size:13px;border:1px solid rgba(201,168,76,.3)}
+  .muted{color:var(--text-2)}.small{font-size:12px}.t3{color:var(--text-3)}
+  .accent{color:var(--accent)}.green{color:var(--green)}.gold{color:var(--gold)}.red{color:var(--red)}
+  header{display:flex;align-items:center;gap:14px;padding:13px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(8,8,15,.92);backdrop-filter:blur(10px);z-index:5}
+  .brand{font-weight:800}.brand span{color:var(--accent)}
+  main{max-width:1200px;margin:0 auto;padding:24px}
+  .gate{max-width:380px;margin:80px auto;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:30px}
+  h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:24px 0 12px;font-weight:700}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:14px}
+  .kpi .v{font-size:26px;font-weight:800}.kpi .l{color:var(--text-2);font-size:12px;margin-top:2px}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:6px 0 14px}
+  table{width:100%;border-collapse:collapse;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-size:13px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border)}
+  th{color:var(--text-3);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  tr:last-child td{border:none}
+  tbody tr:hover{background:rgba(108,99,255,.05)}
+  .tag{font-size:11px;padding:2px 9px;border-radius:20px;border:1px solid var(--border);white-space:nowrap}
+  .tag.g{color:#86efac;border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)}
+  .tag.r{color:#fca5a5;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+  .tag.gold{color:#e6cf8b;border-color:rgba(201,168,76,.3);background:rgba(201,168,76,.08)}
+  .tag.b{color:#7dd3fc;border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.08)}
+  .split{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+  .scrim.on{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;right:0;height:100%;width:min(620px,96vw);background:var(--bg-card);border-left:1px solid var(--border);transform:translateX(100%);transition:.22s;z-index:41;overflow-y:auto;padding:24px}
+  .drawer.on{transform:none}
+  .drawer .x{position:absolute;top:16px;right:18px;font-size:20px;color:var(--text-2);background:none}
+  .bar{height:9px;border-radius:6px;background:var(--bg-raised);overflow:hidden;margin-top:4px}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#8b84ff)}
+  .ins{background:var(--bg-raised);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px}
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid var(--accent-dim);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header><div class="brand">Entre<span>Escolhas</span> · Admin · Testes</div>
+  <div style="flex:1"></div>
+  <a class="btn-ghost" href="/admin-b2b.html" style="text-decoration:none">Admin B2B</a>
+  <button class="btn" id="refreshBtn" onclick="load()" style="display:none">Atualizar</button>
+</header>
+
+<div id="gate" class="gate">
+  <h2 style="font-size:17px;margin-bottom:4px">Gestão de testes</h2>
+  <p class="muted small" style="margin-bottom:16px">Informe a ADMIN_API_KEY para acessar.</p>
+  <input id="key" type="password" placeholder="ADMIN_API_KEY" onkeydown="if(event.key==='Enter')load()" />
+  <button class="btn" style="width:100%;margin-top:12px" onclick="load()">Entrar</button>
+  <div id="gErr" class="red small" style="margin-top:10px"></div>
+</div>
+
+<main id="dash" style="display:none"></main>
+
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer"><button class="x" onclick="closeDrawer()">✕</button><div id="drawerBody"></div></div>
+
+<script>
+const $=id=>document.getElementById(id);let KEY='';let ROWS=[];
+const JLABEL={arquetipo:'Arquétipo',bussola:'Bússola Vocacional','fit-cultural':'Fit Cultural',scanner:'Scanner de Relacionamento'};
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function fmtDate(s){return s?new Date(s).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';}
+function api(path,opts={}){return fetch('/api/b2b?'+path,{...opts,headers:{'X-Api-Key':KEY,...(opts.headers||{})}}).then(async r=>{if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||('Erro '+r.status));}return r.json();});}
+
+const STATUS={
+  concluido:{t:'Concluído',c:'g'}, travado:{t:'Travado',c:'r'},
+  pendente:{t:'Não confirmado',c:'gold'}, confirmado:{t:'Aguardando teste',c:'b'},
+  incompleto:{t:'Incompleto',c:'gold'},
+};
+function stag(s){const o=STATUS[s]||{t:s,c:'b'};return `<span class="tag ${o.c}">${o.t}</span>`;}
+
+async function load(){
+  KEY=KEY||$('key').value.trim();
+  if(!KEY){$('gErr').textContent='Informe a chave';return;}
+  $('gErr').textContent='';
+  try{
+    const d=await api('fn=admin_tests&op=list');
+    $('gate').style.display='none';$('dash').style.display='';$('refreshBtn').style.display='';
+    ROWS=d.data;render(d);
+  }catch(e){$('gErr').textContent=e.message;}
+}
+
+function render(d){
+  const k=d.kpis;
+  $('dash').innerHTML=`
+    <h2 class="sec">Visão geral</h2>
+    <div class="kpis">
+      <div class="kpi"><div class="v">${k.total}</div><div class="l">Testes (leads)</div></div>
+      <div class="kpi"><div class="v green">${k.concluidos}</div><div class="l">Concluídos</div></div>
+      <div class="kpi"><div class="v red">${k.travados}</div><div class="l">Travados</div></div>
+      <div class="kpi"><div class="v gold">${k.pendentes}</div><div class="l">Aguardando</div></div>
+      <div class="kpi"><div class="v accent">${k.pagos}</div><div class="l">Pagos</div></div>
+    </div>
+    <h2 class="sec">Registro de testes</h2>
+    <div class="toolbar">
+      <input id="q" placeholder="Buscar por nome ou e-mail…" style="max-width:300px" oninput="filtra()">
+      <select id="fj" style="max-width:230px" onchange="filtra()">
+        <option value="">Todas as jornadas</option>
+        <option value="arquetipo">Arquétipo</option>
+        <option value="bussola">Bússola Vocacional</option>
+        <option value="fit-cultural">Fit Cultural</option>
+        <option value="scanner">Scanner de Relacionamento</option>
+      </select>
+      <select id="fs" style="max-width:200px" onchange="filtra()">
+        <option value="">Todos os status</option>
+        <option value="travado">Só travados</option>
+        <option value="concluido">Concluídos</option>
+        <option value="pendente">Não confirmados</option>
+      </select>
+    </div>
+    <div id="tbl"></div>`;
+  drawTable(ROWS);
+}
+
+function filtra(){
+  const q=($('q').value||'').toLowerCase(), j=$('fj').value, s=$('fs').value;
+  let r=ROWS.filter(x=>(!q||(x.nome+' '+x.email).toLowerCase().includes(q))&&(!j||x.jornada===j)&&(!s||x.status===s));
+  drawTable(r);
+}
+
+function drawTable(rows){
+  $('tbl').innerHTML=`<table>
+    <thead><tr><th>Candidato</th><th>Jornada</th><th>Status</th><th>Tentativas</th><th>Pago</th><th>Atualizado</th><th>Ações</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td><b>${esc(r.nome)}</b><div class="t3 small">${esc(r.email)}</div></td>
+      <td>${JLABEL[r.jornada]||r.jornada}</td>
+      <td>${stag(r.status)}${r.reset_count?` <span class="t3 small">· ${r.reset_count}× reinic.</span>`:''}</td>
+      <td>${r.attempts_used}/${r.max_attempts}</td>
+      <td>${r.paid?'<span class="tag g">sim</span>':'<span class="tag">não</span>'}</td>
+      <td class="muted small">${fmtDate(r.updated_at)}</td>
+      <td class="split">
+        ${r.has_report?`<button class="btn-soft" onclick="verResultado(${r.id})">Ver resultado</button>`:'<span class="t3 small">sem resultado</span>'}
+        <button class="btn-gold" onclick="reiniciar(${r.id},'${esc(r.nome)}')">Reiniciar</button>
+      </td>
+    </tr>`).join('')||'<tr><td colspan="7" class="muted">Nenhum teste encontrado</td></tr>'}</tbody></table>`;
+}
+
+async function reiniciar(id,nome){
+  if(!confirm(`Reiniciar o teste de ${nome}?\n\nIsso zera as tentativas usadas (libera novas tentativas). O último resultado é preservado.`))return;
+  try{
+    await api('fn=admin_tests&op=reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+    await load();
+    alert('Teste reiniciado. A pessoa já pode refazer.');
+  }catch(e){alert('Erro: '+e.message);}
+}
+
+async function verResultado(id){
+  openDrawer();
+  $('drawerBody').innerHTML='<div style="margin-top:30px" class="muted"><span class="spin"></span> Carregando…</div>';
+  try{
+    const d=await api('fn=admin_tests&op=result&id='+id);
+    $('drawerBody').innerHTML=renderResult(d);
+  }catch(e){$('drawerBody').innerHTML='<p class="red" style="margin-top:30px">'+e.message+'</p>';}
+}
+
+function renderResult(d){
+  const l=d.lead, rep=d.report;
+  const link=location.origin+'/resultado.html?access='+encodeURIComponent(ROWS.find(x=>x.id===l.id)?.access_token||'');
+  let body='';
+  if(!rep){ body='<p class="muted">Este teste ainda não tem resultado salvo.</p>'; }
+  else {
+    const a=rep.arch||{}; const sc=rep.scores||{}; const dn=rep.dimNames||{};
+    const dims=Object.keys(sc).map(k=>`<div style="margin:8px 0"><div class="split" style="justify-content:space-between"><span>${esc(dn[k]||k)}</span><b>${sc[k]}/100</b></div><div class="bar"><i style="width:${Math.max(2,Math.min(100,sc[k]))}%"></i></div></div>`).join('');
+    const ins=(a.insights||[]).map(i=>`<div class="ins"><b>${esc(i.title||'')}</b><div class="muted small" style="margin-top:3px">${esc(i.text||'')}</div></div>`).join('');
+    body=`<div id="printArea">
+      <div style="font-size:12px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">${JLABEL[l.jornada]||l.jornada}</div>
+      <h2 style="font-size:22px;margin:2px 0 2px">${esc(a.name||'Resultado')}</h2>
+      ${a.mode?`<div class="accent" style="font-weight:600">${esc(a.mode)}</div>`:''}
+      ${a.desc?`<p class="muted" style="margin:8px 0 14px">${esc(a.desc)}</p>`:''}
+      ${dims?`<h2 class="sec">Dimensões</h2>${dims}`:''}
+      ${ins?`<h2 class="sec">Insights</h2>${ins}`:''}
+    </div>`;
+  }
+  const hist=(d.history||[]).map(h=>`<tr><td>#${h.attempt_no}</td><td>${esc(h.arquetipo||'—')}</td><td>${h.paid?'<span class="tag g">pago</span>':'<span class="tag">grátis</span>'}</td><td class="muted small">${fmtDate(h.created_at)}</td></tr>`).join('');
+  return `
+    <div class="split" style="justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+      <div><b style="font-size:16px">${esc(l.nome)}</b><div class="t3 small">${esc(l.email)} · lead #${l.id}</div></div>
+      <div class="split">${l.paid?'<span class="tag g">pago</span>':'<span class="tag gold">grátis</span>'}</div>
+    </div>
+    ${body}
+    ${rep?`<div class="split" style="margin:16px 0 6px">
+      <button class="btn" onclick="baixarPDF()">⬇︎ Baixar PDF</button>
+      <button class="btn-ghost" onclick="copy('${link}')">Copiar link do candidato</button>
+    </div>`:''}
+    ${hist?`<h2 class="sec">Histórico de tentativas</h2><table><thead><tr><th>#</th><th>Arquétipo</th><th>Tipo</th><th>Quando</th></tr></thead><tbody>${hist}</tbody></table>`:''}
+  `;
+}
+
+function baixarPDF(){
+  const el=document.getElementById('printArea'); if(!el)return;
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>Resultado — Entre Escolhas</title><style>
+    body{font-family:Arial,Helvetica,sans-serif;color:#1b1b2a;max-width:680px;margin:30px auto;padding:0 20px}
+    h2{color:#6C63FF} .sec{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#888;margin:18px 0 8px}
+    .bar{height:9px;border-radius:6px;background:#eee;overflow:hidden;margin-top:4px} .bar>i{display:block;height:100%;background:#6C63FF}
+    .split{display:flex;justify-content:space-between} .ins{border:1px solid #eee;border-radius:10px;padding:12px;margin-bottom:8px} .muted{color:#666}
+    .accent{color:#6C63FF}
+  </style></head><body><h1 style="color:#6C63FF;font-size:20px">Entre Escolhas — Resultado</h1>${el.innerHTML}<p style="color:#aaa;font-size:11px;margin-top:24px">Gerado em ${new Date().toLocaleString('pt-BR')}</p></body></html>`);
+  w.document.close(); setTimeout(()=>{w.focus();w.print();},300);
+}
+function copy(t){navigator.clipboard.writeText(t).then(()=>alert('Link copiado:\n'+t),()=>prompt('Copie o link:',t));}
+
+function openDrawer(){$('scrim').classList.add('on');$('drawer').classList.add('on');}
+function closeDrawer(){$('scrim').classList.remove('on');$('drawer').classList.remove('on');}
+</script>
+</body>
+</html>
