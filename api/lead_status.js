@@ -27,5 +27,7 @@ module.exports = async (req, res) => {
     attempts_used: Number(lead.attempts_used),
     max_attempts: Number(process.env.MAX_TEST_ATTEMPTS || 3),
     has_report: lead.report_json !== null,
+    mp_public_key: process.env.MP_PUBLIC_KEY || null,
+    preco: Number(process.env.MP_REPORT_PRICE || 7.97),
   });
 };

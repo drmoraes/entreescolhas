@@ -75,6 +75,8 @@ const STATEMENTS = [
   "ALTER TABLE company_users ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'ativo'",
   "ALTER TABLE company_users DROP CONSTRAINT IF EXISTS company_users_role_check",
   "ALTER TABLE company_users ADD CONSTRAINT company_users_role_check CHECK (role IN ('owner','gestor','analista','recruiter','leitura'))",
+  // ── Recuperação de carrinho do candidato (Rodada 11) ──
+  "ALTER TABLE leads ADD COLUMN IF NOT EXISTS cart_recovery_at TIMESTAMPTZ",
 ];
 
 const NEEDED = ['cep', 'lat', 'lon', 'idiomas', 'aceita_relocacao', 'contrato'];

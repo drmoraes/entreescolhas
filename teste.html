@@ -1433,78 +1433,115 @@ function showResult() {
     });
 }
 
-function unlockReport() {
-  const btn = document.getElementById('btn-unlock');
-  const errEl = document.getElementById('paywall-error');
-  errEl.style.display = 'none';
-  btn.disabled = true;
-  btn.textContent = 'Abrindo pagamento...';
+let BRICK_CONTROLLER = null;
 
+// Checkout TRANSPARENTE (Payment Brick): cartão + Pix dentro de um modal no nosso domínio.
+async function unlockReport() {
+  const errEl = document.getElementById('paywall-error');
+  if (errEl) errEl.style.display = 'none';
   if (typeof trackEvent === 'function') { trackEvent('start_checkout', { jornada: JORNADA_PARAM }); }
 
-  // Abre o popup JÁ no clique (síncrono) — evita bloqueio de pop-up do navegador.
-  // A plataforma continua viva nesta aba; o checkout abre numa janela separada.
-  const pop = window.open('about:blank', 'mp_checkout', 'width=480,height=760,menubar=no,toolbar=no');
+  const pub = (typeof LEAD_STATE !== 'undefined' && LEAD_STATE && LEAD_STATE.mp_public_key) || null;
+  const amount = (typeof LEAD_STATE !== 'undefined' && LEAD_STATE && LEAD_STATE.preco) || 7.97;
+  if (!pub || typeof MercadoPago === 'undefined') { return unlockReportFallback(); } // sem Brick → popup
 
-  fetch('/api/mp_create_preference', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ access: ACCESS_TOKEN }),
-  })
-    .then(res => res.json().catch(() => ({})).then(data => ({ ok: res.ok, data })))
-    .then(({ ok, data }) => {
-      if (!ok) throw new Error(data.error || 'Não foi possível iniciar o pagamento.');
-      if (data.already_paid) {
-        if (pop) { try { pop.close(); } catch (e) {} }
-        window.location.reload();
-        return;
-      }
-      // direciona o popup ao checkout; se o popup foi bloqueado, cai no fluxo antigo
-      if (pop) { pop.location.href = data.init_point; }
-      else { window.location.href = data.init_point; return; }
-      btn.textContent = 'Aguardando pagamento...';
-      iniciarPollingPagamento(pop, btn);
-    })
-    .catch(err => {
-      if (pop) { try { pop.close(); } catch (e) {} }
-      errEl.textContent = err.message;
-      errEl.style.display = 'block';
-      btn.disabled = false;
-      btn.textContent = 'Desbloquear relatório completo';
+  document.getElementById('brickModal').style.display = 'flex';
+  const pixArea = document.getElementById('pixArea');
+  pixArea.style.display = 'none'; pixArea.innerHTML = '';
+  document.getElementById('brickContainer').innerHTML = '';
+
+  try {
+    const mp = new MercadoPago(pub, { locale: 'pt-BR' });
+    const bricks = mp.bricks();
+    if (BRICK_CONTROLLER && BRICK_CONTROLLER.unmount) { try { BRICK_CONTROLLER.unmount(); } catch (e) {} }
+    BRICK_CONTROLLER = await bricks.create('payment', 'brickContainer', {
+      initialization: { amount: amount },
+      customization: {
+        visual: { theme: 'dark' },
+        paymentMethods: { creditCard: 'all', debitCard: 'all', bankTransfer: 'all', ticket: 'all' },
+      },
+      callbacks: {
+        onReady: () => {},
+        onError: (e) => { console.error('brick', e); },
+        onSubmit: ({ formData }) => fetch('/api/mp_process_payment', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(Object.assign({ access: ACCESS_TOKEN }, formData)),
+        }).then(r => r.json()).then(d => {
+          if (d.status === 'approved' || d.already_paid) { fecharBrick(); window.location.reload(); return; }
+          if (d.pix_qr || d.pix_qr_base64) { mostrarPix(d); iniciarPollingPagamento(); return; }
+          if (d.status === 'pending' || d.status === 'in_process') { iniciarPollingPagamento(); return; }
+          throw new Error(d.status_detail || 'Pagamento não aprovado. Tente outro método.');
+        }),
+      },
     });
+  } catch (e) {
+    if (errEl) { errEl.textContent = e.message || 'Falha ao abrir o pagamento.'; errEl.style.display = 'block'; }
+    fecharBrick();
+  }
 }
 
-// Escuta o status do pagamento (webhook do MP marca 'paid' no servidor).
-// Quando aprovar: fecha o popup e recarrega — o gate da página mostra o relatório.
-function iniciarPollingPagamento(pop, btn) {
-  let achouPago = false;
+function mostrarPix(d) {
+  const pix = document.getElementById('pixArea');
+  pix.style.display = 'block';
+  const img = d.pix_qr_base64 ? `<img src="data:image/png;base64,${d.pix_qr_base64}" alt="QR Pix" style="width:200px;height:200px;background:#fff;padding:8px;border-radius:10px"/>` : '';
+  const code = (d.pix_qr || '').replace(/'/g, "\\'");
+  pix.innerHTML = `
+    <h3 style="margin:6px 0">Pague com Pix e libere na hora</h3>
+    ${img}
+    ${d.pix_qr ? `<p style="font-size:0.75rem;word-break:break-all;margin-top:10px;color:var(--text-2)">${d.pix_qr}</p>
+      <button class="btn-primary" style="width:100%;margin-top:8px" onclick="navigator.clipboard.writeText('${code}').then(()=>{this.textContent='Código copiado!'})">Copiar código Pix</button>` : ''}
+    <p style="font-size:0.8rem;color:var(--text-2);margin-top:10px">Assim que o pagamento cair, o relatório libera automaticamente aqui.</p>`;
+}
+
+function fecharBrick() { const m = document.getElementById('brickModal'); if (m) m.style.display = 'none'; }
+
+// Escuta o status no servidor (webhook marca 'paid'); ao aprovar, recarrega e mostra o relatório.
+function iniciarPollingPagamento() {
   const poll = setInterval(async () => {
     try {
       const d = await fetch('/api/lead_status?access=' + encodeURIComponent(ACCESS_TOKEN)).then(r => r.json());
-      if (d && d.paid) {
-        achouPago = true;
-        clearInterval(poll); clearInterval(watch);
-        if (pop) { try { pop.close(); } catch (e) {} }
-        window.location.reload();
-      }
-    } catch (e) { /* tenta de novo no próximo tick */ }
+      if (d && d.paid) { clearInterval(poll); fecharBrick(); window.location.reload(); }
+    } catch (e) { /* tenta no próximo tick */ }
   }, 3000);
+  setTimeout(() => clearInterval(poll), 600000);
+}
 
-  // Se o usuário fechar o popup sem pagar, reabilita o botão.
-  const watch = setInterval(() => {
-    if (pop && pop.closed && !achouPago) {
-      clearInterval(watch); clearInterval(poll);
-      if (btn) { btn.disabled = false; btn.textContent = 'Desbloquear relatório completo'; }
-    }
-  }, 1000);
-
-  // Trava de segurança: para de escutar após 5 min.
-  setTimeout(() => { clearInterval(poll); clearInterval(watch); }, 300000);
+// Fallback: se a public key do MP não estiver configurada, usa o popup de Checkout Pro.
+function unlockReportFallback() {
+  const btn = document.getElementById('btn-unlock');
+  const errEl = document.getElementById('paywall-error');
+  if (errEl) errEl.style.display = 'none';
+  if (btn) { btn.disabled = true; btn.textContent = 'Abrindo pagamento...'; }
+  const pop = window.open('about:blank', 'mp_checkout', 'width=480,height=760');
+  fetch('/api/mp_create_preference', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ access: ACCESS_TOKEN }) })
+    .then(res => res.json().catch(() => ({})).then(data => ({ ok: res.ok, data })))
+    .then(({ ok, data }) => {
+      if (!ok) throw new Error(data.error || 'Não foi possível iniciar o pagamento.');
+      if (data.already_paid) { if (pop) { try { pop.close(); } catch (e) {} } window.location.reload(); return; }
+      if (pop) { pop.location.href = data.init_point; } else { window.location.href = data.init_point; return; }
+      if (btn) btn.textContent = 'Aguardando pagamento...';
+      const poll = setInterval(async () => { try { const d = await fetch('/api/lead_status?access=' + encodeURIComponent(ACCESS_TOKEN)).then(r => r.json()); if (d && d.paid) { clearInterval(poll); if (pop) { try { pop.close(); } catch (e) {} } window.location.reload(); } } catch (e) {} }, 3000);
+      setTimeout(() => clearInterval(poll), 300000);
+    })
+    .catch(err => { if (pop) { try { pop.close(); } catch (e) {} } if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; } if (btn) { btn.disabled = false; btn.textContent = 'Desbloquear relatório completo'; } });
 }
 </script>
 <script src="/analytics.js"></script>
 <script>
   if (typeof trackEvent === 'function') { trackEvent('view_test_intro', { jornada: JORNADA_PARAM }); }
 </script>
+
+<!-- Checkout transparente (Payment Brick) -->
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+<div id="brickModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;align-items:flex-start;justify-content:center;overflow:auto;padding:20px;">
+  <div style="background:#0F0F1E;border:1px solid rgba(108,99,255,.25);border-radius:16px;max-width:480px;width:100%;padding:18px;margin-top:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <strong style="font-size:1.02rem;">Desbloquear relatório completo</strong>
+      <button onclick="fecharBrick()" aria-label="Fechar" style="background:none;border:none;color:#9490C0;font-size:24px;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div id="brickContainer"></div>
+    <div id="pixArea" style="display:none;text-align:center;margin-top:10px;"></div>
+  </div>
+</div>
 </body>
 </html>
