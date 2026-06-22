@@ -148,9 +148,19 @@ function drawTable(rows){
       <td class="muted small">${fmtDate(r.updated_at)}</td>
       <td class="split">
         ${r.has_report?`<button class="btn-soft" onclick="verResultado(${r.id})">Ver resultado</button>`:'<span class="t3 small">sem resultado</span>'}
+        ${(r.has_report&&!r.paid)?`<button class="btn-soft" style="background:rgba(34,197,94,.12);color:#86efac" onclick="cortesia(${r.id},'${esc(r.nome)}')">Cortesia</button>`:''}
         <button class="btn-gold" onclick="reiniciar(${r.id},'${esc(r.nome)}')">Reiniciar</button>
       </td>
     </tr>`).join('')||'<tr><td colspan="7" class="muted">Nenhum teste encontrado</td></tr>'}</tbody></table>`;
+}
+
+async function cortesia(id,nome){
+  if(!confirm(`Liberar o relatório completo de ${nome} como CORTESIA (grátis)?\n\nMarca como pago e envia o relatório por e-mail. Não gera cobrança.`))return;
+  try{
+    const d=await api('fn=admin_tests&op=cortesia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+    await load();
+    alert(d.already?'Já estava liberado.':('Cortesia liberada.'+(d.email_ok?' Relatório enviado por e-mail.':' (E-mail não enviado — verifique o SMTP.)')));
+  }catch(e){alert('Erro: '+e.message);}
 }
 
 async function reiniciar(id,nome){

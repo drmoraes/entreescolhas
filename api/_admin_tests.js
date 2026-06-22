@@ -4,6 +4,8 @@
 const { setCors, json, err, requireApiKey, logAdmin, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
 const { adminCan } = require('./_lib/admin-perms');
+const mailer = require('./_lib/mailer');
+const { buildReportEmailHtml } = require('./_lib/report-email');
 
 const MAX = () => Number(process.env.MAX_TEST_ATTEMPTS || 3);
 
@@ -126,5 +128,34 @@ module.exports = async (req, res) => {
     return json(res, { ok: true, id, message: 'Teste reiniciado — novas tentativas liberadas.' });
   }
 
-  return err(res, 'op inválida (use list|result|reset)');
+  // ── CORTESIA (B2C): libera o relatório completo de graça ─
+  if (op === 'cortesia') {
+    if (req.method !== 'POST') return err(res, 'Use POST', 405);
+    if (!adminCan((req.actor || {}).role, 'tests')) return err(res, 'Seu perfil não tem permissão para liberar cortesia.', 403);
+    const id = Number((getJsonBody(req) || {}).id || (req.query && req.query.id));
+    if (!id) return err(res, 'id obrigatório');
+
+    const { rows } = await query(
+      'SELECT id, nome, email, payment_status, report_json FROM leads WHERE id = $1', [id]);
+    const l = rows[0];
+    if (!l) return err(res, 'Lead não encontrado', 404);
+    if (!l.report_json) return err(res, 'Este candidato ainda não concluiu o teste — não há relatório para liberar.', 400);
+    if (l.payment_status === 'paid') return json(res, { ok: true, already: true, message: 'Já estava liberado.' });
+
+    await query(
+      "UPDATE leads SET payment_status='paid', mp_payment_id='cortesia', updated_at=NOW() WHERE id=$1", [id]);
+
+    // envia o relatório por e-mail (best-effort)
+    let email_ok = false;
+    try {
+      const html = buildReportEmailHtml(l.nome, l.report_json);
+      email_ok = await mailer.send(l.email, 'Seu relatório completo (cortesia) — Entre Escolhas', html);
+      if (email_ok) await query('UPDATE leads SET report_sent_at = NOW() WHERE id = $1', [id]);
+    } catch (e) { /* não bloqueia */ }
+
+    await logAdmin(req, 'test_cortesia', `lead#${id} ${l.email}`);
+    return json(res, { ok: true, email_ok, message: 'Relatório liberado como cortesia.' });
+  }
+
+  return err(res, 'op inválida (use list|result|reset|cortesia)');
 };
