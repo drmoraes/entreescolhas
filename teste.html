@@ -199,8 +199,10 @@
         <div style="display:flex;gap:10px;align-items:flex-start;"><span>💡</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Insights do seu arquétipo</strong> — como você decide sob pressão, na prática.</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;"><span>📩</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Acesso permanente</strong> — recebe por e-mail e reabre quando quiser.</span></div>
       </div>
-      <div style="font-size:0.85rem;color:var(--text-3);margin-bottom:6px;">Acesso único</div>
-      <div style="font-size:2rem;font-weight:800;line-height:1;margin-bottom:16px;">R$ 7,97</div>
+      <div id="paywall-price-wrap">
+        <div style="font-size:0.85rem;color:var(--text-3);margin-bottom:6px;">Acesso único</div>
+        <div style="font-size:2rem;font-weight:800;line-height:1;margin-bottom:16px;">R$ 7,97</div>
+      </div>
       <button class="btn-primary" id="btn-unlock" style="width:100%;" onclick="unlockReport()">
         Desbloquear meu relatório
       </button>
@@ -1120,6 +1122,7 @@ let LEAD_STATE = null;
     })
     .then(data => {
       LEAD_STATE = data;
+      if (data.free_mode) aplicarModoGratis();
       if (!data.confirmed) {
         window.location.replace('/cadastro-teste.html?jornada=' + encodeURIComponent(JORNADA_PARAM));
         return;
@@ -1144,6 +1147,12 @@ let LEAD_STATE = null;
     });
 })();
 
+// Ajusta o paywall para o modo grátis (sem preço, botão "ver grátis").
+function aplicarModoGratis() {
+  const wrap = document.getElementById('paywall-price-wrap'); if (wrap) wrap.style.display = 'none';
+  const btn = document.getElementById('btn-unlock'); if (btn) btn.textContent = 'Ver meu relatório grátis';
+}
+
 // Já concluiu o teste mas ainda não pagou — mostra a oferta sem reiniciar o teste.
 function showAlreadyCompleted(data) {
   const intro = document.querySelector('#screen-intro .intro');
@@ -1153,8 +1162,8 @@ function showAlreadyCompleted(data) {
   intro.innerHTML = `
     <div class="intro-badge"><span class="intro-badge-dot"></span><span>Teste concluído</span></div>
     <h1>Você já concluiu<br/><span class="grad serif">este teste</span></h1>
-    <p>Seu resultado está salvo. Desbloqueie o relatório completo para ver tudo${podeRefazer ? ', ou refaça o teste se quiser' : ''}.</p>
-    <button class="btn-primary" style="width:100%;" onclick="unlockReport()">Desbloquear relatório completo</button>
+    <p>Seu resultado está salvo. ${data.free_mode ? 'Veja o relatório completo gratuitamente' : 'Desbloqueie o relatório completo para ver tudo'}${podeRefazer ? ', ou refaça o teste se quiser' : ''}.</p>
+    <button class="btn-primary" style="width:100%;" onclick="unlockReport()">${data.free_mode ? 'Ver meu relatório grátis' : 'Desbloquear relatório completo'}</button>
     ${podeRefazer ? '<button class="btn-primary" style="width:100%;margin-top:10px;background:transparent;border:1px solid var(--border);color:var(--text-2);" onclick="startTest()">Refazer o teste</button>' : ''}
   `;
 }
@@ -1445,8 +1454,26 @@ function showResult() {
 
 let BRICK_CONTROLLER = null;
 
+// Modo GRÁTIS (com cadastro): libera o relatório sem pagamento.
+function freeUnlock() {
+  const btn = document.getElementById('btn-unlock');
+  if (btn) { btn.disabled = true; btn.textContent = 'Liberando...'; }
+  fetch('/api/b2b?fn=lead_free_unlock', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ access: ACCESS_TOKEN }),
+  }).then(r => r.json()).then(d => {
+    if (d.ok) { window.location.reload(); }
+    else throw new Error(d.error || 'Não foi possível liberar.');
+  }).catch(e => {
+    const errEl = document.getElementById('paywall-error');
+    if (errEl) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Ver meu relatório grátis'; }
+  });
+}
+
 // Checkout TRANSPARENTE (Payment Brick): cartão + Pix dentro de um modal no nosso domínio.
 async function unlockReport() {
+  if (typeof LEAD_STATE !== 'undefined' && LEAD_STATE && LEAD_STATE.free_mode) { return freeUnlock(); }
   const errEl = document.getElementById('paywall-error');
   if (errEl) errEl.style.display = 'none';
   if (typeof trackEvent === 'function') { trackEvent('start_checkout', { jornada: JORNADA_PARAM }); }

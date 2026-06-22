@@ -2,7 +2,7 @@
 // se libera o teste, mostra paywall ou já mostra o relatório pago.
 const { setCors, json, err } = require('./_lib/http');
 const { query } = require('./_lib/db');
-const { getReportPrice } = require('./_lib/settings');
+const { getReportPrice, getSetting } = require('./_lib/settings');
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
@@ -30,5 +30,6 @@ module.exports = async (req, res) => {
     has_report: lead.report_json !== null,
     mp_public_key: process.env.MP_PUBLIC_KEY || null,
     preco: await getReportPrice(),
+    free_mode: (await getSetting('free_mode', '0')) === '1',
   });
 };
