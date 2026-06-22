@@ -79,6 +79,34 @@ const STATEMENTS = [
   "ALTER TABLE leads ADD COLUMN IF NOT EXISTS cart_recovery_at TIMESTAMPTZ",
   // ── Configurações editáveis no admin (Rodada 12) ──
   "CREATE TABLE IF NOT EXISTS app_settings (key VARCHAR(60) PRIMARY KEY, value TEXT, updated_at TIMESTAMPTZ DEFAULT NOW())",
+  // ── Vagas (Rodada 13) ──
+  `CREATE TABLE IF NOT EXISTS vagas (
+    id SERIAL PRIMARY KEY,
+    titulo VARCHAR(200) NOT NULL,
+    empresa VARCHAR(160),
+    area VARCHAR(80),
+    cidade VARCHAR(120),
+    lat DOUBLE PRECISION, lon DOUBLE PRECISION,
+    work_model VARCHAR(20),
+    salario VARCHAR(80),
+    descricao TEXT,
+    url TEXT,
+    source VARCHAR(30) NOT NULL DEFAULT 'direct',
+    external_id VARCHAR(160),
+    company_id INTEGER,
+    arquetipos JSONB,
+    status VARCHAR(20) NOT NULL DEFAULT 'ativa' CHECK (status IN ('ativa','inativa','expirada')),
+    expires_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW())`,
+  "CREATE UNIQUE INDEX IF NOT EXISTS idx_vagas_extid ON vagas (source, external_id) WHERE external_id IS NOT NULL",
+  "CREATE INDEX IF NOT EXISTS idx_vagas_status ON vagas (status, created_at DESC)",
+  `CREATE TABLE IF NOT EXISTS vaga_applications (
+    id SERIAL PRIMARY KEY,
+    vaga_id INTEGER NOT NULL REFERENCES vagas(id) ON DELETE CASCADE,
+    candidate_id INTEGER,
+    nome VARCHAR(160), email VARCHAR(255), telefone VARCHAR(30),
+    created_at TIMESTAMPTZ DEFAULT NOW())`,
+  "CREATE INDEX IF NOT EXISTS idx_vaga_apps ON vaga_applications (vaga_id, created_at DESC)",
 ];
 
 const NEEDED = ['cep', 'lat', 'lon', 'idiomas', 'aceita_relocacao', 'contrato'];

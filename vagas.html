@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vagas — Entre Escolhas</title>
+<link rel="icon" href="/favicon.svg" />
+<style>
+  :root{--bg:#08080F;--bg-card:#0F0F1E;--bg-raised:#141428;--border:rgba(108,99,255,.15);
+    --accent:#6C63FF;--accent-dim:rgba(108,99,255,.12);--text:#F0EFF8;--text-2:#9490C0;--text-3:#5E5A8A;--green:#22C55E}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.55}
+  a{color:inherit}
+  input,select{font-family:inherit;background:var(--bg-raised);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 13px;font-size:14px;width:100%}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;font-weight:700}
+  .btn{background:var(--accent);color:#fff;padding:10px 16px;font-size:14px}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-2);padding:9px 14px;font-size:13px;text-decoration:none;display:inline-block}
+  header{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--border)}
+  .brand{font-weight:800}.brand span{color:var(--accent)}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 20px 60px}
+  h1{font-size:clamp(1.6rem,4vw,2.2rem);letter-spacing:-.02em;margin-bottom:6px}
+  .sub{color:var(--text-2);margin-bottom:22px}
+  .filtros{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:20px}
+  @media(max-width:680px){.filtros{grid-template-columns:1fr}}
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px}
+  .card h3{font-size:1.08rem;margin-bottom:2px}
+  .meta{color:var(--text-2);font-size:0.88rem;margin:4px 0 8px;display:flex;gap:12px;flex-wrap:wrap}
+  .resumo{color:var(--text-3);font-size:0.9rem;margin-bottom:12px}
+  .tag{font-size:11px;padding:2px 9px;border-radius:20px;border:1px solid var(--border);color:var(--text-2)}
+  .muted{color:var(--text-2)}.small{font-size:0.85rem}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .modal{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;max-width:420px;width:100%;padding:22px}
+  .modal label{display:block;font-size:12px;color:var(--text-2);margin:10px 0 4px}
+  .spin{display:inline-block;width:18px;height:18px;border:2px solid var(--accent-dim);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <a href="/" class="brand" style="text-decoration:none">Entre<span>Escolhas</span></a>
+  <div style="flex:1"></div>
+  <a href="/" class="btn-ghost">Fazer o teste</a>
+</header>
+<div class="wrap">
+  <h1>Vagas para você</h1>
+  <p class="sub">Oportunidades reais. Quem se conhece, escolhe melhor — <a href="/" class="accent" style="color:var(--accent)">faça o teste</a> e encontre o que combina.</p>
+  <div class="filtros">
+    <input id="q" placeholder="Cargo, empresa, palavra-chave…" oninput="deb()">
+    <input id="cidade" placeholder="Cidade" oninput="deb()">
+    <select id="wm" onchange="buscar()">
+      <option value="">Qualquer modelo</option><option value="remoto">Remoto</option><option value="hibrido">Híbrido</option><option value="presencial">Presencial</option>
+    </select>
+  </div>
+  <div id="lista"><div class="muted" style="padding:30px 0"><span class="spin"></span> Carregando vagas…</div></div>
+</div>
+
+<div class="scrim" id="scrim"><div class="modal">
+  <h3 style="margin-bottom:2px">Candidatar-se</h3>
+  <div id="mVaga" class="muted small" style="margin-bottom:6px"></div>
+  <label>Nome</label><input id="aNome">
+  <label>E-mail</label><input id="aEmail" type="email">
+  <label>Telefone (opcional)</label><input id="aTel">
+  <div style="display:flex;gap:8px;margin-top:16px">
+    <button class="btn" onclick="enviar()" style="flex:1">Enviar candidatura</button>
+    <button class="btn-ghost" onclick="fechar()">Cancelar</button>
+  </div>
+  <div id="aMsg" class="small" style="margin-top:10px"></div>
+</div></div>
+
+<script>
+const $=id=>document.getElementById(id);let T=null;let VAGA=null;
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function deb(){clearTimeout(T);T=setTimeout(buscar,400);}
+async function buscar(){
+  const p=new URLSearchParams({q:$('q').value||'',cidade:$('cidade').value||'',work_model:$('wm').value||''});
+  $('lista').innerHTML='<div class="muted" style="padding:20px 0"><span class="spin"></span></div>';
+  try{
+    const d=await fetch('/api/b2b?fn=vagas&'+p).then(r=>r.json());
+    render(d.data||[], d.total||0);
+  }catch(e){$('lista').innerHTML='<p class="muted">Não foi possível carregar as vagas.</p>';}
+}
+function render(rows,total){
+  if(!rows.length){$('lista').innerHTML='<p class="muted" style="padding:20px 0">Nenhuma vaga encontrada. Tente outros filtros.</p>';return;}
+  $('lista').innerHTML=`<p class="muted small" style="margin-bottom:12px">${total} vaga(s)</p>`+rows.map(v=>`
+    <div class="card">
+      <h3>${esc(v.titulo)}</h3>
+      <div class="meta">
+        ${v.empresa?`<span>🏢 ${esc(v.empresa)}</span>`:''}
+        ${v.cidade?`<span>📍 ${esc(v.cidade)}</span>`:''}
+        ${v.work_model?`<span class="tag">${esc(v.work_model)}</span>`:''}
+        ${v.salario?`<span>💰 ${esc(v.salario)}</span>`:''}
+      </div>
+      ${v.resumo?`<div class="resumo">${esc(v.resumo)}${v.resumo.length>=280?'…':''}</div>`:''}
+      ${v.interna
+        ? `<button class="btn" onclick='abrir(${v.id}, ${JSON.stringify(v.titulo)})'>Candidatar-se</button>`
+        : `<a class="btn" style="text-decoration:none" href="${esc(v.url)}" target="_blank" rel="noopener nofollow">Ver vaga na origem ↗</a>`}
+    </div>`).join('');
+}
+function abrir(id,titulo){VAGA=id;$('mVaga').textContent=titulo;$('aMsg').textContent='';$('scrim').style.display='flex';}
+function fechar(){$('scrim').style.display='none';}
+async function enviar(){
+  const nome=$('aNome').value.trim(),email=$('aEmail').value.trim(),telefone=$('aTel').value.trim(),msg=$('aMsg');
+  if(!nome||!email){msg.textContent='Preencha nome e e-mail';msg.style.color='#FF6B6B';return;}
+  msg.textContent='Enviando…';msg.style.color='var(--text-2)';
+  try{
+    const d=await fetch('/api/b2b?fn=vaga_apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({vaga_id:VAGA,nome,email,telefone})}).then(r=>r.json());
+    if(d.ok){msg.textContent=d.already?'Você já se candidatou a esta vaga ✓':'Candidatura enviada! ✓';msg.style.color='var(--green)';setTimeout(fechar,1400);}
+    else throw new Error(d.error||'Falha');
+  }catch(e){msg.textContent=e.message;msg.style.color='#FF6B6B';}
+}
+buscar();
+</script>
+</body>
+</html>

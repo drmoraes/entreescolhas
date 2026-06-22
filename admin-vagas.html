@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin · Vagas — Entre Escolhas</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.svg" />
+<style>
+  :root{--bg:#08080F;--bg-card:#0F0F1E;--bg-raised:#141428;--border:rgba(108,99,255,.15);
+    --accent:#6C63FF;--accent-dim:rgba(108,99,255,.12);--text:#F0EFF8;--text-2:#9490C0;--text-3:#5E5A8A;--green:#22C55E;--red:#EF4444}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:14px}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;font-weight:600}
+  input,select,textarea{font-family:inherit;background:var(--bg-raised);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 12px;font-size:13px;width:100%}
+  label.fl{display:block;font-size:12px;color:var(--text-2);margin-bottom:4px}
+  .btn{background:var(--accent);color:#fff;padding:9px 16px;font-size:13px}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-2);padding:8px 13px;font-size:13px}
+  .btn-soft{background:var(--accent-dim);color:#cfcaff;padding:8px 13px;font-size:13px}
+  .btn-danger{background:rgba(239,68,68,.12);color:#fca5a5;padding:8px 13px;font-size:13px}
+  .muted{color:var(--text-2)}.small{font-size:12px}.t3{color:var(--text-3)}
+  header{display:flex;align-items:center;gap:14px;padding:13px 24px;border-bottom:1px solid var(--border)}
+  .brand{font-weight:800}.brand span{color:var(--accent)}
+  main{max-width:1100px;margin:0 auto;padding:24px}
+  .gate{max-width:380px;margin:80px auto;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:30px}
+  h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:20px 0 12px;font-weight:700}
+  table{width:100%;border-collapse:collapse;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-size:13px}
+  th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--border)}
+  th{color:var(--text-3);font-size:11px;text-transform:uppercase}
+  .tag{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid var(--border)}
+  .tag.g{color:#86efac;border-color:rgba(34,197,94,.3)}.tag.b{color:#7dd3fc;border-color:rgba(56,189,248,.3)}.tag.r{color:#fca5a5;border-color:rgba(239,68,68,.3)}
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .split{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid var(--accent-dim);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header><div class="brand">Entre<span>Escolhas</span> · Admin · Vagas</div>
+  <div style="flex:1"></div>
+  <a class="btn-ghost" href="/admin-b2b.html" style="text-decoration:none">Admin B2B</a>
+  <button class="btn" id="refreshBtn" onclick="load()" style="display:none">Atualizar</button>
+</header>
+<div id="gate" class="gate">
+  <h2 style="font-size:17px;margin-bottom:4px">Vagas</h2>
+  <p class="muted small" style="margin-bottom:16px">Informe a ADMIN_API_KEY.</p>
+  <input id="key" type="password" placeholder="ADMIN_API_KEY" onkeydown="if(event.key==='Enter')load()" />
+  <button class="btn" style="width:100%;margin-top:12px" onclick="load()">Entrar</button>
+  <div id="gErr" class="red small" style="margin-top:10px"></div>
+</div>
+<main id="dash" style="display:none"></main>
+
+<script>
+const $=id=>document.getElementById(id);let KEY='';let ROWS=[];
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function api(p,o={}){return fetch('/api/b2b?'+p,{...o,headers:{'X-Api-Key':KEY,...(o.headers||{})}}).then(async r=>{if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||('Erro '+r.status));}return r.json();});}
+function fmt(s){return s?new Date(s).toLocaleDateString('pt-BR'):'—';}
+
+async function load(){
+  KEY=KEY||$('key').value.trim(); if(!KEY){$('gErr').textContent='Informe a chave';return;}
+  try{ const d=await api('fn=admin_vagas&op=list'); $('gate').style.display='none';$('dash').style.display='';$('refreshBtn').style.display='';ROWS=d.data;render();}
+  catch(e){$('gErr').textContent=e.message;}
+}
+function render(){
+  $('dash').innerHTML=`
+  <h2 class="sec">Nova vaga (direta)</h2>
+  <div class="card">
+    <input type="hidden" id="f_id">
+    <div class="grid3">
+      <div><label class="fl">Título *</label><input id="f_titulo" placeholder="Analista de Dados"></div>
+      <div><label class="fl">Empresa</label><input id="f_empresa"></div>
+      <div><label class="fl">Área</label><input id="f_area"></div>
+    </div>
+    <div class="grid3" style="margin-top:10px">
+      <div><label class="fl">Cidade</label><input id="f_cidade"></div>
+      <div><label class="fl">Modelo</label><select id="f_wm"><option value="">—</option><option value="remoto">Remoto</option><option value="hibrido">Híbrido</option><option value="presencial">Presencial</option></select></div>
+      <div><label class="fl">Salário (texto)</label><input id="f_salario" placeholder="R$ 5.000"></div>
+    </div>
+    <div style="margin-top:10px"><label class="fl">Descrição</label><textarea id="f_desc" style="height:80px"></textarea></div>
+    <div class="grid2" style="margin-top:10px">
+      <div><label class="fl">Arquétipos que combinam (vírgula)</label><input id="f_arq" placeholder="Estrategista, Realizador"></div>
+      <div><label class="fl">Expira em</label><input id="f_exp" type="date"></div>
+    </div>
+    <div class="split" style="margin-top:12px"><button class="btn" onclick="salvar()">Salvar vaga</button><button class="btn-ghost" onclick="limpar()">Limpar</button><span id="fMsg" class="small"></span></div>
+    <p class="muted small" style="margin-top:8px">Vaga direta = candidatura dentro da EntreEscolhas (alimenta o Banco de Talentos).</p>
+  </div>
+
+  <h2 class="sec">Importar da Adzuna (API oficial)</h2>
+  <div class="card">
+    <div class="split">
+      <input id="imWhat" placeholder="cargo (ex.: vendedor)" style="flex:1;min-width:140px">
+      <input id="imWhere" placeholder="cidade (ex.: São Paulo)" style="flex:1;min-width:140px">
+      <button class="btn-soft" onclick="importar()">Importar</button><span id="imMsg" class="small"></span>
+    </div>
+    <p class="muted small" style="margin-top:8px">Requer ADZUNA_APP_ID e ADZUNA_APP_KEY nas variáveis da Vercel. Vagas de API abrem na origem (link externo).</p>
+  </div>
+
+  <h2 class="sec">Vagas (${ROWS.length})</h2>
+  <table><thead><tr><th>Título</th><th>Local</th><th>Fonte</th><th>Cand.</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+    ${ROWS.map(v=>`<tr>
+      <td><b>${esc(v.titulo)}</b><div class="t3 small">${esc(v.empresa||'')}</div></td>
+      <td>${esc(v.cidade||'—')}<div class="t3 small">${esc(v.work_model||'')}</div></td>
+      <td><span class="tag ${v.source==='direct'?'g':'b'}">${v.source}</span></td>
+      <td>${v.candidaturas||0}</td>
+      <td>${v.status==='ativa'?'<span class="tag g">ativa</span>':'<span class="tag r">'+v.status+'</span>'}</td>
+      <td class="split">
+        ${v.source==='direct'?`<button class="btn-ghost" onclick='editar(${JSON.stringify(v).replace(/'/g,"&#39;")})'>Editar</button>`:''}
+        ${v.candidaturas?`<button class="btn-soft" onclick="verApps(${v.id},'${esc(v.titulo)}')">Candidaturas</button>`:''}
+        <button class="btn-ghost" onclick="toggle(${v.id})">${v.status==='ativa'?'Pausar':'Ativar'}</button>
+        <button class="btn-danger" onclick="excluir(${v.id})">Excluir</button>
+      </td></tr>`).join('')||'<tr><td colspan="6" class="muted">Sem vagas ainda</td></tr>'}
+  </tbody></table>`;
+}
+function limpar(){['f_id','f_titulo','f_empresa','f_area','f_cidade','f_salario','f_desc','f_arq','f_exp'].forEach(i=>{if($(i))$(i).value='';});if($('f_wm'))$('f_wm').value='';$('fMsg').textContent='';}
+function editar(v){$('f_id').value=v.id;$('f_titulo').value=v.titulo||'';$('f_empresa').value=v.empresa||'';$('f_area').value=v.area||'';$('f_cidade').value=v.cidade||'';$('f_wm').value=v.work_model||'';$('f_salario').value=v.salario||'';$('f_desc').value=v.descricao||'';$('f_arq').value=Array.isArray(v.arquetipos)?v.arquetipos.join(', '):'';$('f_exp').value=v.expires_at?new Date(v.expires_at).toISOString().slice(0,10):'';window.scrollTo(0,0);}
+async function salvar(){
+  const b={id:$('f_id').value||undefined,titulo:$('f_titulo').value,empresa:$('f_empresa').value,area:$('f_area').value,cidade:$('f_cidade').value,work_model:$('f_wm').value,salario:$('f_salario').value,descricao:$('f_desc').value,arquetipos:$('f_arq').value,expires_at:$('f_exp').value||null};
+  const msg=$('fMsg');msg.textContent='Salvando…';msg.className='small muted';
+  try{ await api('fn=admin_vagas&op=save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});limpar();await load();}catch(e){msg.textContent=e.message;msg.className='small red';}
+}
+async function importar(){
+  const msg=$('imMsg');msg.textContent='Importando…';msg.className='small muted';
+  try{ const d=await api('fn=admin_vagas&op=import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({what:$('imWhat').value,where:$('imWhere').value})});
+    msg.textContent=`✓ ${d.novas} novas, ${d.duplicadas} já existiam (${d.encontradas} encontradas)`;msg.className='small green';await load();
+  }catch(e){msg.textContent=e.message;msg.className='small red';}
+}
+async function toggle(id){try{await api('fn=admin_vagas&op=toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});await load();}catch(e){alert(e.message);}}
+async function excluir(id){if(!confirm('Excluir esta vaga?'))return;try{await api('fn=admin_vagas&op=delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});await load();}catch(e){alert(e.message);}}
+async function verApps(id,titulo){
+  try{ const d=await api('fn=admin_vagas&op=apps&vaga_id='+id);
+    alert('Candidaturas — '+titulo+'\\n\\n'+(d.data.length?d.data.map(a=>`• ${a.nome} <${a.email}> ${a.telefone||''}`).join('\\n'):'(nenhuma)'));
+  }catch(e){alert(e.message);}
+}
+(function(){try{
+  if(window.self===window.top){location.replace('/painel.html#vagas');return;}
+  var h=document.querySelector("header");if(h)h.style.display="none";
+  var k=localStorage.getItem('ee_admin_key')||sessionStorage.getItem('ee_admin_key');
+  if(k){KEY=k;load();}
+}catch(e){}})();
+</script>
+</body>
+</html>
