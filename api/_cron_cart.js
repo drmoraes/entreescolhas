@@ -5,6 +5,7 @@
 const { setCors, json, err } = require('./_lib/http');
 const { query } = require('./_lib/db');
 const mailer = require('./_lib/mailer');
+const { getReportPrice } = require('./_lib/settings');
 
 const JLABEL = { arquetipo: 'Arquétipo', bussola: 'Bússola Vocacional', 'fit-cultural': 'Fit Cultural', scanner: 'Scanner de Relacionamento' };
 function esc(s){ return String(s==null?'':s).replace(/[<>&]/g,''); }
@@ -18,7 +19,7 @@ module.exports = async (req, res) => {
   }
 
   const base = process.env.APP_BASE_URL || 'https://www.entreescolhas.com.br';
-  const preco = Number(process.env.MP_REPORT_PRICE || 7.97).toFixed(2).replace('.', ',');
+  const preco = (await getReportPrice()).toFixed(2).replace('.', ',');
 
   // candidatos que concluíram (têm relatório), não pagaram, sem lembrete ainda,
   // e que terminaram entre 2h e 7 dias atrás (dá tempo de pagar; não pega antigos demais).

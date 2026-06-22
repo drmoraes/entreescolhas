@@ -82,7 +82,24 @@ async function load(){
     const d=await r.json();
     $('gate').classList.add('hide');$('dash').classList.remove('hide');$('refreshBtn').style.display='';
     render(d);
+    carregarPreco();
   }catch(e){$('gErr').textContent=e.message;}
+}
+
+async function carregarPreco(){
+  try{ const d=await fetch('/api/b2b?fn=admin_settings&op=get',{headers:{'X-Api-Key':KEY}}).then(r=>r.json());
+    if($('cfgPrice')) $('cfgPrice').value=Number(d.report_price).toFixed(2);
+  }catch(e){}
+}
+async function salvarPreco(){
+  const v=parseFloat($('cfgPrice').value), msg=$('cfgMsg');
+  if(!(v>0)){msg.textContent='Valor inválido';msg.className='small red';return;}
+  msg.textContent='Salvando…';msg.className='small muted';
+  try{
+    const r=await fetch('/api/b2b?fn=admin_settings&op=set',{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':KEY},body:JSON.stringify({report_price:v})});
+    const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
+    msg.textContent='✓ Preço salvo: R$ '+Number(d.report_price).toFixed(2);msg.className='small green';
+  }catch(e){msg.textContent=e.message;msg.className='small red';}
 }
 
 function kpi(v,l,s,cls){return `<div class="kpi"><div class="v ${cls||''}">${v}</div><div class="l">${l}</div>${s?'<div class="s muted">'+s+'</div>':''}</div>`;}
@@ -132,6 +149,17 @@ function render(d){
       <div style="font-size:10px;color:var(--text-3)">${s.mes.slice(5)}</div></div>`).join(''):'<span class="muted small">Sem vendas pagas ainda.</span>';
 
   $('dash').innerHTML=`
+  <h2 class="sec">Preço do relatório (candidato / B2C)</h2>
+  <div class="kpi" style="padding:14px;max-width:520px">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span class="muted small">R$</span>
+      <input id="cfgPrice" type="number" step="0.01" min="0.5" style="width:120px" placeholder="7.97">
+      <button class="btn" onclick="salvarPreco()">Salvar preço</button>
+      <span id="cfgMsg" class="small"></span>
+    </div>
+    <p class="muted small" style="margin-top:8px">Vale na hora pro checkout e pro paywall. Vazio = usa o padrão.</p>
+  </div>
+
   ${alertas.length?`<h2 class="sec">Alertas (${alertas.length})</h2><div class="kpis">${alertasHtml}</div>`:''}
 
   <h2 class="sec">Receita (R$)</h2>

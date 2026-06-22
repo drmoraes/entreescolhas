@@ -31,6 +31,7 @@ const handlers = {
   cron_sla:           require('./_cron_sla'),
   cron_cart:          require('./_cron_cart'),
   mp_process_payment: require('./_mp_process_payment'),
+  admin_settings:     require('./_admin_settings'),
 };
 
 module.exports = async (req, res) => {

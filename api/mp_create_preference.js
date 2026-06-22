@@ -2,6 +2,7 @@
 // devolve o init_point para o front-end redirecionar o usuário.
 const { setCors, json, err, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
+const { getReportPrice } = require('./_lib/settings');
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
@@ -37,7 +38,7 @@ module.exports = async (req, res) => {
       title: 'Relatório completo — Entre Escolhas',
       quantity: 1,
       currency_id: 'BRL',
-      unit_price: Number(process.env.MP_REPORT_PRICE || 7.97),
+      unit_price: await getReportPrice(),
     }],
     payer: { email: lead.email },
     external_reference: access,

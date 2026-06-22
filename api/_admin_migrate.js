@@ -77,6 +77,8 @@ const STATEMENTS = [
   "ALTER TABLE company_users ADD CONSTRAINT company_users_role_check CHECK (role IN ('owner','gestor','analista','recruiter','leitura'))",
   // ── Recuperação de carrinho do candidato (Rodada 11) ──
   "ALTER TABLE leads ADD COLUMN IF NOT EXISTS cart_recovery_at TIMESTAMPTZ",
+  // ── Configurações editáveis no admin (Rodada 12) ──
+  "CREATE TABLE IF NOT EXISTS app_settings (key VARCHAR(60) PRIMARY KEY, value TEXT, updated_at TIMESTAMPTZ DEFAULT NOW())",
 ];
 
 const NEEDED = ['cep', 'lat', 'lon', 'idiomas', 'aceita_relocacao', 'contrato'];

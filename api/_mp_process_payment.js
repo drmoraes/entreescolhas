@@ -3,6 +3,7 @@
 // Cartão: aprova na hora. Pix/boleto: devolve QR/linha e o webhook confirma depois.
 const { setCors, json, err, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
+const { getReportPrice } = require('./_lib/settings');
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
@@ -20,7 +21,7 @@ module.exports = async (req, res) => {
   if (!lead.report_json) return err(res, 'Conclua o teste antes de pagar', 403);
   if (lead.payment_status === 'paid') return json(res, { status: 'approved', already_paid: true });
 
-  const amount = Number(process.env.MP_REPORT_PRICE || 7.97);
+  const amount = await getReportPrice();
   const payment = {
     transaction_amount: amount,
     description: 'Relatório completo — Entre Escolhas',
