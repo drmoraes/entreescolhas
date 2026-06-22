@@ -240,200 +240,312 @@ const JORNADAS = {
   //            REL=relacional, EXE=execução, EMO=emocional
   // ─────────────────────────────────────────────────────────
   'arquetipo': {
-    badge: 'Início gratuito • Relatório completo R$ 7,97',
-    title: 'Análise de<br/><span class="grad serif">Padrões de Decisão</span>',
-    desc: '10 cenários. Cada escolha revela como você processa informações, decide sob pressão e reage quando o contexto muda.',
-    resultTag: 'Arquétipo Situacional Dominante',
-    dimsTitle: 'Suas 6 dimensões comportamentais',
-    shareText: 'Fiz a análise de padrões de decisão no Entre Escolhas e descobri meu arquétipo cognitivo! https://www.entreescolhas.com.br',
+    badge: 'Comece grátis • Relatório completo no final',
+    title: 'Como você<br/><span class="grad serif">toma decisões</span>',
+    desc: '20 situações da vida real — no trabalho, nos estudos, com dinheiro, com as pessoas. Cada escolha mostra como você decide, age sob pressão e reage quando tudo muda.',
+    resultTag: 'Seu jeito de decidir',
+    dimsTitle: 'Você em 6 traços',
+    shareText: 'Descobri meu jeito de decidir no Entre Escolhas! Faça o seu: https://www.entreescolhas.com.br',
     backLink: '/',
     dimNames: {
-      SIS: 'Orientação a sistemas',
-      AMB: 'Tolerância à ambiguidade',
-      VEL: 'Velocidade de decisão',
-      REL: 'Foco relacional',
-      EXE: 'Propensão à execução',
-      EMO: 'Regulação emocional'
+      SIS: 'Organização e método',
+      AMB: 'Lidar com o incerto',
+      VEL: 'Rapidez para decidir',
+      REL: 'Foco nas pessoas',
+      EXE: 'Mão na massa',
+      EMO: 'Equilíbrio emocional'
     },
     questions: [
       {
-        context: "Contexto profissional — reunião com cliente",
-        text: "Você acaba de entrar em uma reunião onde o cliente muda completamente os requisitos do projeto. Sua equipe olha para você esperando direção. O que você faz primeiro?",
+        context: "Um plano que mudou de repente",
+        text: "Você organizou tudo para um dia importante e, na última hora, os planos viram de cabeça pra baixo. O que você faz primeiro?",
         opts: [
-          { text: "Peço 5 minutos para processar e estruturo um novo plano rapidamente", dims: {SIS:3, VEL:2} },
-          { text: "Inicio uma conversa aberta com o cliente para entender o porquê da mudança", dims: {REL:3, AMB:2} },
-          { text: "Avalio o impacto nos compromissos existentes antes de qualquer resposta", dims: {SIS:2, EMO:3} },
-          { text: "Energizo o grupo — mudanças assim costumam esconder oportunidades", dims: {AMB:3, EXE:2} }
+          { text: "Respiro, paro alguns minutos e monto um plano novo", dims: {SIS:3, EMO:2} },
+          { text: "Converso com quem está junto pra decidir o caminho em conjunto", dims: {REL:3, AMB:1} },
+          { text: "Vejo rápido o que dá pra salvar e já começo a agir", dims: {EXE:3, VEL:2} },
+          { text: "Encaro como aventura — às vezes o improviso abre algo melhor", dims: {AMB:3, VEL:1} }
         ]
       },
       {
-        context: "Contexto pessoal — tomada de decisão",
-        text: "Você precisa decidir entre duas oportunidades de carreira. Uma é segura e previsível. A outra tem mais potencial mas também mais risco. O prazo é amanhã.",
+        context: "Uma escolha grande, com prazo curto",
+        text: "Você precisa escolher entre duas oportunidades. Uma é segura e previsível; a outra tem mais potencial, mas também mais risco. Precisa decidir até amanhã.",
         opts: [
-          { text: "Faço uma planilha com prós/contras e pontuo cada critério objetivamente", dims: {SIS:3, VEL:1} },
-          { text: "Converso com pessoas que passaram por situações parecidas antes de decidir", dims: {REL:3, EMO:2} },
-          { text: "Vou de instinto — analise demais e vou travar", dims: {VEL:3, EXE:2} },
-          { text: "Aceito a ambiguidade e escolho o caminho com maior potencial de aprendizado", dims: {AMB:3, SIS:1} }
+          { text: "Listo prós e contras e dou uma nota pra cada ponto", dims: {SIS:3} },
+          { text: "Converso com gente que já passou por algo parecido", dims: {REL:3, EMO:1} },
+          { text: "Vou no instinto — pensar demais me trava", dims: {VEL:3, EXE:1} },
+          { text: "Escolho o caminho onde vou aprender mais, mesmo incerto", dims: {AMB:3} }
         ]
       },
       {
-        context: "Contexto de equipe — conflito",
-        text: "Dois membros do seu time estão em conflito aberto. O trabalho está sendo prejudicado. Você não é gestor, mas é a pessoa mais sênior no projeto.",
+        context: "Duas pessoas próximas brigadas",
+        text: "Dois amigos (ou colegas) seus estão de mal, e isso está atrapalhando todo mundo. Você acabou no meio. O que faz?",
         opts: [
-          { text: "Proponho uma conversa estruturada com os dois — agenda clara e foco em solução", dims: {SIS:2, REL:2, EXE:2} },
-          { text: "Falo individualmente com cada um antes de qualquer reunião conjunta", dims: {REL:3, EMO:2} },
-          { text: "Escalo para o gestor — não é meu papel intervir sem autoridade formal", dims: {SIS:2, EMO:2} },
-          { text: "Reestrutura as entregas para minimizar a interação entre eles enquanto o clima esfria", dims: {EXE:3, VEL:2} }
+          { text: "Proponho uma conversa com hora marcada e foco em resolver", dims: {SIS:2, REL:2} },
+          { text: "Falo com cada um em separado antes de juntar os dois", dims: {REL:3, EMO:2} },
+          { text: "Deixo o tempo esfriar e sigo com o que dá pra tocar", dims: {EXE:2, VEL:2} },
+          { text: "Tento entender o lado de cada um antes de opinar", dims: {EMO:3, REL:1} }
         ]
       },
       {
-        context: "Contexto de pressão — prazo",
-        text: "São 17h de uma sexta. O prazo de entrega é às 18h e você descobriu um erro crítico no trabalho. Corrigir vai levar pelo menos 2 horas.",
+        context: "Erro descoberto na última hora",
+        text: "Faltando pouco para entregar algo (um trabalho, uma tarefa, um compromisso), você percebe um erro sério. Consertar vai levar tempo que você não tem.",
         opts: [
-          { text: "Aviso o cliente imediatamente, explico o problema e proponho um novo prazo com justificativa", dims: {REL:3, EMO:2} },
-          { text: "Trabalho nas 2 horas, entrego às 19h sem avisar — o trabalho é o que importa", dims: {EXE:3, VEL:2} },
-          { text: "Entrego o que está pronto com uma nota explicando o que ainda precisa de revisão", dims: {VEL:2, AMB:3} },
-          { text: "Avalio o impacto real do erro — se for baixo, entrego agora e corrijo depois", dims: {SIS:3, AMB:2} }
+          { text: "Aviso na hora quem depende disso e proponho um novo prazo", dims: {REL:3, EMO:2} },
+          { text: "Faço o que der pra corrigir e entrego, mesmo um pouco atrasado", dims: {EXE:3, VEL:1} },
+          { text: "Entrego o que está pronto e sinalizo o que falta revisar", dims: {VEL:2, AMB:2} },
+          { text: "Avalio o tamanho real do erro antes de qualquer reação", dims: {SIS:3} }
         ]
       },
       {
-        context: "Contexto de liderança — feedback",
-        text: "Você precisa dar feedback negativo a um colega próximo sobre um erro que afetou o resultado do time. Como você conduz essa conversa?",
+        context: "Falar uma verdade difícil",
+        text: "Você precisa dizer algo desconfortável para alguém de quem gosta — um erro que afetou os dois. Como conduz?",
         opts: [
-          { text: "Direto ao ponto: descrevo o comportamento, o impacto e o que precisa mudar", dims: {SIS:2, VEL:3} },
-          { text: "Começo entendendo o contexto dele antes de trazer o feedback", dims: {REL:3, EMO:2} },
-          { text: "Preparo exemplos concretos e uma estrutura clara para a conversa", dims: {SIS:3, EXE:2} },
-          { text: "Escolho o momento certo — contexto e estado emocional dele importam", dims: {EMO:3, REL:2} }
+          { text: "Direto e claro: digo o que foi, o efeito e o que muda daqui pra frente", dims: {VEL:3, SIS:1} },
+          { text: "Começo entendendo o lado da pessoa antes de falar", dims: {REL:3, EMO:1} },
+          { text: "Preparo exemplos concretos pra conversa não virar discussão", dims: {SIS:3, EXE:1} },
+          { text: "Escolho a hora certa — o momento emocional importa", dims: {EMO:3, REL:1} }
         ]
       },
       {
-        context: "Contexto de incerteza — novo projeto",
-        text: "Seu gestor apresenta um projeto inovador sem precedentes na empresa. O escopo está vago, o time é novo e não há processos definidos. Qual é sua reação?",
+        context: "Começar algo do zero",
+        text: "Você decide tirar um sonho do papel (um curso, um projeto, um negócio), mas não existe manual: nada está definido. Por onde começa?",
         opts: [
-          { text: "Entusiasmo — adoro construir do zero. Começo mapeando o que não sabemos", dims: {AMB:3, EXE:2} },
-          { text: "Cautela — faço perguntas até ter clareza suficiente para dar o primeiro passo", dims: {SIS:3, EMO:2} },
-          { text: "Estruturo o processo antes de executar: quem decide o quê, quais são os marcos", dims: {SIS:2, EXE:3} },
-          { text: "Conecto as pessoas certas primeiro — o time alinhado resolve o resto", dims: {REL:3, AMB:2} }
+          { text: "Boto a mão na massa logo e vou ajustando no caminho", dims: {EXE:3, AMB:1} },
+          { text: "Faço perguntas até ter clareza pra dar o primeiro passo", dims: {SIS:3, EMO:1} },
+          { text: "Monto um plano e marcos antes de começar", dims: {SIS:2, EXE:2} },
+          { text: "Chamo as pessoas certas — junto a gente resolve", dims: {REL:3, AMB:1} }
         ]
       },
       {
-        context: "Contexto de negociação",
-        text: "Você está negociando um aumento. Seu gestor ofereceu 8%, mas você esperava 15%. O que você faz?",
+        context: "Uma grana extra inesperada",
+        text: "Sobrou um dinheiro que você não esperava. O que faz?",
         opts: [
-          { text: "Apresento dados de mercado e uma argumentação estruturada sobre meu valor", dims: {SIS:3, EXE:2} },
-          { text: "Agradeço a oferta, peço um tempo para pensar e volto com uma contraproposta", dims: {VEL:1, EMO:3, SIS:2} },
-          { text: "Sou transparente sobre a expectativa e peço que revisem considerando meu histórico", dims: {REL:2, VEL:3} },
-          { text: "Aceito os 8% mas nego outros benefícios — férias, flexibilidade, desenvolvimento", dims: {AMB:2, EXE:3} }
+          { text: "Guardo e planejo onde ele faz mais diferença", dims: {SIS:3, EMO:1} },
+          { text: "Arrisco em algo com potencial de render mais", dims: {AMB:3, VEL:1} },
+          { text: "Resolvo logo algo que estava pendente", dims: {EXE:3, VEL:1} },
+          { text: "Uso parte pra ajudar alguém ou celebrar com quem amo", dims: {REL:3, EMO:1} }
         ]
       },
       {
-        context: "Contexto de aprendizado",
-        text: "Você entra em uma área completamente nova no trabalho. Qual é sua estratégia de aprendizado?",
+        context: "Aprender algo difícil",
+        text: "Você precisa aprender uma coisa nova e puxada, do zero. Qual é o seu jeito?",
         opts: [
-          { text: "Mapeo todo o ecossistema primeiro — ferramentas, pessoas, processos — antes de agir", dims: {SIS:3, AMB:1} },
-          { text: "Aprendo fazendo. Erro rápido, corrijo rápido", dims: {EXE:3, VEL:2} },
-          { text: "Busco um mentor ou alguém experiente para guiar meu aprendizado", dims: {REL:3, EMO:2} },
-          { text: "Mergulho na documentação e nas fontes primárias antes de buscar ajuda", dims: {SIS:2, AMB:3} }
+          { text: "Estudo com método: passo a passo, do básico ao avançado", dims: {SIS:3} },
+          { text: "Aprendo fazendo — erro, corrijo e sigo", dims: {EXE:3, VEL:1} },
+          { text: "Vou tateando, testo do meu jeito sem roteiro fixo", dims: {AMB:3} },
+          { text: "Procuro alguém que já saiba pra me guiar", dims: {REL:3, EMO:1} }
         ]
       },
       {
-        context: "Contexto de crise",
-        text: "O sistema principal da empresa caiu durante um evento importante. Você não é o responsável técnico, mas está na sala com os tomadores de decisão.",
+        context: "Uma mudança grande na vida",
+        text: "Você está diante de uma mudança e tanto (de cidade, de trabalho, de fase). Como lida com o frio na barriga?",
         opts: [
-          { text: "Organizo a sala — quem vai falar com o cliente, quem resolve o técnico, quem comunica internamente", dims: {EXE:3, SIS:2} },
-          { text: "Fico quieto — não é minha área de responsabilidade e opiniões sem contexto atrapalham", dims: {EMO:3, REL:1} },
-          { text: "Faço perguntas para entender o impacto real antes de qualquer ação", dims: {SIS:3, VEL:1} },
-          { text: "Cuido do humor da sala — crises pioram quando o ambiente entra em pânico", dims: {REL:3, EMO:2} }
+          { text: "Organizo cada etapa pra reduzir o risco", dims: {SIS:3, EMO:1} },
+          { text: "Topo logo e vou descobrindo no caminho", dims: {AMB:3, VEL:2} },
+          { text: "Busco apoio de quem é próximo antes de decidir", dims: {REL:3, EMO:1} },
+          { text: "Foco no primeiro passo concreto e dou ele", dims: {EXE:3} }
         ]
       },
       {
-        context: "Contexto de escolha pessoal",
-        text: "Você tem 4 horas livres inesperadas em um dia de semana. O que você faz?",
+        context: "Uma semana pesada",
+        text: "Tudo acumulou ao mesmo tempo e o estresse subiu. Qual é a sua reação mais natural?",
         opts: [
-          { text: "Organizo algo que estava pendente há semanas — inbox, projetos pessoais, planejamento", dims: {SIS:2, EXE:3} },
-          { text: "Ligo para alguém próximo ou encontro alguém — tempo de qualidade com pessoas importa", dims: {REL:3, EMO:2} },
-          { text: "Exploro algo novo — um livro, um curso, uma conversa fora da minha bolha", dims: {AMB:3, SIS:1} },
-          { text: "Descanco sem culpa — recarregar é tão produtivo quanto executar", dims: {EMO:3, VEL:1} }
+          { text: "Faço uma lista e ataco por prioridade", dims: {SIS:3} },
+          { text: "Vou resolvendo no impulso, uma coisa atrás da outra", dims: {EXE:3, VEL:2} },
+          { text: "Paro, respiro e cuido de não me sobrecarregar", dims: {EMO:3} },
+          { text: "Peço ajuda e divido as tarefas", dims: {REL:3} }
+        ]
+      },
+      {
+        context: "Alguém precisa de você num momento ruim",
+        text: "Uma pessoa querida está passando por um perrengue e te procura. Como você aparece pra ela?",
+        opts: [
+          { text: "Escuto de verdade, sem pressa de resolver", dims: {EMO:3, REL:2} },
+          { text: "Ajudo a organizar a situação e os próximos passos", dims: {SIS:3, REL:1} },
+          { text: "Já parto pra ação prática pra aliviar o problema", dims: {EXE:3} },
+          { text: "Trago leveza e esperança pra pessoa respirar", dims: {AMB:2, EMO:2} }
+        ]
+      },
+      {
+        context: "Hora de negociar",
+        text: "Você quer um valor (um preço, um acordo, um aumento) e a primeira oferta veio bem abaixo. O que faz?",
+        opts: [
+          { text: "Apresento dados e argumentos pra sustentar meu pedido", dims: {SIS:3, EXE:1} },
+          { text: "Agradeço, peço um tempo e volto com uma contraproposta", dims: {EMO:3, SIS:1} },
+          { text: "Coloco logo o número que eu quero, sem rodeio", dims: {VEL:3, EXE:1} },
+          { text: "Busco uma saída que seja boa pros dois lados", dims: {REL:3, AMB:1} }
+        ]
+      },
+      {
+        context: "Um sonho que está parado",
+        text: "Tem um projeto pessoal seu que vive sendo adiado. O que destrava você?",
+        opts: [
+          { text: "Quebrar em metas pequenas e marcar no calendário", dims: {SIS:3} },
+          { text: "Simplesmente começar, mesmo imperfeito", dims: {EXE:3, VEL:2} },
+          { text: "Contar pra alguém pra me cobrar", dims: {REL:3} },
+          { text: "Aceitar que vai ser incerto e ir assim mesmo", dims: {AMB:3} }
+        ]
+      },
+      {
+        context: "Recebendo uma crítica",
+        text: "Alguém te dá um retorno duro sobre algo que você fez. Qual é a sua primeira reação por dentro?",
+        opts: [
+          { text: "Respiro e separo o que é útil do que é só desabafo", dims: {EMO:3} },
+          { text: "Analiso o que aconteceu pra entender onde melhorar", dims: {SIS:3} },
+          { text: "Pergunto mais pra pessoa pra entender o ponto de vista dela", dims: {REL:3} },
+          { text: "Já penso no que mudar e parto pra ação", dims: {EXE:2, VEL:2} }
+        ]
+      },
+      {
+        context: "Decidir em grupo, sem acordo",
+        text: "Um grupo precisa decidir algo e ninguém concorda. O tempo está passando. O que você faz?",
+        opts: [
+          { text: "Estruturo a conversa: critérios claros e uma votação", dims: {SIS:2, REL:2} },
+          { text: "Proponho uma decisão e sigo — depois a gente ajusta", dims: {VEL:3, EXE:1} },
+          { text: "Garanto que todos sejam ouvidos antes de fechar", dims: {REL:3, EMO:1} },
+          { text: "Sugiro testar duas opções e ver qual funciona", dims: {AMB:3} }
+        ]
+      },
+      {
+        context: "Um perrengue financeiro",
+        text: "Veio uma despesa inesperada que apertou o orçamento. Como você reage?",
+        opts: [
+          { text: "Refaço as contas e corto o que dá pra cortar", dims: {SIS:3, EMO:1} },
+          { text: "Corro atrás de uma renda extra rapidinho", dims: {EXE:3, VEL:2} },
+          { text: "Converso com a família/pessoas pra resolver junto", dims: {REL:3} },
+          { text: "Mantenho a calma — já passei por pior e dei a volta", dims: {EMO:3, AMB:1} }
+        ]
+      },
+      {
+        context: "Quando tudo está previsível demais",
+        text: "Sua rotina está estável, mas meio sem graça. O que isso desperta em você?",
+        opts: [
+          { text: "Vontade de buscar um desafio ou algo novo", dims: {AMB:3, VEL:1} },
+          { text: "Alívio — gosto de estabilidade pra construir", dims: {SIS:2, EMO:2} },
+          { text: "Energia pra adiantar projetos parados", dims: {EXE:3} },
+          { text: "Vontade de fortalecer laços com as pessoas", dims: {REL:3} }
+        ]
+      },
+      {
+        context: "Ser referência sem ter o cargo",
+        text: "Numa situação, as pessoas começam a olhar pra você esperando direção — mesmo sem você ser 'o chefe'. Como age?",
+        opts: [
+          { text: "Organizo quem faz o quê e dou o ritmo", dims: {SIS:2, EXE:2} },
+          { text: "Cuido do clima e mantenho todos juntos", dims: {REL:3, EMO:1} },
+          { text: "Defino o próximo passo e puxo a ação", dims: {EXE:2, VEL:2} },
+          { text: "Escuto o grupo e construo a decisão com ele", dims: {REL:2, AMB:2} }
+        ]
+      },
+      {
+        context: "Regras que parecem sem sentido",
+        text: "Você se depara com uma regra (no trabalho, no estudo, na vida) que acha que não faz sentido. O que faz?",
+        opts: [
+          { text: "Sigo por ora, mas levanto o ponto do jeito certo", dims: {SIS:3, EMO:1} },
+          { text: "Procuro um caminho próprio que funcione melhor", dims: {AMB:3, VEL:1} },
+          { text: "Converso com quem pode mudar a regra", dims: {REL:3} },
+          { text: "Testo uma alternativa na prática pra provar que dá certo", dims: {EXE:3} }
+        ]
+      },
+      {
+        context: "Seu jeito de recarregar",
+        text: "Você finalmente tem um tempo livre. O que te recarrega de verdade?",
+        opts: [
+          { text: "Organizar coisas e planejar os próximos passos", dims: {SIS:3} },
+          { text: "Estar com gente que eu gosto", dims: {REL:3, EMO:1} },
+          { text: "Viver algo novo — um lugar, um livro, uma ideia fora da bolha", dims: {AMB:3} },
+          { text: "Descansar sem culpa — recarregar também é produtivo", dims: {EMO:3} }
         ]
       }
     ],
     archetypes: [
       {
         id: 'arquiteto',
-        name: 'Arquiteto de Possibilidades',
+        name: 'O Arquiteto',
         icon: '🏗️',
-        mode: 'Modo Analítico-Criativo',
+        mode: 'Cria ordem no meio do caos',
         dims: ['SIS','AMB'],
-        desc: 'Você combina pensamento sistêmico com alta tolerância à ambiguidade. Constrói estruturas onde outros enxergam caos. Sua força está em transformar complexidade em clareza — sem perder a criatividade no processo. Em ambientes de alta incerteza, você é o tipo de pessoa que naturalmente começa a mapear o que não se sabe ainda.',
+        desc: 'Você junta duas coisas raras: gosta de organizar e não se assusta com o incerto. Onde os outros veem bagunça, você começa a desenhar um caminho. Isso vale tanto pra um projeto no trabalho quanto pra organizar a vida quando tudo parece confuso.',
         insights: [
-          { icon:'⚡', title:'Força central', text:'Criar sistemas onde não existem. Você não precisa de tudo definido para começar a organizar.' },
-          { icon:'🔍', title:'Ponto de atenção', text:'Pode travar na fase de estruturação se não aprender a aceitar imperfeições no processo.' },
-          { icon:'🎯', title:'Ambiente ideal', text:'Projetos novos, ambientes que valorizam inovação estruturada e autonomia intelectual.' }
+          { icon:'⚡', title:'Sua força', text:'Transformar confusão em clareza. Você consegue dar os primeiros passos mesmo quando nada está definido.' },
+          { icon:'🪞', title:'Seu ponto cego', text:'Às vezes você quer estruturar tanto que demora pra sair do lugar. Nem tudo precisa estar perfeito pra começar.' },
+          { icon:'🌱', title:'Como evoluir', text:'Treine entregar uma primeira versão "boa o suficiente" e melhorar depois. Coloque um prazo curto pra sair do planejamento e ir pra ação.' },
+          { icon:'🧭', title:'Onde você brilha', text:'Coisas novas, sem manual: começar um projeto, organizar uma mudança, estruturar uma ideia. Áreas como projetos, planejamento, empreender, pesquisa.' },
+          { icon:'💬', title:'Pra refletir', text:'Qual ideia sua está esperando "o plano perfeito" pra começar — e o que você poderia testar essa semana?' }
         ]
       },
       {
         id: 'executor',
-        name: 'Executor Pragmático',
+        name: 'O Realizador',
         icon: '🔩',
-        mode: 'Modo Orientado a Resultado',
+        mode: 'Põe a mão na massa e entrega',
         dims: ['EXE','VEL'],
-        desc: 'Você decide rápido e entrega. Não paralisa diante da incerteza — age, observa o resultado e ajusta. Sua energia natural vai para a execução: transformar intenção em realidade concreta. Em equipes, você frequentemente é o catalisador que empurra do planejamento para a ação.',
+        desc: 'Você não trava: decide, faz e ajusta no caminho. Tem uma energia natural pra tirar as coisas do papel — seja uma tarefa, um perrengue ou um sonho. As pessoas perto de você costumam se mover mais rápido por causa disso.',
         insights: [
-          { icon:'⚡', title:'Força central', text:'Velocidade e entrega. Você transforma intenção em resultado mais rápido que a maioria.' },
-          { icon:'🔍', title:'Ponto de atenção', text:'A urgência de agir pode gerar retrabalho. Nem sempre 80% rápido é melhor que 100% no prazo.' },
-          { icon:'🎯', title:'Ambiente ideal', text:'Ambientes de alta cadência, metas claras e autonomia para executar sem excesso de processo.' }
+          { icon:'⚡', title:'Sua força', text:'Fazer acontecer. Você transforma intenção em resultado mais rápido do que a maioria.' },
+          { icon:'🪞', title:'Seu ponto cego', text:'A pressa pode gerar retrabalho. Às vezes correr custa mais caro do que parar 10 minutos pra pensar.' },
+          { icon:'🌱', title:'Como evoluir', text:'Antes de decisões grandes, escreva as opções e durma sobre elas uma noite. Pergunte "qual o custo de errar aqui?" antes de acelerar.' },
+          { icon:'🧭', title:'Onde você brilha', text:'Ambientes de ritmo rápido e metas claras: vendas, operações, atendimento, empreender, esportes, qualquer coisa que exija tirar do papel.' },
+          { icon:'💬', title:'Pra refletir', text:'Onde a sua pressa já te custou caro — e como você perceberia, da próxima vez, que vale desacelerar?' }
         ]
       },
       {
         id: 'conector',
-        name: 'Conector Empático',
+        name: 'O Conector',
         icon: '🔗',
-        mode: 'Modo Relacional-Adaptativo',
+        mode: 'Decide pensando nas pessoas',
         dims: ['REL','EMO'],
-        desc: 'Você processa o mundo através das pessoas e das relações. Antes de decidir, você lê o ambiente — quem está impactado, como estão se sentindo, o que não está sendo dito. Essa inteligência relacional é rara e extremamente valiosa em contextos de liderança, negociação e mudança cultural.',
+        desc: 'Você lê o ambiente pelas pessoas: percebe como estão se sentindo, o que não foi dito, quem precisa de apoio. Essa sensibilidade é rara e faz diferença em qualquer grupo — na família, entre amigos ou no trabalho.',
         insights: [
-          { icon:'⚡', title:'Força central', text:'Construir confiança e ler dinâmicas interpessoais com precisão que a maioria não percebe.' },
-          { icon:'🔍', title:'Ponto de atenção', text:'Alta sensibilidade ao ambiente pode gerar paralisia em contextos de conflito ou pressão emocional.' },
-          { icon:'🎯', title:'Ambiente ideal', text:'Papéis com foco em pessoas, cultura, liderança ou qualquer contexto onde relacionamento é estratégico.' }
+          { icon:'⚡', title:'Sua força', text:'Criar confiança e enxergar o que as pessoas sentem. Você une grupos e acalma tensões.' },
+          { icon:'🪞', title:'Seu ponto cego', text:'Cuidar tanto dos outros que esquece de você — e adiar conversas difíceis pra não magoar ninguém.' },
+          { icon:'🌱', title:'Como evoluir', text:'Pratique dizer o que você precisa, com clareza e gentileza. Lembre: evitar um conflito hoje costuma criar um maior amanhã.' },
+          { icon:'🧭', title:'Onde você brilha', text:'Tudo que envolve gente: cuidado, ensino, atendimento, liderança, saúde, recursos humanos, comunidades, causas.' },
+          { icon:'💬', title:'Pra refletir', text:'Qual conversa importante você está adiando pra não desagradar — e o que mudaria se você a tivesse?' }
         ]
       },
       {
         id: 'analista',
-        name: 'Analista Sistemático',
+        name: 'O Analista',
         icon: '📐',
-        mode: 'Modo Lógico-Estruturado',
+        mode: 'Pensa com método e capricho',
         dims: ['SIS','EXE'],
-        desc: 'Você pensa em sistemas e executa com método. Antes de agir, estrutura. Antes de decidir, analisa. Sua abordagem reduz riscos e aumenta a qualidade das entregas — especialmente em contextos onde erros têm alto custo. Você é o tipo de profissional que outros procuram quando precisam de confiabilidade.',
+        desc: 'Você pensa antes de agir e age com cuidado. Gosta de fazer bem feito, sem deixar pontas soltas. As pessoas confiam em você justamente porque você entrega com qualidade e consistência.',
         insights: [
-          { icon:'⚡', title:'Força central', text:'Confiabilidade e precisão. Você entrega o que promete, com qualidade consistente.' },
-          { icon:'🔍', title:'Ponto de atenção', text:'Em ambientes de alta velocidade, pode ser percebido como lento. Aprenda a calibrar a profundidade de análise pelo contexto.' },
-          { icon:'🎯', title:'Ambiente ideal', text:'Ambientes com processos valorizados, onde qualidade supera velocidade e planejamento é respeitado.' }
+          { icon:'⚡', title:'Sua força', text:'Confiabilidade. Você entrega o que promete, com capricho — e raramente deixa algo importante passar.' },
+          { icon:'🪞', title:'Seu ponto cego', text:'Buscar o perfeito pode te deixar lento ou exigente demais (com você e com os outros).' },
+          { icon:'🌱', title:'Como evoluir', text:'Defina, pra cada tarefa, o nível de capricho que ela realmente exige — nem tudo merece 100%. Pratique decidir com 80% da informação.' },
+          { icon:'🧭', title:'Onde você brilha', text:'Onde qualidade importa mais que pressa: finanças, dados, jurídico, saúde, engenharia, qualidade, planejamento, ofícios técnicos.' },
+          { icon:'💬', title:'Pra refletir', text:'Onde o seu "caprichar mais" virou "travar mais" — e o que aconteceria se você entregasse antes?' }
         ]
       },
       {
         id: 'estrategista',
-        name: 'Estrategista Adaptativo',
+        name: 'O Navegador',
         icon: '🧭',
-        mode: 'Modo Estratégico-Ágil',
+        mode: 'Ágil em terreno incerto',
         dims: ['AMB','VEL'],
-        desc: 'Você age rápido mesmo em cenários incertos. Não precisa de todas as informações para se mover — lê sinais, testa hipóteses e ajusta em tempo real. Essa combinação de velocidade e adaptabilidade é sua vantagem competitiva em mercados voláteis e papéis de liderança emergente.',
+        desc: 'Você se move bem quando o mapa não existe. Não precisa de tudo definido: lê os sinais, testa, ajusta e segue. Em situações novas ou que mudam o tempo todo, você acha caminho onde os outros veem beco.',
         insights: [
-          { icon:'⚡', title:'Força central', text:'Navegar cenários novos sem paralisar. Você encontra caminhos onde outros encontram becos sem saída.' },
-          { icon:'🔍', title:'Ponto de atenção', text:'A facilidade para se adaptar pode gerar falta de profundidade. Alguns contextos exigem persistência, não agilidade.' },
-          { icon:'🎯', title:'Ambiente ideal', text:'Startups, transformações organizacionais, papéis de inovação — qualquer lugar onde o mapa muda enquanto você caminha.' }
+          { icon:'⚡', title:'Sua força', text:'Avançar no incerto sem paralisar. Você se adapta rápido e enxerga saídas criativas.' },
+          { icon:'🪞', title:'Seu ponto cego', text:'Tanta adaptabilidade pode virar falta de profundidade. Algumas coisas pedem persistência, não mais um plano novo.' },
+          { icon:'🌱', title:'Como evoluir', text:'Escolha uma ou duas coisas pra ir até o fim, mesmo quando der vontade de mudar. Termine antes de começar a próxima.' },
+          { icon:'🧭', title:'Onde você brilha', text:'Mudança e novidade: empreender, inovação, projetos, vendas, criação, ambientes que se transformam rápido.' },
+          { icon:'💬', title:'Pra refletir', text:'O que você começou e não terminou — e qual dessas coisas merece a sua persistência agora?' }
         ]
       },
       {
         id: 'guardiao',
-        name: 'Guardião Relacional',
+        name: 'O Guardião',
         icon: '🛡️',
-        mode: 'Modo Cuidador-Sistemático',
+        mode: 'Cuida das pessoas com organização',
         dims: ['REL','SIS'],
-        desc: 'Você une cuidado com as pessoas e pensamento estruturado. Constrói ambientes seguros onde a equipe performa. Seu estilo de liderança é baseado em confiança e clareza — as pessoas sabem o que esperar de você e sentem que podem contar. Essa combinação cria os times mais coesos e resilientes.',
+        desc: 'Você junta cuidado com as pessoas e senso de organização. Cria ambientes onde os outros se sentem seguros e sabem o que esperar. É a pessoa em quem todos confiam — porque você é justo, presente e constante.',
         insights: [
-          { icon:'⚡', title:'Força central', text:'Criar ambientes de alta confiança e performance sustentável — não apenas resultado pontual.' },
-          { icon:'🔍', title:'Ponto de atenção', text:'Dificuldade em tomar decisões difíceis que afetam pessoas. O cuidado pode adiar conversas necessárias.' },
-          { icon:'🎯', title:'Ambiente ideal', text:'Gestão de pessoas, desenvolvimento de cultura organizacional, papéis de liderança de médio e longo prazo.' }
+          { icon:'⚡', title:'Sua força', text:'Construir confiança que dura. Você cria estabilidade e cuida pra que ninguém fique pra trás.' },
+          { icon:'🪞', title:'Seu ponto cego', text:'Decisões difíceis que afetam pessoas podem ser adiadas demais. Proteger todo mundo às vezes trava o necessário.' },
+          { icon:'🌱', title:'Como evoluir', text:'Pratique tomar a decisão dura quando ela é justa, mesmo que desconforte. Cuidar também é ser honesto a tempo.' },
+          { icon:'🧭', title:'Onde você brilha', text:'Cuidar de pessoas e de processos ao mesmo tempo: liderança, educação, saúde, gestão, comunidade, qualquer time que precise de base sólida.' },
+          { icon:'💬', title:'Pra refletir', text:'Que decisão justa você está adiando pra evitar desconforto — e quem ganharia se você a tomasse?' }
         ]
       }
     ]

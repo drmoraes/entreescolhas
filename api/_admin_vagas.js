@@ -76,32 +76,41 @@ module.exports = async (req, res) => {
   if (op === 'import') {
     if (req.method !== 'POST') return err(res, 'Use POST', 405);
     const APP_ID = process.env.ADZUNA_APP_ID, APP_KEY = process.env.ADZUNA_APP_KEY;
-    if (!APP_ID || !APP_KEY) return err(res, 'Configure ADZUNA_APP_ID e ADZUNA_APP_KEY nas variáveis da Vercel.', 400);
+    if (!APP_ID || !APP_KEY) return json(res, {
+      error: 'Configure ADZUNA_APP_ID e ADZUNA_APP_KEY nas variáveis da Vercel.',
+      _diag: { build: 'v2', has_id: !!APP_ID, has_key: !!APP_KEY,
+        adzuna_keys: Object.keys(process.env).filter((k) => k.startsWith('ADZUNA')) }
+    }, 400);
     const b = getJsonBody(req) || {};
     const what = encodeURIComponent(String(b.what || '').trim());
     const where = encodeURIComponent(String(b.where || '').trim());
-    const url = `https://api.adzuna.com/v1/api/jobs/br/search/1?app_id=${APP_ID}&app_key=${APP_KEY}`
-      + `&results_per_page=30&content-type=application/json${what ? '&what=' + what : ''}${where ? '&where=' + where : ''}`;
-    let data;
-    try { data = await (await fetch(url)).json(); }
-    catch (e) { return err(res, 'Falha ao consultar a Adzuna', 502); }
-    const results = (data && data.results) || [];
-    let novas = 0, dup = 0;
-    for (const r of results) {
-      try {
-        const ins = await query(
-          `INSERT INTO vagas (titulo, empresa, area, cidade, lat, lon, salario, descricao, url, source, external_id, status)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'adzuna',$10,'ativa')
-           ON CONFLICT (source, external_id) WHERE external_id IS NOT NULL DO NOTHING RETURNING id`,
-          [String(r.title || '').slice(0, 200), r.company && r.company.display_name, (r.category && r.category.label) || null,
-           r.location && r.location.display_name, r.latitude || null, r.longitude || null,
-           r.salary_min ? `R$ ${Math.round(r.salary_min)}+` : null, r.description || null,
-           r.redirect_url || null, String(r.id || '')]);
-        if (ins.rows[0]) novas++; else dup++;
-      } catch (e) { /* pula a linha problemática */ }
+    const pages = Math.min(10, Math.max(1, Number(b.pages) || 5)); // até 10 páginas × 50 = 500
+    let encontradas = 0, novas = 0, dup = 0;
+    for (let p = 1; p <= pages; p++) {
+      const url = `https://api.adzuna.com/v1/api/jobs/br/search/${p}?app_id=${APP_ID}&app_key=${APP_KEY}`
+        + `&results_per_page=50&content-type=application/json${what ? '&what=' + what : ''}${where ? '&where=' + where : ''}`;
+      let data;
+      try { data = await (await fetch(url)).json(); }
+      catch (e) { break; }
+      const results = (data && data.results) || [];
+      if (!results.length) break; // acabaram as páginas
+      encontradas += results.length;
+      for (const r of results) {
+        try {
+          const ins = await query(
+            `INSERT INTO vagas (titulo, empresa, area, cidade, lat, lon, salario, descricao, url, source, external_id, status)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'adzuna',$10,'ativa')
+             ON CONFLICT (source, external_id) WHERE external_id IS NOT NULL DO NOTHING RETURNING id`,
+            [String(r.title || '').slice(0, 200), r.company && r.company.display_name, (r.category && r.category.label) || null,
+             r.location && r.location.display_name, r.latitude || null, r.longitude || null,
+             r.salary_min ? `R$ ${Math.round(r.salary_min)}+` : null, r.description || null,
+             r.redirect_url || null, String(r.id || '')]);
+          if (ins.rows[0]) novas++; else dup++;
+        } catch (e) { /* pula a linha problemática */ }
+      }
     }
-    await logAdmin(req, 'vaga_import_adzuna', `${novas} novas, ${dup} dup (q=${b.what || ''})`);
-    return json(res, { ok: true, encontradas: results.length, novas, duplicadas: dup });
+    await logAdmin(req, 'vaga_import_adzuna', `${novas} novas, ${dup} dup, ${pages}p (q=${b.what || ''})`);
+    return json(res, { ok: true, encontradas, novas, duplicadas: dup, paginas: pages });
   }
 
   return err(res, 'op inválida (use list|save|toggle|delete|import|apps)');
