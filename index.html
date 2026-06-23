@@ -972,9 +972,17 @@
     .nav-hamburger.open span:nth-child(2) { opacity: 0; }
     .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
+    .nav-quick { display: none; align-items: center; gap: 12px; margin-left: auto; margin-right: 14px; }
+    .nav-quick a { font-size: 0.92rem; color: var(--text-2); text-decoration: none; font-weight: 600; }
+    .nav-quick a:hover { color: var(--text); }
+    .nav-quick .nav-quick-cta { background: var(--accent); color: #fff; padding: 8px 15px; border-radius: 10px; }
     @media (max-width: 900px) {
       .nav-hamburger { display: flex; }
       .nav-links { display: none !important; } /* colapsa no menu antes de estourar a largura */
+      .nav-quick { display: flex; }
+    }
+    @media (max-width: 380px) {
+      .nav-quick a:not(.nav-quick-cta) { display: none; } /* telas muito estreitas: só o "Começar" */
     }
 
     /* ── Mobile Menu Overlay ────────────────────────────────────── */
@@ -1120,6 +1128,10 @@
       </div>
       <a href="banco-de-talentos.html" class="btn-nav">Banco de Talentos</a>
     </div>
+    <div class="nav-quick">
+      <a href="/vagas.html">Vagas</a>
+      <a href="/cadastro-teste.html?jornada=arquetipo" class="nav-quick-cta">Começar</a>
+    </div>
     <button class="nav-hamburger" id="nav-hamburger" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-menu">
       <span></span><span></span><span></span>
     </button>
@@ -1131,6 +1143,7 @@
   <button class="mobile-menu-close" id="mobile-menu-close" aria-label="Fechar menu">✕</button>
   <a href="#como-funciona" class="mobile-menu-link">Como funciona</a>
   <a href="#jornadas" class="mobile-menu-link">Jornadas</a>
+  <a href="/vagas.html" class="mobile-menu-link">💼 Vagas</a>
   <a href="#faq" class="mobile-menu-link">FAQ</a>
   <a href="portal-rh.html" class="mobile-menu-link">🏢 Empresas (RH)</a>
   <a href="meu-perfil.html" class="mobile-menu-link">👤 Candidato</a>
