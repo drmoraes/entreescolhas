@@ -3,47 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Regulamento do Programa de Afiliados e Recompensas — Entre Escolhas</title>
-  <meta name="description" content="Regras do Programa de Afiliados e Recompensas da Entre Escolhas: comissão por indicação via Pix, desconto ao indicado, prazos e condições." />
+  <title>Programa de Indicação — Entre Escolhas</title>
+  <meta name="description" content="Indique a Entre Escolhas, seu amigo ganha desconto e você ganha comissão no Pix. Veja como funciona, prazos e regras." />
   <meta name="robots" content="noindex, follow" />
   <link rel="canonical" href="https://www.entreescolhas.com.br/regulamento-afiliados.html" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <!-- INTERNO (não exibido): antes de divulgar, preencher CNPJ e comarca do foro nos pontos marcados no código; validar IRRF com contador. -->
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #08080F; --bg-raised: #111118; --accent: #6C63FF;
-      --text: #F0EFFF; --text-2: #A09FB5; --text-3: #5A5870;
-      --border: rgba(255,255,255,0.07); --gold: #C9A84C; --green:#22C55E;
+      --bg: #08080F; --bg-card: #0F0F1E; --bg-raised:#15152a; --accent: #6C63FF; --accent-2:#8B7CFF;
+      --text: #F0EFFF; --text-2: #B6B3CE; --text-3: #6E6B8E;
+      --border: rgba(255,255,255,0.08); --gold: #C9A84C; --green:#34D399;
     }
     body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; line-height: 1.7; }
-    a { color: var(--accent); text-decoration: none; }
+    .serif { font-family:'Playfair Display',Georgia,serif; }
+    a { color: var(--accent-2); text-decoration: none; }
     a:hover { text-decoration: underline; }
-    nav { position: sticky; top: 0; z-index: 100; padding: 16px 24px; background: rgba(8,8,15,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    nav { position: sticky; top: 0; z-index: 100; padding: 16px 24px; background: rgba(8,8,15,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
     .nav-logo { font-size: 1.1rem; font-weight: 700; color: var(--text); }
     .nav-logo span { color: var(--accent); }
     .nav-back { font-size: 0.85rem; color: var(--text-2); }
-    .nav-back:hover { color: var(--text); }
-    .container { max-width: 760px; margin: 0 auto; padding: 0 24px; }
-    header.page-header { padding: 64px 0 40px; border-bottom: 1px solid var(--border); }
-    .page-tag { display: inline-block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); background: rgba(108,99,255,0.1); border: 1px solid rgba(108,99,255,0.2); border-radius: 20px; padding: 4px 14px; margin-bottom: 20px; }
-    h1 { font-size: 2rem; font-weight: 700; margin-bottom: 12px; }
-    .page-meta { font-size: 0.85rem; color: var(--text-3); }
-    .content { padding: 48px 0 80px; }
-    .content h2 { font-size: 1.15rem; font-weight: 600; margin: 40px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); color: var(--text); }
-    .content h2:first-child { margin-top: 0; }
-    .content p { color: var(--text-2); margin-bottom: 14px; font-size: 0.95rem; }
-    .content ul { color: var(--text-2); padding-left: 20px; margin-bottom: 14px; }
-    .content ul li { margin-bottom: 6px; font-size: 0.95rem; }
+    .container { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+    header.page-header { padding: 60px 0 8px; text-align:center; }
+    .page-tag { display: inline-block; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); background: rgba(108,99,255,0.12); border: 1px solid rgba(108,99,255,0.25); border-radius: 20px; padding: 5px 14px; margin-bottom: 18px; }
+    h1 { font-size: 2.1rem; font-weight: 700; line-height:1.15; margin-bottom: 12px; letter-spacing:-0.02em; }
+    .page-meta { font-size: 0.82rem; color: var(--text-3); }
+
+    /* Como funciona — 3 passos */
+    .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:36px 0 8px; }
+    .step { background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:22px 18px; text-align:center; }
+    .step .ico { font-size:1.7rem; margin-bottom:8px; }
+    .step b { display:block; margin-bottom:4px; font-size:0.98rem; }
+    .step span { color:var(--text-2); font-size:0.86rem; }
+    @media(max-width:640px){ .steps{ grid-template-columns:1fr; } }
+
+    .highlight { background: linear-gradient(135deg, rgba(108,99,255,0.12), rgba(201,168,76,0.07)); border: 1px solid rgba(108,99,255,0.25); border-radius: 16px; padding: 22px 24px; margin: 28px 0; }
+    .highlight p { color: var(--text-2); margin: 0; font-size: 0.95rem; }
+    .highlight strong { color: var(--text); }
+
+    .content { padding: 20px 0 70px; }
+    .content h2 { font-size: 1.15rem; font-weight: 600; margin: 36px 0 12px; color: var(--text); }
+    .content p { color: var(--text-2); margin-bottom: 12px; font-size: 0.95rem; }
+    .content ul { color: var(--text-2); padding-left: 20px; margin-bottom: 12px; }
+    .content ul li { margin-bottom: 7px; font-size: 0.95rem; }
     .content strong { color: var(--text); }
-    .highlight-box { background: rgba(201,168,76,0.06); border: 1px solid rgba(201,168,76,0.2); border-radius: 10px; padding: 20px 24px; margin: 24px 0; }
-    .highlight-box p { color: var(--text-2); margin: 0; font-size: 0.88rem; }
-    table { width:100%; border-collapse: collapse; margin: 16px 0; font-size: 0.9rem; }
-    th, td { text-align:left; padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-2); }
-    th { color: var(--text); font-weight: 600; }
-    footer { padding: 32px 0; border-top: 1px solid var(--border); text-align: center; font-size: 0.82rem; color: var(--text-3); }
+    table { width:100%; border-collapse: collapse; margin: 16px 0; font-size: 0.92rem; background:var(--bg-card); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+    th, td { text-align:left; padding: 12px 14px; border-bottom: 1px solid var(--border); color: var(--text-2); }
+    th { color: var(--text); font-weight: 600; background:var(--bg-raised); }
+    tr:last-child td { border-bottom:none; }
+    .divider { height:1px; background:var(--border); margin:8px 0 0; }
+    footer { padding: 28px 0; border-top: 1px solid var(--border); text-align: center; font-size: 0.82rem; color: var(--text-3); }
     footer a { color: var(--text-3); }
   </style>
 </head>
@@ -56,122 +69,95 @@
 
 <div class="container">
   <header class="page-header">
-    <div class="page-tag">Legal</div>
-    <h1>Regulamento do Programa de Afiliados e Recompensas</h1>
-    <p class="page-meta">Versão 2.1 · Operado por Veritas Lab — CNPJ [a preencher]</p>
+    <div class="page-tag">Programa de Indicação</div>
+    <h1>Indique amigos.<br/><span class="serif" style="color:var(--accent-2)">Todo mundo ganha.</span></h1>
+    <p class="page-meta">Como funciona, prazos e regras · Entre Escolhas</p>
   </header>
+
+  <div class="steps">
+    <div class="step"><div class="ico">🔗</div><b>1. Compartilhe</b><span>Você recebe um link só seu depois de desbloquear um relatório.</span></div>
+    <div class="step"><div class="ico">🎁</div><b>2. Seu amigo economiza</b><span>Quem entra pelo seu link ganha <span data-discount>10%</span> de desconto na 1ª compra.</span></div>
+    <div class="step"><div class="ico">💸</div><b>3. Você recebe no Pix</b><span>A cada compra confirmada, você ganha <span data-commission>15%</span> de comissão.</span></div>
+  </div>
+
+  <div class="highlight">
+    <p>💡 <strong>Resumo rápido:</strong> seu amigo ganha <strong><span data-discount>10%</span> de desconto</strong> e você ganha <strong><span data-commission>15%</span> de comissão</strong> no Pix. A comissão fica disponível depois de um prazo de segurança — <strong>8 dias</strong> quando a compra é no Pix e <strong>30 a 45 dias</strong> quando é no cartão ou boleto (tempo que cobre eventuais estornos). É só indicar de verdade: não vale indicar a si mesmo.</p>
+  </div>
 
   <div class="content">
 
-    <div class="highlight-box">
-      <p>📌 <strong>Resumo:</strong> indique a Entre Escolhas e ganhe <strong><span data-commission>15%</span> de comissão</strong> via Pix sobre cada compra confirmada de quem você indicou. Quem você indica ganha <strong><span data-discount>10%</span> de desconto</strong> na primeira compra. A comissão é gerada em qualquer pagamento aprovado (Pix, cartão ou boleto) e fica pendente conforme o método — <strong>Pix em <span data-winpix>8</span> dias</strong> e <strong>cartão/boleto em <span data-wincard>40</span> dias</strong> — sendo cancelada em caso de estorno. Autoindicação não é permitida.</p>
-    </div>
+    <h2>1. O que é o programa</h2>
+    <p>O <strong>Programa de Indicação da Entre Escolhas</strong> recompensa quem recomenda a plataforma. Quando alguém que você indicou faz uma compra, você ganha uma <strong>comissão</strong> — e essa pessoa ainda ganha um desconto. É simples assim: a recompensa nasce de uma <strong>venda real</strong>, não de sorteio ou cadastro.</p>
+    <p>A indicação é <strong>direta</strong>: você é recompensado apenas pelas pessoas que você mesmo indica. Não existe rede, níveis ou ganho sobre indicações de terceiros — e participar é gratuito.</p>
 
-    <h2>1. Objeto e natureza jurídica</h2>
-    <p>Este Regulamento estabelece os termos do <strong>Programa de Afiliados e Recompensas</strong> da Entre Escolhas, pelo qual usuários cadastrados ("Afiliados" ou "Indicadores") recomendam os produtos da plataforma e, havendo <strong>conversão bem-sucedida</strong>, recebem uma <strong>comissão por resultado</strong>.</p>
-    <p>A recompensa tem natureza de <strong>comissão por intermediação de venda efetivamente concretizada</strong> — não é doação, sorteio, brinde aleatório ou rendimento de investimento. A comissão só existe quando há uma venda real, paga e mantida.</p>
-    <p><strong>Nível único — sem multinível.</strong> O Afiliado é remunerado apenas pelas vendas de suas <strong>indicações diretas</strong>. Não há remuneração por níveis, redes ou recrutamento de outros afiliados. O Programa <strong>não constitui</strong> esquema de pirâmide ou marketing multinível.</p>
-    <p>A adesão é gratuita, voluntária e não exclusiva, e não cria vínculo empregatício, societário ou de representação comercial.</p>
-
-    <h2>2. Definições</h2>
-    <ul>
-      <li><strong>Indicador (Afiliado):</strong> pessoa física, maior de 18 anos, com cadastro ativo, que compartilha seu link/código pessoal.</li>
-      <li><strong>Indicado:</strong> novo cliente que acessa a plataforma pelo link/código do Indicador e realiza uma compra paga.</li>
-      <li><strong>Conversão bem-sucedida:</strong> compra do Indicado aprovada, paga via Pix e mantida após a janela de arrependimento.</li>
-      <li><strong>Valor líquido:</strong> valor efetivamente pago pelo Indicado, já deduzidos descontos e cupons.</li>
-      <li><strong>Janela de arrependimento (CDC):</strong> 8 dias corridos a contar da confirmação do pagamento.</li>
-    </ul>
-
-    <h2>3. Funcionamento e adesão</h2>
-    <p>Cada usuário cadastrado recebe um <strong>link/código de afiliado</strong> único. A indicação é válida quando o Indicado acessa a plataforma por esse link/código e conclui a compra na mesma origem, observadas as regras antifraude (Cláusula 9). A habilitação ao recebimento depende do <strong>aceite expresso</strong> deste Regulamento e do fornecimento dos dados de recebimento (Cláusula 7).</p>
-
-    <h2>4. Recompensa do Indicado (desconto)</h2>
-    <p>O Indicado que utilizar um link/código válido recebe <strong><span data-discount>10%</span> de desconto</strong> sobre o preço vigente, aplicado automaticamente no momento da compra. O desconto vale para a <strong>primeira compra</strong>, não é cumulativo com outras promoções e não é convertível em dinheiro. O percentual é parametrizável pela Entre Escolhas para indicações futuras.</p>
-
-    <h2>5. Comissão do Indicador</h2>
-    <p>Havendo conversão bem-sucedida, o Indicador faz jus a <strong><span data-commission>15%</span> sobre o valor líquido pago</strong> pelo Indicado.</p>
+    <h2>2. Quem ganha o quê</h2>
+    <p>Quem você indica recebe <strong><span data-discount>10%</span> de desconto</strong> na primeira compra, aplicado automaticamente no checkout. Você recebe <strong><span data-commission>15%</span></strong> sobre o valor que essa pessoa efetivamente pagou.</p>
     <table>
-      <tr><th>Produto</th><th>Preço base</th><th>Com desconto (<span data-discount>10%</span>)</th><th>Comissão (<span data-commission>15%</span>)</th></tr>
+      <tr><th>Produto</th><th>Preço</th><th>Seu amigo paga (−<span data-discount>10%</span>)</th><th>Sua comissão</th></tr>
       <tr><td>Teste avulso</td><td data-cell="single_base">R$ 9,90</td><td data-cell="single_net">R$ 8,91</td><td data-cell="single_comm">R$ 1,34</td></tr>
       <tr><td>Combo (todos os testes)</td><td data-cell="combo_base">R$ 19,90</td><td data-cell="combo_net">R$ 17,91</td><td data-cell="combo_comm">R$ 2,69</td></tr>
     </table>
-    <p>A comissão é apurada uma única vez por compra, em <strong>qualquer método de pagamento aprovado</strong> (Pix, cartão de crédito ou boleto).</p>
-    <div class="highlight-box">
-      <p>⚡ <strong>Meio de pagamento e prazo de liberação:</strong> a comissão é gerada em qualquer pagamento aprovado, mas o <strong>prazo de liberação varia conforme o risco do método</strong>: pagamentos via <strong>Pix</strong> liberam em <strong><span data-winpix>8</span> dias</strong>; pagamentos por <strong>cartão de crédito ou boleto</strong> liberam em <strong><span data-wincard>40</span> dias</strong>, prazo maior que cobre a janela de contestação/estorno (chargeback) desses meios.</p>
-    </div>
+    <p>A comissão vale para qualquer forma de pagamento aprovada — Pix, cartão de crédito ou boleto.</p>
 
-    <h2>6. Prazos, status e liberação (art. 49 do CDC)</h2>
+    <h2>3. Quando o dinheiro fica disponível</h2>
+    <p>Por segurança (e para respeitar o direito de arrependimento de quem comprou), a comissão passa por um prazo antes de liberar para saque:</p>
     <ul>
-      <li><strong>Pendente:</strong> confirmado o pagamento, a comissão fica pendente pela janela do método — <strong>Pix: <span data-winpix>8</span> dias</strong> (alinhado ao direito de arrependimento); <strong>cartão/boleto: <span data-wincard>40</span> dias</strong>.</li>
-      <li><strong>Liberada:</strong> decorrida a janela aplicável sem devolução/estorno, a comissão fica disponível para saque.</li>
-      <li><strong>Cancelada:</strong> se o Indicado exercer o direito de arrependimento ou houver estorno/chargeback dentro da janela, a comissão é cancelada automaticamente.</li>
+      <li><strong>Compra no Pix:</strong> libera em <strong><span data-winpix>8</span> dias</strong>.</li>
+      <li><strong>Compra no cartão ou boleto:</strong> libera em <strong><span data-wincard>40</span> dias</strong> — prazo maior porque esses meios podem ser estornados depois.</li>
+      <li>Se a compra for cancelada ou estornada nesse período, a comissão daquela venda não é paga.</li>
     </ul>
 
-    <h2>7. Dados de recebimento</h2>
-    <p>Para receber, o Indicador informa <strong>nome completo, CPF e chave Pix</strong>. A chave Pix e o CPF devem ser de <strong>titularidade do próprio Indicador</strong> — não há pagamento a terceiros. A Entre Escolhas não se responsabiliza por valores enviados a chave Pix incorreta informada pelo Indicador. Os dados podem ser solicitados na adesão ou na primeira solicitação de saque.</p>
-
-    <h2>8. Saque das comissões</h2>
+    <h2>4. Como receber</h2>
     <ul>
-      <li>Saque exclusivamente via <strong>Pix</strong>, para chave de mesma titularidade e CPF do Indicador.</li>
-      <li><strong>Valor mínimo para saque: R$ 20,00</strong> (saldos menores ficam acumulados).</li>
-      <li>Pagamento em até <strong>15 dias úteis</strong> após a solicitação e validação dos dados.</li>
-      <li><strong>Encerramento (proteção contra enriquecimento sem causa):</strong> se a Entre Escolhas encerrar o Programa ou o usuário cancelar a conta, <strong>todos os valores já liberados serão pagos, mesmo abaixo de R$ 20,00</strong>, em ciclo final de até <strong>30 dias</strong>.</li>
+      <li>O pagamento é feito <strong>via Pix</strong>, numa chave de <strong>sua própria titularidade</strong> (mesmo CPF). Para isso, você informa nome, CPF e chave Pix na hora de sacar.</li>
+      <li><strong>Saque mínimo: R$ 20,00</strong>. Valores menores ficam acumulados até chegar nesse total.</li>
+      <li>Pagamos em até <strong>15 dias úteis</strong> após a solicitação.</li>
+      <li>Se o programa for encerrado ou você fechar sua conta, pagamos <strong>tudo que já estiver liberado</strong>, mesmo abaixo de R$ 20,00, em até 30 dias.</li>
     </ul>
 
-    <h2>9. Antifraude e uso indevido</h2>
-    <p>São vedados, sob pena de cancelamento das comissões e do cadastro:</p>
+    <h2>5. Regras para valer (antifraude)</h2>
+    <p>Para o programa ser justo com todo mundo, não é permitido:</p>
     <ul>
-      <li><strong>Autoindicação</strong> — usar o próprio link/código, ou coincidência de CPF, e-mail, meio de pagamento, dispositivo ou IP entre Indicador e Indicado.</li>
-      <li>Contas falsas, dados de terceiros, e-mails temporários ou compras simuladas.</li>
-      <li>Spam, propaganda enganosa ou uso indevido da marca.</li>
+      <li><strong>Indicar a si mesmo</strong> — usar o próprio link na própria compra, ou repetir CPF, e-mail, meio de pagamento ou dispositivo entre quem indica e quem compra.</li>
+      <li>Criar contas falsas, usar dados de terceiros ou simular compras para gerar comissão.</li>
+      <li>Divulgar com spam ou de forma enganosa.</li>
     </ul>
-    <p>A Entre Escolhas pode auditar, reter, suspender ou cancelar comissões sob suspeita de fraude.</p>
+    <p>Comissões suspeitas podem ser revisadas e canceladas. Mudanças no programa são avisadas com <strong>30 dias</strong> de antecedência e não afetam comissões já liberadas.</p>
 
-    <h2>10. Alterações e encerramento</h2>
-    <p>O Programa pode ser alterado ou encerrado a qualquer tempo, com <strong>aviso prévio de 30 dias</strong> aos usuários ativos. Alterações de percentuais ou regras valem apenas para indicações futuras, preservando comissões já liberadas.</p>
+    <h2>6. Impostos</h2>
+    <p>Os valores recebidos são rendimento e podem ter imposto retido na fonte quando o total pago no mês atingir a faixa de tributação prevista pela Receita Federal. Você é responsável por declarar esses valores conforme sua situação.</p>
 
-    <h2>11. Tributação (fonte pagadora)</h2>
-    <p>Os valores recebidos são <strong>rendimento tributável</strong>. A Entre Escolhas, como fonte pagadora, <strong>efetuará a retenção do IRRF</strong> sempre que o acumulado mensal pago ao Indicador atingir a faixa de incidência da Receita Federal, disponibilizando o informe de rendimentos. O Indicador é responsável pela declaração e recolhimento de tributos conforme sua situação fiscal.</p>
+    <h2>7. Seus dados (LGPD)</h2>
+    <p>Usamos seus dados (nome, CPF, chave Pix e histórico de indicações) só para operar o programa, pagar as comissões e evitar fraudes, conforme a <a href="/privacidade.html">Política de Privacidade</a>.</p>
 
-    <h2>12. Proteção de dados (LGPD)</h2>
-    <p>O tratamento de dados (nome, CPF, chave Pix, histórico de compras e indicações) tem fundamento na <strong>execução deste contrato</strong> (art. 7º, V, da LGPD) e na prevenção a fraudes, sendo usado exclusivamente para operar o Programa, apurar e pagar comissões e cumprir obrigações fiscais, conforme a <a href="/privacidade.html">Política de Privacidade</a>.</p>
-
-    <h2>13. Disposições gerais e foro</h2>
-    <p>Este Regulamento integra os <a href="/termos.html">Termos de Uso</a> e a <a href="/privacidade.html">Política de Privacidade</a>. Fica eleito o foro da comarca de [Cidade/UF], sem prejuízo dos direitos do consumidor previstos no CDC, inclusive a competência do foro de seu domicílio.</p>
-
-    <div class="highlight-box">
-      <p>⚠️ <strong>Aviso:</strong> os campos entre colchetes (CNPJ, comarca) e os prazos indicados devem ser confirmados pela empresa. Recomenda-se revisão por advogado e contador antes da publicação definitiva.</p>
-    </div>
+    <div class="divider"></div>
+    <p style="margin-top:18px;font-size:0.86rem;color:var(--text-3);">Este programa complementa os <a href="/termos.html">Termos de Uso</a> e a <a href="/privacidade.html">Política de Privacidade</a>. Dúvidas? Fale com a gente em <a href="mailto:suporte@entreescolhas.com.br">suporte@entreescolhas.com.br</a>.</p>
 
   </div>
 
   <footer>
-    <p>© 2026 Entre Escolhas · Veritas Lab — <a href="/termos.html">Termos</a> · <a href="/privacidade.html">Privacidade</a></p>
+    <p>© 2026 Entre Escolhas — <a href="/termos.html">Termos</a> · <a href="/privacidade.html">Privacidade</a></p>
   </footer>
 </div>
 
 <script>
-// Mantém os valores do regulamento sempre iguais aos configurados no admin.
-// Se você alterar preço/percentual/janela no painel, esta página reflete na hora.
+// Mantém os números iguais aos configurados no admin. Só sobrescreve quando o
+// valor vier válido — assim a página nunca mostra 0% ou R$ 0,00 por falha de rede.
 (function () {
-  function brl(v){return 'R$ ' + Number(v||0).toFixed(2).replace('.', ',');}
-  fetch('/api/b2b?fn=referral&op=prices').then(function(r){return r.json();}).then(function(d){
-    if(!d || !d.ok) return;
+  function brl(v){ return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
+  function setAll(sel, val){ document.querySelectorAll(sel).forEach(function(e){ e.textContent = val; }); }
+  fetch('/api/b2b?fn=referral&op=prices').then(function(r){ return r.json(); }).then(function(d){
+    if (!d || !d.ok) return;
     var disc = Number(d.discount_pct), comm = Number(d.commission_pct);
     var ps = Number(d.price_single), pc = Number(d.price_combo);
-    var sNet = ps*(1-disc/100), cNet = pc*(1-disc/100);
-    var set = function(sel,val){document.querySelectorAll(sel).forEach(function(e){e.textContent=val;});};
-    set('[data-discount]', disc + '%');
-    set('[data-commission]', comm + '%');
-    set('[data-winpix]', d.window_pix);
-    set('[data-wincard]', d.window_card);
-    var cell = function(k,val){var e=document.querySelector('[data-cell="'+k+'"]'); if(e) e.textContent=val;};
-    cell('single_base', brl(ps));
-    cell('single_net', brl(sNet));
-    cell('single_comm', brl(sNet*comm/100));
-    cell('combo_base', brl(pc));
-    cell('combo_net', brl(cNet));
-    cell('combo_comm', brl(cNet*comm/100));
+    var wpix = parseInt(d.window_pix, 10), wcard = parseInt(d.window_card, 10);
+    if (disc > 0) setAll('[data-discount]', disc + '%');
+    if (comm > 0) setAll('[data-commission]', comm + '%');
+    if (wpix > 0) setAll('[data-winpix]', wpix);
+    if (wcard > 0) setAll('[data-wincard]', wcard);
+    var cell = function(k, val){ var e = document.querySelector('[data-cell="'+k+'"]'); if (e) e.textContent = val; };
+    if (ps > 0 && disc >= 0) { var sNet = ps*(1-disc/100); cell('single_base', brl(ps)); cell('single_net', brl(sNet)); if (comm>0) cell('single_comm', brl(sNet*comm/100)); }
+    if (pc > 0 && disc >= 0) { var cNet = pc*(1-disc/100); cell('combo_base', brl(pc)); cell('combo_net', brl(cNet)); if (comm>0) cell('combo_comm', brl(cNet*comm/100)); }
   }).catch(function(){});
 })();
 </script>
