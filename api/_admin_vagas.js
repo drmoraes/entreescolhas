@@ -3,6 +3,7 @@
 const { setCors, json, err, requireApiKey, logAdmin, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
 const { adminCan } = require('./_lib/admin-perms');
+const { cityCoords } = require('./_lib/cidades');
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
@@ -97,12 +98,15 @@ module.exports = async (req, res) => {
       encontradas += results.length;
       for (const r of results) {
         try {
+          const cidade = r.location && r.location.display_name;
+          let lat = r.latitude || null, lon = r.longitude || null;
+          if (lat == null || lon == null) { const cc = cityCoords(cidade); if (cc) { lat = cc[0]; lon = cc[1]; } }
           const ins = await query(
             `INSERT INTO vagas (titulo, empresa, area, cidade, lat, lon, salario, descricao, url, source, external_id, status)
              VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'adzuna',$10,'ativa')
              ON CONFLICT (source, external_id) WHERE external_id IS NOT NULL DO NOTHING RETURNING id`,
             [String(r.title || '').slice(0, 200), r.company && r.company.display_name, (r.category && r.category.label) || null,
-             r.location && r.location.display_name, r.latitude || null, r.longitude || null,
+             cidade, lat, lon,
              r.salary_min ? `R$ ${Math.round(r.salary_min)}+` : null, r.description || null,
              r.redirect_url || null, String(r.id || '')]);
           if (ins.rows[0]) novas++; else dup++;
@@ -113,5 +117,20 @@ module.exports = async (req, res) => {
     return json(res, { ok: true, encontradas, novas, duplicadas: dup, paginas: pages });
   }
 
-  return err(res, 'op inválida (use list|save|toggle|delete|import|apps)');
+  // ── GEOCODE: preenche lat/lon das vagas sem coordenada, pela cidade ──
+  if (op === 'geocode') {
+    if (req.method !== 'POST') return err(res, 'Use POST', 405);
+    const { rows } = await query(
+      "SELECT id, cidade FROM vagas WHERE (lat IS NULL OR lon IS NULL) AND cidade IS NOT NULL AND cidade<>'' LIMIT 2000");
+    let ok = 0, sem = 0;
+    for (const v of rows) {
+      const cc = cityCoords(v.cidade);
+      if (cc) { await query('UPDATE vagas SET lat=$1, lon=$2 WHERE id=$3', [cc[0], cc[1], v.id]); ok++; }
+      else sem++;
+    }
+    await logAdmin(req, 'vaga_geocode', `${ok} geocodificadas, ${sem} sem cidade conhecida`);
+    return json(res, { ok: true, geocodificadas: ok, sem_match: sem, analisadas: rows.length });
+  }
+
+  return err(res, 'op inválida (use list|save|toggle|delete|import|apps|geocode)');
 };
