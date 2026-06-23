@@ -215,13 +215,24 @@
     <div id="afiliado-box" style="display:none;background:linear-gradient(135deg,rgba(108,99,255,0.10),rgba(201,168,76,0.06));border:1px solid rgba(108,99,255,0.25);border-radius:20px;padding:26px;max-width:560px;margin:0 auto 28px;">
       <div style="font-size:1.6rem;margin-bottom:6px;">🎁</div>
       <h3 style="font-size:1.15rem;margin-bottom:6px;">Indique e ganhe <span class="grad" id="afi-pct">15%</span> via Pix</h3>
-      <p style="color:var(--text-2);font-size:0.9rem;line-height:1.6;margin-bottom:16px;">Compartilhe seu link. Quem entrar por ele ganha <strong id="afi-desc">10%</strong> de desconto, e você recebe a comissão via Pix a cada compra confirmada. <a href="/regulamento-afiliados.html" target="_blank" style="color:var(--accent);">Ver regras</a>.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <input id="afi-link" readonly style="flex:1;min-width:200px;background:var(--bg-raised, #141428);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:12px 14px;font-size:0.85rem;" value="" />
-        <button class="btn-primary" style="white-space:nowrap;" onclick="copiarAfiliado()">Copiar link</button>
-        <a id="afi-wa" class="btn-primary" style="white-space:nowrap;background:#25D366;text-decoration:none;" target="_blank" rel="noopener">WhatsApp</a>
+      <p style="color:var(--text-2);font-size:0.9rem;line-height:1.6;margin-bottom:16px;">Compartilhe seu link. Quem entrar por ele ganha <strong id="afi-desc">10%</strong> de desconto, e você recebe a comissão via Pix a cada compra confirmada.</p>
+
+      <div id="afi-gate">
+        <label style="display:flex;gap:9px;align-items:flex-start;font-size:0.83rem;color:var(--text-2);text-align:left;margin-bottom:14px;cursor:pointer;">
+          <input type="checkbox" id="afi-aceite" style="margin-top:3px;width:16px;height:16px;flex:0 0 auto;" onchange="document.getElementById('afi-gerar').disabled=!this.checked;" />
+          <span>Li e concordo com o <a href="/regulamento-afiliados.html" target="_blank" style="color:var(--accent);">Regulamento do Programa de Afiliados</a>: comissão paga via Pix, liberada após o prazo do método (8 dias no Pix; 30–45 dias em cartão/boleto), cancelada em caso de estorno; saque por Pix de minha titularidade (mesmo CPF), mínimo R$ 20; valores são rendimentos tributáveis (IRRF quando aplicável); autoindicação não é permitida.</span>
+        </label>
+        <button class="btn-primary" id="afi-gerar" style="width:100%;" disabled onclick="gerarAfiliado()">Gerar meu link de indicação</button>
       </div>
-      <p style="font-size:0.74rem;color:var(--text-3);margin-top:12px;">Comissão gerada em qualquer pagamento aprovado e liberada após o prazo de segurança (8 dias no Pix; 30–45 dias em cartão/boleto). Pagamento via Pix. Autoindicação não é permitida. <a href="/regulamento-afiliados.html" target="_blank" style="color:var(--accent);">Regras</a>.</p>
+
+      <div id="afi-reveal" style="display:none;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input id="afi-link" readonly style="flex:1;min-width:200px;background:var(--bg-raised, #141428);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:12px 14px;font-size:0.85rem;" value="" />
+          <button class="btn-primary" style="white-space:nowrap;" onclick="copiarAfiliado()">Copiar link</button>
+          <a id="afi-wa" class="btn-primary" style="white-space:nowrap;background:#25D366;text-decoration:none;" target="_blank" rel="noopener">WhatsApp</a>
+        </div>
+        <p style="font-size:0.74rem;color:var(--text-3);margin-top:12px;">✓ Aceite registrado. Comissão gerada em qualquer pagamento aprovado e liberada após o prazo de segurança (8 dias no Pix; 30–45 dias em cartão/boleto). <a href="/regulamento-afiliados.html" target="_blank" style="color:var(--accent);">Regras</a>.</p>
+      </div>
     </div>
 
     <div class="result-ctas">
@@ -1335,22 +1346,50 @@ function renderOferta() {
 }
 
 // Painel "Indique e ganhe" — mostrado ao usuário com relatório pago.
+// O link só é gerado APÓS o aceite expresso do regulamento (prova jurídica).
 function mostrarAfiliado() {
   if (!ACCESS_TOKEN) return;
   const box = document.getElementById('afiliado-box');
   if (!box) return;
-  fetch('/api/b2b?fn=referral&op=code&access=' + encodeURIComponent(ACCESS_TOKEN))
-    .then(r => r.json())
-    .then(d => {
-      if (!d || !d.ok || !d.link) return;
-      const inp = document.getElementById('afi-link'); if (inp) inp.value = d.link;
-      const pct = document.getElementById('afi-pct'); if (pct && d.commission_pct != null) pct.textContent = d.commission_pct + '%';
-      const desc = document.getElementById('afi-desc'); if (desc && d.discount_pct != null) desc.textContent = d.discount_pct + '%';
-      const wa = document.getElementById('afi-wa');
-      if (wa) wa.href = 'https://wa.me/?text=' + encodeURIComponent('Fiz um teste rápido de autoconhecimento no Entre Escolhas e curti. Usa meu link que você ganha desconto: ' + d.link);
-      box.style.display = 'block';
-    })
-    .catch(() => {});
+  box.style.display = 'block';
+  // Se já aceitou antes neste dispositivo, revela o link direto.
+  let already = false;
+  try { already = localStorage.getItem('ee_afi_ok') === '1'; } catch (e) {}
+  if (already) gerarAfiliado(true);
+}
+
+function preencheAfiliado(d) {
+  if (!d || !d.link) return false;
+  const inp = document.getElementById('afi-link'); if (inp) inp.value = d.link;
+  const pct = document.getElementById('afi-pct'); if (pct && d.commission_pct != null) pct.textContent = d.commission_pct + '%';
+  const desc = document.getElementById('afi-desc'); if (desc && d.discount_pct != null) desc.textContent = d.discount_pct + '%';
+  const wa = document.getElementById('afi-wa');
+  if (wa) wa.href = 'https://wa.me/?text=' + encodeURIComponent('Fiz um teste rápido de autoconhecimento no Entre Escolhas e curti. Usa meu link que você ganha desconto: ' + d.link);
+  document.getElementById('afi-gate').style.display = 'none';
+  document.getElementById('afi-reveal').style.display = 'block';
+  return true;
+}
+
+// Registra o aceite (se ainda não registrado) e gera/recupera o link.
+async function gerarAfiliado(silencioso) {
+  const aceite = document.getElementById('afi-aceite');
+  let already = false;
+  try { already = localStorage.getItem('ee_afi_ok') === '1'; } catch (e) {}
+  if (!already && !silencioso && (!aceite || !aceite.checked)) return;
+  const btn = document.getElementById('afi-gerar');
+  if (btn && !silencioso) { btn.disabled = true; btn.textContent = 'Gerando…'; }
+  try {
+    if (!already) {
+      await fetch('/api/b2b?fn=referral&op=accept_terms', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access: ACCESS_TOKEN }),
+      });
+      try { localStorage.setItem('ee_afi_ok', '1'); } catch (e) {}
+    }
+    const d = await fetch('/api/b2b?fn=referral&op=code&access=' + encodeURIComponent(ACCESS_TOKEN)).then(r => r.json());
+    preencheAfiliado(d);
+  } catch (e) { /* silencioso */ }
+  if (btn && !silencioso) { btn.disabled = false; btn.textContent = 'Gerar meu link de indicação'; }
 }
 
 function copiarAfiliado() {
