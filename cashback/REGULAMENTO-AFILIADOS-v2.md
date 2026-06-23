@@ -1,6 +1,6 @@
 # Regulamento do Programa de Afiliados e Recompensas — Entre Escolhas
 
-**Versão 2.0** · Vigência a partir de **__/__/____**
+**Versão 2.1** · Vigência a partir de **__/__/____**
 **Titular:** [Razão Social], inscrita no CNPJ sob o nº [__.___.___/____-__], doravante denominada **"Entre Escolhas"**.
 
 > **Nota de uso interno (remover antes de publicar):** modelo elaborado com técnica jurídica, mas que **não dispensa revisão por advogado e contador** da empresa, em especial quanto ao tratamento tributário (IRRF) e ao enquadramento da Lei nº 1.521/51. Campos entre colchetes `[ ]` devem ser preenchidos.
@@ -56,15 +56,15 @@
 
 5.3. A comissão é apurada **uma única vez por compra** e **somente** quando observados, cumulativamente, os requisitos das Cláusulas 6 (prazos) e, especialmente, da Cláusula 5.4 (meio de pagamento).
 
-5.4. **Restrição de meio de pagamento (condição essencial).** A comissão **somente será gerada** se a compra do Indicado for paga **exclusivamente via Pix**. **Compras pagas por cartão de crédito, boleto ou qualquer outro meio NÃO geram comissão** para o Indicador. Esta condição é da essência do Programa e visa mitigar fraudes e estornos (chargebacks).
+5.4. **Meios de pagamento e prazo de liberação diferenciado.** A comissão é gerada em **qualquer meio de pagamento aprovado** (Pix, cartão de crédito ou boleto). Contudo, para mitigar fraudes e estornos (chargebacks), o **prazo de liberação varia conforme o risco do método**: compras pagas via **Pix** liberam após a janela curta (Cláusula 6); compras por **cartão de crédito ou boleto** liberam após uma **janela estendida de 30 a 45 dias**, suficiente para cobrir o período usual de contestação desses meios. Em todos os casos, havendo estorno/contestação dentro da janela aplicável, a comissão é cancelada.
 
 5.5. O percentual de comissão é **parametrizável pela Entre Escolhas** e poderá ser alterado para indicações futuras, observada a Cláusula 10.
 
 ## 6. Prazos, status e liberação (Compliance — art. 49 do CDC)
 
-6.1. **Pendente.** Confirmado o pagamento via Pix do Indicado, a comissão é registrada com status **"Pendente"** pelo prazo de **8 (oito) dias corridos**, correspondente à janela do direito de arrependimento (art. 49 do CDC garante no mínimo 7 dias; a Entre Escolhas adota 8 por liberalidade).
+6.1. **Pendente.** Confirmado o pagamento do Indicado, a comissão é registrada com status **"Pendente"** pela janela aplicável ao método: **Pix — 8 (oito) dias corridos** (alinhado ao art. 49 do CDC, que garante no mínimo 7 dias; a Entre Escolhas adota 8 por liberalidade); **cartão de crédito ou boleto — 30 a 45 dias corridos** (janela estendida que cobre o prazo de contestação/chargeback desses meios).
 
-6.2. **Liberada.** Decorrido o 8º dia **sem** que o Indicado tenha exercido o direito de arrependimento, solicitado devolução ou gerado estorno, a comissão passa ao status **"Liberada"** e fica disponível para saque.
+6.2. **Liberada.** Decorrida a janela aplicável **sem** que o Indicado tenha exercido o direito de arrependimento, solicitado devolução ou gerado estorno, a comissão passa ao status **"Liberada"** e fica disponível para saque.
 
 6.3. **Cancelada.** Caso o Indicado exerça o direito de arrependimento, obtenha reembolso ou seja registrado estorno/chargeback dentro da janela, a comissão correspondente é **cancelada automaticamente**, não gerando qualquer direito ao Indicador.
 
@@ -143,4 +143,4 @@ A participação no Programa exige **aceite expresso** deste Regulamento. Ao ade
 
 ### Versão curta para o checkbox de aceite
 
-> ☐ Li e concordo com o **[Regulamento do Programa de Afiliados e Recompensas (v2.0)](/regulamento-afiliados.html)**. Entendo que: o desconto de **10%** vale para o indicado e a comissão de **15%** é do indicador; **a comissão só é gerada se a compra do indicado for paga via Pix**; o valor fica **pendente por 8 dias** (direito de arrependimento — art. 49 do CDC) e é **cancelado em caso de estorno**; o saque é via **Pix de minha própria titularidade (mesmo CPF)**, com **mínimo de R$ 20,00**; os valores são **rendimentos tributáveis**, com **retenção de IRRF** quando aplicável. **Autoindicação não é permitida.**
+> ☐ Li e concordo com o **[Regulamento do Programa de Afiliados e Recompensas (v2.1)](/regulamento-afiliados.html)**. Entendo que: o desconto de **10%** vale para o indicado e a comissão de **15%** é do indicador; a comissão é gerada em **qualquer pagamento aprovado**, com liberação após a janela do método — **8 dias no Pix** e **30 a 45 dias em cartão/boleto** — sendo **cancelada em caso de estorno**; o saque é via **Pix de minha própria titularidade (mesmo CPF)**, com **mínimo de R$ 20,00**; os valores são **rendimentos tributáveis**, com **retenção de IRRF** quando aplicável. **Autoindicação não é permitida.**

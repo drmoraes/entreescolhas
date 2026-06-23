@@ -9,10 +9,10 @@ const { setCors, json, err, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
 const {
   getPriceSingle, getPriceCombo, getDiscountPct, getCommissionPct,
-  getMinPayout, isReferralEnabled,
+  getReferralWindowDays, getReferralWindowCard, getMinPayout, isReferralEnabled,
 } = require('./_lib/settings');
 
-const TERMS_VERSION = '2.0';
+const TERMS_VERSION = '2.1';
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sem I,O,0,1
 
 function randSuffix(n = 4) {
@@ -70,6 +70,8 @@ module.exports = async (req, res) => {
       price_combo: await getPriceCombo(),
       discount_pct: await getDiscountPct(),
       commission_pct: await getCommissionPct(),
+      window_pix: await getReferralWindowDays(),
+      window_card: await getReferralWindowCard(),
       min_payout: await getMinPayout(),
       terms_version: TERMS_VERSION,
     });

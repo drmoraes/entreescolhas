@@ -95,11 +95,20 @@ function render(){
 
     <h2 class="sec">Parâmetros do programa</h2>
     <div class="card">
-      <div class="grid4">
+      <div class="grid3" style="margin-bottom:10px">
+        <div><label class="fl">Preço do teste avulso (R$)</label><input id="c_ps" type="number" step="0.01" value="${CFG.price_single}"></div>
+        <div><label class="fl">Preço do combo (R$)</label><input id="c_pc" type="number" step="0.01" value="${CFG.price_combo}"></div>
+        <div></div>
+      </div>
+      <div class="grid3">
         <div><label class="fl">Desconto do indicado (%)</label><input id="c_disc" type="number" step="1" value="${CFG.discount_pct}"></div>
         <div><label class="fl">Comissão do indicador (%)</label><input id="c_comm" type="number" step="1" value="${CFG.commission_pct}"></div>
-        <div><label class="fl">Janela CDC (dias)</label><input id="c_win" type="number" step="1" value="${CFG.window_days}"></div>
         <div><label class="fl">Mínimo de saque (R$)</label><input id="c_min" type="number" step="0.01" value="${CFG.min_payout}"></div>
+      </div>
+      <div class="grid3" style="margin-top:10px">
+        <div><label class="fl">Janela Pix (dias) — CDC</label><input id="c_win" type="number" step="1" value="${CFG.window_days}"></div>
+        <div><label class="fl">Janela cartão/boleto (dias)</label><input id="c_winc" type="number" step="1" value="${CFG.window_card}"></div>
+        <div></div>
       </div>
       <div class="split" style="margin-top:12px">
         <label class="split small"><input type="checkbox" id="c_on" style="width:auto" ${CFG.enabled?'checked':''}> Programa ativo</label>
@@ -108,7 +117,7 @@ function render(){
         <button class="btn-ghost" onclick="migrar()">Instalar/migrar tabelas (1ª vez)</button>
         <span id="cfgMsg" class="small"></span>
       </div>
-      <p class="muted small" style="margin-top:8px">Comissão só é gerada em compras pagas via Pix. Liberação automática ocorre no cron diário após a janela.</p>
+      <p class="muted small" style="margin-top:8px">Comissão é gerada em qualquer pagamento aprovado. A liberação respeita a janela: Pix em poucos dias (CDC); cartão/boleto na janela longa (30–45 dias). Liberação automática no cron diário. Ao salvar o preço aqui, ele passa a valer no site (paywall, home) e o <a href="/regulamento-afiliados.html" target="_blank" style="color:var(--accent)">regulamento</a> reflete os novos valores automaticamente.</p>
     </div>
 
     <h2 class="sec">Fila de pagamento Pix (liberado, não pago)</h2>
@@ -140,7 +149,7 @@ function render(){
 }
 
 async function salvarCfg(){
-  const body={discount_pct:$('c_disc').value,commission_pct:$('c_comm').value,window_days:$('c_win').value,min_payout:$('c_min').value,enabled:$('c_on').checked};
+  const body={price_single:$('c_ps').value,price_combo:$('c_pc').value,discount_pct:$('c_disc').value,commission_pct:$('c_comm').value,window_days:$('c_win').value,window_card:$('c_winc').value,min_payout:$('c_min').value,enabled:$('c_on').checked};
   const m=$('cfgMsg');m.textContent='Salvando…';m.className='small muted';
   try{ await api('fn=admin_cashback&op=settings_set',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     m.textContent='Salvo ✓';m.className='small green';await loadAll();}catch(e){m.textContent=e.message;m.className='small red';}

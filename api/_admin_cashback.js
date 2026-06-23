@@ -129,9 +129,12 @@ module.exports = async (req, res) => {
   if (op === 'settings_get') {
     return json(res, {
       ok: true,
+      price_single: Number(await getSetting('price_single', await getSetting('report_price', '9.90'))),
+      price_combo: Number(await getSetting('price_combo', '19.90')),
       discount_pct: Number(await getSetting('referral_discount_pct', '10')),
       commission_pct: Number(await getSetting('referral_commission_pct', '15')),
       window_days: Number(await getSetting('cashback_window_days', '8')),
+      window_card: Number(await getSetting('cashback_window_card', '40')),
       min_payout: Number(await getSetting('cashback_min_payout', '20.00')),
       enabled: (await getSetting('referral_enabled', '1')) === '1',
     });
@@ -141,6 +144,17 @@ module.exports = async (req, res) => {
     if (req.method !== 'POST') return err(res, 'Use POST', 405);
     if (!canManage) return err(res, 'Sem permissão.', 403);
     const b = getJsonBody(req) || {};
+    if (b.price_single !== undefined) {
+      const v = Number(b.price_single);
+      if (!(v > 0) || v > 999) return err(res, 'Preço avulso inválido (0,01–999).');
+      await setSetting('price_single', v.toFixed(2));
+      await setSetting('report_price', v.toFixed(2)); // mantém legado em sincronia
+    }
+    if (b.price_combo !== undefined) {
+      const v = Number(b.price_combo);
+      if (!(v > 0) || v > 999) return err(res, 'Preço do combo inválido (0,01–999).');
+      await setSetting('price_combo', v.toFixed(2));
+    }
     if (b.discount_pct !== undefined) {
       const v = Number(b.discount_pct);
       if (!(v >= 0 && v <= 90)) return err(res, 'Desconto inválido (0–90).');
@@ -153,8 +167,13 @@ module.exports = async (req, res) => {
     }
     if (b.window_days !== undefined) {
       const v = parseInt(b.window_days, 10);
-      if (!(v >= 7 && v <= 60)) return err(res, 'Janela mínima de 7 dias (CDC).');
+      if (!(v >= 7 && v <= 60)) return err(res, 'Janela Pix mínima de 7 dias (CDC).');
       await setSetting('cashback_window_days', String(v));
+    }
+    if (b.window_card !== undefined) {
+      const v = parseInt(b.window_card, 10);
+      if (!(v >= 7 && v <= 120)) return err(res, 'Janela cartão/boleto inválida (7–120 dias).');
+      await setSetting('cashback_window_card', String(v));
     }
     if (b.min_payout !== undefined) {
       const v = Number(b.min_payout);

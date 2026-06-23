@@ -12,6 +12,7 @@ const STATEMENTS = [
      ('referral_discount_pct','10',NOW()),
      ('referral_commission_pct','15',NOW()),
      ('cashback_window_days','8',NOW()),
+     ('cashback_window_card','40',NOW()),
      ('cashback_min_payout','20.00',NOW()),
      ('referral_enabled','1',NOW())
    ON CONFLICT (key) DO NOTHING`,

@@ -3,7 +3,7 @@
 const { query } = require('./db');
 const {
   getPriceSingle, getPriceCombo, getDiscountPct, getCommissionPct,
-  getReferralWindowDays, isReferralEnabled,
+  getWindowForMethod, isReferralEnabled,
 } = require('./settings');
 
 function round2(n) { return Math.round((Number(n) + Number.EPSILON) * 100) / 100; }
@@ -62,13 +62,15 @@ async function applyPaidPurchase(purchaseId, paymentMethod) {
     await query("UPDATE leads SET payment_status='paid' WHERE id=$1 AND payment_status<>'paid'", [p.lead_id]);
   }
 
-  // comissão: SOMENTE se pago via Pix e com indicação válida (não autoindicação)
-  if (method === 'pix' && p.referred_by_code) {
+  // comissão: para qualquer método aprovado (Pix, cartão ou boleto), com indicação
+  // válida (não autoindicação). A JANELA de liberação varia pelo método:
+  //   Pix → janela curta (8 dias, CDC); cartão/boleto → janela longa (30–45 dias).
+  if (method && p.referred_by_code) {
     const refOwner = await validRefFor(p.email, p.referred_by_code);
     if (refOwner) {
       const pct = await getCommissionPct();
       const commission = round2(Number(p.amount) * pct / 100);
-      const windowDays = await getReferralWindowDays();
+      const windowDays = await getWindowForMethod(method);
       await query(
         `INSERT INTO affiliate_commissions
            (referrer_code, referrer_email, purchase_id, referred_email, purchase_amount,

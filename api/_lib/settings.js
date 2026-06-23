@@ -51,11 +51,27 @@ async function getCommissionPct() {
   return 15;
 }
 
-// Janela CDC (dias) antes de liberar a comissão → default 8
+// Janela (dias) p/ liberar comissão de Pix → default 8 (CDC)
 async function getReferralWindowDays() {
   const v = parseInt(await getSetting('cashback_window_days', null), 10);
-  if (v >= 0 && v <= 60) return v;
+  if (v >= 0 && v <= 90) return v;
   return 8;
+}
+
+// Janela (dias) p/ liberar comissão de cartão/boleto → default 40 (faixa 30–45)
+async function getReferralWindowCard() {
+  const v = parseInt(await getSetting('cashback_window_card', null), 10);
+  if (v >= 0 && v <= 120) return v;
+  return 40;
+}
+
+// Classifica o método do Mercado Pago e devolve a janela aplicável (em dias).
+// 'pix' → janela curta; qualquer outro método aprovado (cartão/boleto) → janela longa.
+function isCardOrBoleto(method) {
+  return !!method && method !== 'pix';
+}
+async function getWindowForMethod(method) {
+  return method === 'pix' ? getReferralWindowDays() : getReferralWindowCard();
 }
 
 // Valor mínimo de saque → default 20.00
@@ -73,5 +89,6 @@ async function isReferralEnabled() {
 module.exports = {
   getSetting, setSetting, getReportPrice,
   getPriceSingle, getPriceCombo, getDiscountPct, getCommissionPct,
-  getReferralWindowDays, getMinPayout, isReferralEnabled,
+  getReferralWindowDays, getReferralWindowCard, getWindowForMethod, isCardOrBoleto,
+  getMinPayout, isReferralEnabled,
 };
