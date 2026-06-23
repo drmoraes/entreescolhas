@@ -255,6 +255,14 @@ const JORNADAS = {
       EXE: 'Mão na massa',
       EMO: 'Equilíbrio emocional'
     },
+    dimInfo: {
+      SIS: 'O quanto você gosta de planejar, organizar e seguir um método antes de agir. Pessoas fortes aqui transformam bagunça em passo a passo.',
+      AMB: 'Quão à vontade você fica quando não há regras claras e o caminho precisa ser descoberto. Um traço marcante aqui significa coragem para o novo.',
+      VEL: 'Sua rapidez para bater o martelo, mesmo sem ter todas as informações. Forte aqui = você não trava, decide e segue.',
+      REL: 'O quanto você leva em conta sentimentos, relações e o impacto nas pessoas ao decidir. É a sua inteligência com gente.',
+      EXE: 'Sua energia para sair do plano e fazer acontecer de verdade. Forte aqui = você tira ideias do papel.',
+      EMO: 'Sua calma e equilíbrio diante de pressão, conflito ou imprevistos. É o que te mantém firme quando aperta.'
+    },
     questions: [
       {
         context: "Um plano que mudou de repente",
@@ -1375,37 +1383,33 @@ function prevQ() {
 // SCORING — dinâmico, calcula max a partir das perguntas
 // ═══════════════════════════════════════════════════════════
 function calcScores() {
-  // Soma os scores reais
-  const scores = {};
+  // Pontuação bruta por dimensão (garante todas as dimensões da jornada)
+  const raw = {};
+  Object.keys(JORNADA_CFG.dimNames).forEach(d => { raw[d] = 0; });
   answers.forEach((ansIdx, qIdx) => {
     if (ansIdx === null) return;
     const dims = QUESTIONS[qIdx].opts[ansIdx].dims;
-    Object.entries(dims).forEach(([d,v]) => { scores[d] = (scores[d] || 0) + v; });
+    Object.entries(dims).forEach(([d,v]) => { raw[d] = (raw[d] || 0) + v; });
   });
 
-  // Calcula o máximo possível por dimensão
-  const maxPossible = {};
-  QUESTIONS.forEach(q => {
-    const qMaxes = {};
-    q.opts.forEach(opt => {
-      Object.entries(opt.dims).forEach(([d,v]) => {
-        qMaxes[d] = Math.max(qMaxes[d] || 0, v);
-      });
-    });
-    Object.entries(qMaxes).forEach(([d,v]) => {
-      maxPossible[d] = (maxPossible[d] || 0) + v;
-    });
-  });
-
-  // Normaliza para 0-100
+  // Em teste de ESCOLHA FORÇADA é impossível maximizar todas as dimensões ao mesmo
+  // tempo. Por isso usamos um PERFIL RELATIVO: a dimensão mais forte da pessoa lê alto
+  // (~95) e as demais em degradê (piso 58). Resultado positivo e psicometricamente justo.
+  const vals = Object.values(raw);
+  const max = Math.max(...vals), min = Math.min(...vals);
   const norm = {};
-  Object.keys(maxPossible).forEach(d => {
-    norm[d] = maxPossible[d] > 0
-      ? Math.min(100, Math.round(((scores[d] || 0) / maxPossible[d]) * 100))
-      : 0;
+  Object.keys(raw).forEach(d => {
+    norm[d] = (max === min) ? 74 : Math.round(58 + 37 * ((raw[d] - min) / (max - min)));
   });
-
   return norm;
+}
+
+// Classifica a nota num rótulo positivo
+function nivelLabel(v) {
+  if (v >= 85) return 'Traço marcante';
+  if (v >= 72) return 'Bem presente';
+  if (v >= 64) return 'Presente';
+  return 'Em desenvolvimento';
 }
 
 function findArchetype(scores) {
@@ -1455,9 +1459,11 @@ function showSavedFullReport() {
       dimsEl.innerHTML = '';
       Object.entries(report.scores || {}).forEach(([d, v]) => {
         const label = (report.dimNames && report.dimNames[d]) || d;
+        const info = (report.dimInfo && report.dimInfo[d]) || '';
         dimsEl.innerHTML += `<div class="dim-item">
-          <div class="dim-label"><span>${label}</span><span>${v}/100</span></div>
+          <div class="dim-label"><span>${label} · <small style="color:var(--accent)">${nivelLabel(v)}</small></span><span>${v}/100</span></div>
           <div class="dim-bar-bg"><div class="dim-bar" data-width="${v}" style="width:0%"></div></div>
+          ${info ? `<div style="font-size:.82rem;color:var(--text-2);margin-top:6px;line-height:1.5">${info}</div>` : ''}
         </div>`;
       });
 
@@ -1478,13 +1484,16 @@ function showSavedFullReport() {
 
 function renderDimsAndInsights(arch, scores) {
   const dimNames = JORNADA_CFG.dimNames;
+  const dimInfo = JORNADA_CFG.dimInfo || {};
   const dimsEl = document.getElementById('r-dims');
   dimsEl.innerHTML = '';
   Object.entries(scores).forEach(([d, v]) => {
     const label = dimNames[d] || d;
+    const info = dimInfo[d] || '';
     dimsEl.innerHTML += `<div class="dim-item">
-      <div class="dim-label"><span>${label}</span><span>${v}/100</span></div>
+      <div class="dim-label"><span>${label} · <small style="color:var(--accent)">${nivelLabel(v)}</small></span><span>${v}/100</span></div>
       <div class="dim-bar-bg"><div class="dim-bar" data-width="${v}" style="width:0%"></div></div>
+      ${info ? `<div style="font-size:.82rem;color:var(--text-2);margin-top:6px;line-height:1.5">${info}</div>` : ''}
     </div>`;
   });
 
@@ -1530,11 +1539,16 @@ function showResult() {
     localStorage.setItem('ec_test_results', JSON.stringify(saved));
   } catch(e) {}
 
+  const TEST_NOMES = { arquetipo: 'Padrões de Decisão', bussola: 'Bússola Vocacional', 'fit-cultural': 'Fit Cultural', scanner: 'Scanner de Relacionamento' };
   LAST_REPORT = {
     arch: { icon: arch.icon, name: arch.name, mode: arch.mode, desc: arch.desc, insights: arch.insights },
     scores,
     dimNames: JORNADA_CFG.dimNames,
+    dimInfo: JORNADA_CFG.dimInfo || {},
     resultTag: JORNADA_CFG.resultTag,
+    nome: (typeof LEAD_STATE !== 'undefined' && LEAD_STATE && LEAD_STATE.nome) || '',
+    testNome: TEST_NOMES[JORNADA_PARAM] || JORNADA_PARAM,
+    data: new Date().toISOString(),
   };
 
   if (!ACCESS_TOKEN) {

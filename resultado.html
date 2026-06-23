@@ -9,41 +9,57 @@
   :root{--bg:#08080F;--bg-card:#0F0F1E;--bg-raised:#141428;--border:rgba(108,99,255,.15);
     --accent:#6C63FF;--accent-dim:rgba(108,99,255,.12);--text:#F0EFF8;--text-2:#9490C0;--text-3:#5E5A8A;--green:#22C55E}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.55}
-  .wrap{max-width:720px;margin:0 auto;padding:34px 22px 60px}
-  .brand{font-weight:800;font-size:15px;margin-bottom:22px}.brand span{color:var(--accent)}
-  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:26px}
-  h1{font-size:26px;letter-spacing:-.02em;margin:4px 0 2px}
-  .jor{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3)}
-  .mode{color:var(--accent);font-weight:700;margin-top:2px}
-  .desc{color:var(--text-2);margin:12px 0 6px}
-  h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:22px 0 10px}
-  .dim{margin:10px 0}
-  .dim .top{display:flex;justify-content:space-between;font-size:14px}
-  .bar{height:10px;border-radius:6px;background:var(--bg-raised);overflow:hidden;margin-top:5px}
-  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#8b84ff)}
-  .ins{background:var(--bg-raised);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
-  .ins b{color:var(--text)}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:30px 22px 60px}
+  .topbar{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+  .brand{font-weight:800;font-size:15px}.brand span{color:var(--accent)}
   .btn{background:var(--accent);color:#fff;padding:12px 20px;font-size:14px;border:none;border-radius:11px;cursor:pointer;font-weight:700}
-  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-2);padding:11px 18px;border-radius:11px;cursor:pointer;font-weight:600}
-  .muted{color:var(--text-2)}.small{font-size:13px}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-2);padding:11px 18px;border-radius:11px;cursor:pointer;font-weight:600;text-decoration:none;display:inline-block}
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:26px;margin-bottom:16px}
+  .ficha{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:.85rem;color:var(--text-2);margin-bottom:4px}
+  .ficha b{color:var(--text)}
+  .jor{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-top:14px}
+  h1{font-size:28px;letter-spacing:-.02em;margin:4px 0 2px}
+  .mode{color:var(--accent);font-weight:700}
+  .desc{color:var(--text-2);margin:12px 0 0}
+  h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:24px 0 12px}
+  .oque{color:var(--text-2);font-size:.92rem}
+  .dim{margin:14px 0}
+  .dim .top{display:flex;justify-content:space-between;font-size:14px;align-items:baseline}
+  .dim .nivel{font-size:.8rem;color:var(--accent);font-weight:600}
+  .bar{height:10px;border-radius:6px;background:var(--bg-raised);overflow:hidden;margin:5px 0 6px}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#8b84ff)}
+  .dim .info{font-size:.84rem;color:var(--text-3);line-height:1.5}
+  .ins{background:var(--bg-raised);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;display:flex;gap:12px}
+  .ins .ic{font-size:18px}
+  .ins b{color:var(--text)} .ins .tx{color:var(--text-2);font-size:.9rem}
+  .muted{color:var(--text-2)}.small{font-size:.85rem}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
   .spin{display:inline-block;width:18px;height:18px;border:2px solid var(--accent-dim);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite;vertical-align:middle}
   @keyframes s{to{transform:rotate(360deg)}}
-  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
-  @media print{ body{background:#fff;color:#1b1b2a} .card{border:none} .noprint{display:none!important}
-    .bar{background:#eee} .ins{background:#fafafa} .jor,.muted,h2.sec{color:#666} h1,.mode{color:#6C63FF} }
+  @media print{body{background:#fff;color:#111} .card,.ins{border:none;background:#fafafa} .noprint{display:none!important}
+    .jor,.muted,h2.sec,.dim .info{color:#666} h1,.mode,.dim .nivel{color:#6C63FF} .bar{background:#eee}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="brand">Entre<span>Escolhas</span></div>
-  <div class="card" id="card">
-    <div class="muted"><span class="spin"></span> Carregando seu resultado…</div>
+  <div class="topbar">
+    <a href="/" class="brand" style="text-decoration:none">Entre<span>Escolhas</span></a>
+    <div style="flex:1"></div>
+    <a href="/" class="btn-ghost noprint">← Início</a>
   </div>
+  <div id="card" class="card"><div class="muted"><span class="spin"></span> Carregando seu resultado…</div></div>
 </div>
 <script>
-const JLABEL={arquetipo:'Arquétipo',bussola:'Bússola Vocacional','fit-cultural':'Fit Cultural',scanner:'Scanner de Relacionamento'};
+const OQUE = {
+  arquetipo: 'Este é um teste de <b>padrões de decisão</b>: a partir de 20 situações da vida real, ele mostra como você decide, age sob pressão e reage quando o contexto muda. Não existe resultado "certo" ou "errado" — é um retrato do seu jeito, para você se conhecer e crescer.',
+  bussola: 'A <b>Bússola Vocacional</b> revela o que te move e quais caminhos combinam com você, a partir de escolhas do dia a dia.',
+  'fit-cultural': 'O <b>Fit Cultural</b> mostra em que tipo de ambiente e cultura você floresce — para escolher onde trabalhar com mais acerto.',
+  scanner: 'O <b>Scanner de Relacionamento</b> revela como você se conecta, influencia e se relaciona — no trabalho e na vida.'
+};
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function nivel(v){return v>=85?'Traço marcante':v>=72?'Bem presente':v>=64?'Presente':'Em desenvolvimento';}
+function fmtData(s){try{return new Date(s).toLocaleDateString('pt-BR');}catch(e){return '';}}
 const access=new URLSearchParams(location.search).get('access');
 
 async function init(){
@@ -53,29 +69,47 @@ async function init(){
     const r=await fetch('/api/lead_report?access='+encodeURIComponent(access));
     const d=await r.json();
     if(!r.ok){
-      if(r.status===402){card.innerHTML=`<h1>Quase lá!</h1><p class="desc">Seu relatório completo ainda não foi desbloqueado. Verifique o e-mail com o link de pagamento, ou volte ao teste.</p><div class="row noprint"><a class="btn" href="/">Voltar ao site</a></div>`;return;}
+      if(r.status===402){card.innerHTML=`<h1>Quase lá!</h1><p class="desc">Seu relatório completo ainda não foi desbloqueado. Verifique o e-mail com o link, ou volte ao teste.</p><div class="row noprint"><a class="btn" href="/">Voltar ao site</a></div>`;return;}
       throw new Error(d.error||'Não foi possível carregar.');
     }
     render(d);
   }catch(e){card.innerHTML='<p class="muted">'+esc(e.message)+'</p>';}
 }
-
 function render(d){
-  const rep=d.report||{}; const a=rep.arch||{}; const sc=rep.scores||{}; const dn=rep.dimNames||{};
-  const dims=Object.keys(sc).map(k=>`<div class="dim"><div class="top"><span>${esc(dn[k]||k)}</span><b>${sc[k]}/100</b></div><div class="bar"><i style="width:${Math.max(2,Math.min(100,sc[k]))}%"></i></div></div>`).join('');
-  const ins=(a.insights||[]).map(i=>`<div class="ins"><b>${esc(i.title||'')}</b><div class="muted small" style="margin-top:4px">${esc(i.text||'')}</div></div>`).join('');
+  const rep=d.report||{}, a=rep.arch||{}, sc=rep.scores||{}, dn=rep.dimNames||{}, di=rep.dimInfo||{};
+  const dims=Object.keys(sc).sort((x,y)=>sc[y]-sc[x]).map(k=>`
+    <div class="dim">
+      <div class="top"><span>${esc(dn[k]||k)} · <span class="nivel">${nivel(sc[k])}</span></span><b>${sc[k]}/100</b></div>
+      <div class="bar"><i style="width:${Math.max(2,Math.min(100,sc[k]))}%"></i></div>
+      ${di[k]?`<div class="info">${esc(di[k])}</div>`:''}
+    </div>`).join('');
+  const ins=(a.insights||[]).map(i=>`<div class="ins"><span class="ic">${i.icon||'•'}</span><div><b>${esc(i.title||'')}</b><div class="tx">${esc(i.text||'')}</div></div></div>`).join('');
   document.getElementById('card').innerHTML=`
-    <div class="jor">${JLABEL[d.jornada]||d.jornada}</div>
-    <h1>${esc(a.name||'Seu resultado')}</h1>
+    <div class="ficha">
+      ${d.nome?`<span>Candidato: <b>${esc(d.nome)}</b></span>`:''}
+      ${d.email?`<span>E-mail: <b>${esc(d.email)}</b></span>`:''}
+      <span>Data: <b>${fmtData(d.created_at)}</b></span>
+      <span>Teste: <b>${esc(rep.testNome||d.jornada)}</b></span>
+    </div>
+    <div class="jor">${esc(rep.resultTag||'Resultado')}</div>
+    <h1>${a.icon?a.icon+' ':''}${esc(a.name||'Seu resultado')}</h1>
     ${a.mode?`<div class="mode">${esc(a.mode)}</div>`:''}
     ${a.desc?`<p class="desc">${esc(a.desc)}</p>`:''}
-    ${dims?`<h2 class="sec">Suas dimensões</h2>${dims}`:''}
-    ${ins?`<h2 class="sec">Insights</h2>${ins}`:''}
+
+    <h2 class="sec">O que é este teste</h2>
+    <p class="oque">${OQUE[d.jornada]||OQUE.arquetipo}</p>
+
+    ${dims?`<h2 class="sec">Você em 6 traços (o que cada um significa)</h2>${dims}
+      <p class="small muted" style="margin-top:8px">As notas mostram o seu <b>perfil relativo</b>: o traço mais forte aparece em destaque, e os outros em degradê. Todos fazem parte de você — não há nota "ruim".</p>`:''}
+
+    ${ins?`<h2 class="sec">Sua leitura completa</h2>${ins}`:''}
+
     <div class="row noprint">
       <button class="btn" onclick="window.print()">⬇︎ Baixar PDF</button>
-      <a class="btn-ghost" href="/" style="text-decoration:none">Voltar ao site</a>
+      <a class="btn-ghost" href="/vagas.html">Ver vagas para mim</a>
+      <a class="btn-ghost" href="/">Início</a>
     </div>
-    <p class="muted small noprint" style="margin-top:14px">Dica: no diálogo de impressão, escolha “Salvar como PDF”.</p>`;
+    <p class="small muted noprint" style="margin-top:14px">Dica: no diálogo de impressão, escolha "Salvar como PDF".</p>`;
 }
 init();
 </script>

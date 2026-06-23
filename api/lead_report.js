@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
   if (!access) return err(res, 'access obrigatório');
 
   const { rows } = await query(
-    'SELECT jornada, payment_status, report_json FROM leads WHERE access_token = $1',
+    'SELECT nome, email, jornada, payment_status, report_json, created_at FROM leads WHERE access_token = $1',
     [access]
   );
   const lead = rows[0];
@@ -22,6 +22,9 @@ module.exports = async (req, res) => {
   json(res, {
     ok: true,
     jornada: lead.jornada,
+    nome: lead.nome,
+    email: lead.email,
+    created_at: lead.created_at,
     report: lead.report_json, // pg já devolve JSONB como objeto
   });
 };
