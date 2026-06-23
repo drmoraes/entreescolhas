@@ -4,19 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Análise de Padrões de Decisão — Entre Escolhas</title>
-  <meta name="description" content="Comece gratuitamente sua análise situacional de padrões de decisão. Leva cerca de 20 minutos. Relatório completo por R$ 7,97 ao final." />
+  <meta name="description" content="Comece gratuitamente sua análise situacional de padrões de decisão. Leva cerca de 20 minutos. Relatório completo por R$ 9,90 ao final." />
   <meta name="robots" content="noindex, follow" />
   <link rel="canonical" href="https://www.entreescolhas.com.br/teste.html" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.entreescolhas.com.br/teste.html" />
   <meta property="og:site_name" content="Entre Escolhas" />
   <meta property="og:title" content="Análise de Padrões de Decisão — Entre Escolhas" />
-  <meta property="og:description" content="Comece gratuitamente. Relatório completo por R$ 7,97 ao final da análise." />
+  <meta property="og:description" content="Comece gratuitamente. Relatório completo por R$ 9,90 ao final da análise." />
   <meta property="og:image" content="https://www.entreescolhas.com.br/og-image.png" />
   <meta property="og:locale" content="pt_BR" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Análise de Padrões de Decisão — Entre Escolhas" />
-  <meta name="twitter:description" content="Comece gratuitamente. Relatório completo por R$ 7,97 ao final da análise." />
+  <meta name="twitter:description" content="Comece gratuitamente. Relatório completo por R$ 9,90 ao final da análise." />
   <meta name="twitter:image" content="https://www.entreescolhas.com.br/og-image.png" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -200,10 +200,9 @@
         <div style="display:flex;gap:10px;align-items:flex-start;"><span>📩</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Acesso permanente</strong> — recebe por e-mail e reabre quando quiser.</span></div>
       </div>
       <div id="paywall-price-wrap">
-        <div style="font-size:0.85rem;color:var(--text-3);margin-bottom:6px;">Acesso único</div>
-        <div style="font-size:2rem;font-weight:800;line-height:1;margin-bottom:16px;">R$ 7,97</div>
+        <div style="font-size:0.85rem;color:var(--text-3);margin-bottom:6px;">Carregando opções…</div>
       </div>
-      <button class="btn-primary" id="btn-unlock" style="width:100%;" onclick="unlockReport()">
+      <button class="btn-primary" id="btn-unlock" style="width:100%;" onclick="unlockReport('single')">
         Desbloquear meu relatório
       </button>
       <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:14px;font-size:0.78rem;color:var(--text-3);">
@@ -212,6 +211,18 @@
       <p id="paywall-error" style="display:none;color:var(--red, #FF6B6B);font-size:0.85rem;margin-top:14px;"></p>
     </div>
     <p id="paid-note" style="display:none;text-align:center;color:var(--text-3);font-size:0.82rem;margin-bottom:24px;">✓ Relatório completo enviado para o seu e-mail.</p>
+
+    <div id="afiliado-box" style="display:none;background:linear-gradient(135deg,rgba(108,99,255,0.10),rgba(201,168,76,0.06));border:1px solid rgba(108,99,255,0.25);border-radius:20px;padding:26px;max-width:560px;margin:0 auto 28px;">
+      <div style="font-size:1.6rem;margin-bottom:6px;">🎁</div>
+      <h3 style="font-size:1.15rem;margin-bottom:6px;">Indique e ganhe <span class="grad" id="afi-pct">15%</span> via Pix</h3>
+      <p style="color:var(--text-2);font-size:0.9rem;line-height:1.6;margin-bottom:16px;">Compartilhe seu link. Quem entrar por ele ganha <strong id="afi-desc">10%</strong> de desconto, e você recebe a comissão via Pix a cada compra confirmada. <a href="/regulamento-afiliados.html" target="_blank" style="color:var(--accent);">Ver regras</a>.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <input id="afi-link" readonly style="flex:1;min-width:200px;background:var(--bg-raised, #141428);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:12px 14px;font-size:0.85rem;" value="" />
+        <button class="btn-primary" style="white-space:nowrap;" onclick="copiarAfiliado()">Copiar link</button>
+        <a id="afi-wa" class="btn-primary" style="white-space:nowrap;background:#25D366;text-decoration:none;" target="_blank" rel="noopener">WhatsApp</a>
+      </div>
+      <p style="font-size:0.74rem;color:var(--text-3);margin-top:12px;">Comissão liberada após 8 dias da compra (direito de arrependimento) e somente para compras pagas via Pix. Autoindicação não é permitida.</p>
+    </div>
 
     <div class="result-ctas">
       <a href="/banco-de-talentos.html" class="btn-primary">
@@ -565,7 +576,7 @@ const JORNADAS = {
   //            IMP=impacto coletivo, COL=colaboração, SEG=segurança
   // ─────────────────────────────────────────────────────────
   'fit-cultural': {
-    badge: 'Início gratuito • Relatório completo R$ 7,97',
+    badge: 'Início gratuito • Relatório completo R$ 9,90',
     title: 'Descubra seu<br/><span class="grad serif">Perfil de Fit Cultural</span>',
     desc: '10 cenários profissionais. Cada escolha revela o tipo de ambiente, cultura e dinâmica onde você performa naturalmente melhor.',
     resultTag: 'Perfil de Fit Cultural',
@@ -770,7 +781,7 @@ const JORNADAS = {
   //            MED=mediação, NET=rede/presença, INT=profundidade
   // ─────────────────────────────────────────────────────────
   'scanner': {
-    badge: 'Início gratuito • Relatório completo R$ 7,97',
+    badge: 'Início gratuito • Relatório completo R$ 9,90',
     title: 'Seu padrão de<br/><span class="grad serif">Relacionamento Profissional</span>',
     desc: '10 cenários interpessoais. Cada escolha revela como você se conecta, influencia e reage ao conflito em contextos profissionais.',
     resultTag: 'Padrão de Relacionamento Dominante',
@@ -976,7 +987,7 @@ const JORNADAS = {
   //            REC=reconhecimento, AUT=autonomia
   // ─────────────────────────────────────────────────────────
   'bussola': {
-    badge: 'Início gratuito • Relatório completo R$ 7,97',
+    badge: 'Início gratuito • Relatório completo R$ 9,90',
     title: 'Descubra sua<br/><span class="grad serif">Direção Vocacional</span>',
     desc: '10 cenários de escolha profissional. Cada resposta revela o que realmente move suas decisões de carreira — propósito, impacto, segurança, criação ou reconhecimento.',
     resultTag: 'Vetor Vocacional Dominante',
@@ -1271,6 +1282,83 @@ let LEAD_STATE = null;
 function aplicarModoGratis() {
   const wrap = document.getElementById('paywall-price-wrap'); if (wrap) wrap.style.display = 'none';
   const btn = document.getElementById('btn-unlock'); if (btn) btn.textContent = 'Ver meu relatório grátis';
+  const off = document.getElementById('oferta'); if (off) off.style.display = 'none';
+}
+
+function brl(v) { return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ','); }
+
+function precoDoKind(kind) {
+  const s = LEAD_STATE || {};
+  if (kind === 'combo') return s.preco_combo || s.preco_combo_base || 19.90;
+  return s.preco_single || s.preco || s.preco_single_base || 9.90;
+}
+
+// Monta os dois cartões de oferta (combo em destaque) com preços vindos do servidor.
+function ofertaHtml() {
+  const s = LEAD_STATE || {};
+  const single = precoDoKind('single');
+  const combo = precoDoKind('combo');
+  const desc = s.desconto_indicacao;
+  const baseS = s.preco_single_base || single;
+  const baseC = s.preco_combo_base || combo;
+  const economia = Math.max(0, (baseS * 4) - combo); // 4 jornadas hoje
+  const riscoS = desc && baseS > single ? `<span style="text-decoration:line-through;color:var(--text-3);font-size:0.85rem;margin-right:6px;">${brl(baseS)}</span>` : '';
+  const riscoC = desc && baseC > combo ? `<span style="text-decoration:line-through;color:var(--text-3);font-size:0.85rem;margin-right:6px;">${brl(baseC)}</span>` : '';
+  const tagDesc = desc ? `<div style="font-size:0.72rem;color:#22C55E;font-weight:600;margin-top:4px;">✓ Desconto de indicação aplicado</div>` : '';
+  return `
+    <div style="display:grid;gap:10px;text-align:left;margin-bottom:16px;">
+      <button onclick="unlockReport('combo')" style="all:unset;cursor:pointer;border:1.5px solid var(--accent);background:rgba(108,99,255,0.10);border-radius:14px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <div>
+          <div style="font-weight:700;">Todos os testes <span style="font-size:0.68rem;background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px;margin-left:6px;vertical-align:middle;">MELHOR ESCOLHA</span></div>
+          <div style="font-size:0.8rem;color:var(--text-2);margin-top:3px;">Acesso completo a todas as jornadas${economia > 0 ? ' — economize ' + brl(economia) : ''}</div>
+        </div>
+        <div style="text-align:right;white-space:nowrap;">${riscoC}<span style="font-size:1.25rem;font-weight:800;">${brl(combo)}</span></div>
+      </button>
+      <button onclick="unlockReport('single')" style="all:unset;cursor:pointer;border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <div>
+          <div style="font-weight:700;">Só este teste</div>
+          <div style="font-size:0.8rem;color:var(--text-2);margin-top:3px;">Relatório completo desta jornada</div>
+        </div>
+        <div style="text-align:right;white-space:nowrap;">${riscoS}<span style="font-size:1.25rem;font-weight:800;">${brl(single)}</span></div>
+      </button>
+    </div>
+    ${tagDesc}`;
+}
+
+// Renderiza a oferta no paywall do relatório (substitui o preço fixo).
+function renderOferta() {
+  if (LEAD_STATE && LEAD_STATE.free_mode) return;
+  const wrap = document.getElementById('paywall-price-wrap');
+  const btn = document.getElementById('btn-unlock');
+  if (wrap) wrap.innerHTML = ofertaHtml();
+  if (btn) btn.style.display = 'none'; // a escolha agora é feita nos cartões
+}
+
+// Painel "Indique e ganhe" — mostrado ao usuário com relatório pago.
+function mostrarAfiliado() {
+  if (!ACCESS_TOKEN) return;
+  const box = document.getElementById('afiliado-box');
+  if (!box) return;
+  fetch('/api/b2b?fn=referral&op=code&access=' + encodeURIComponent(ACCESS_TOKEN))
+    .then(r => r.json())
+    .then(d => {
+      if (!d || !d.ok || !d.link) return;
+      const inp = document.getElementById('afi-link'); if (inp) inp.value = d.link;
+      const pct = document.getElementById('afi-pct'); if (pct && d.commission_pct != null) pct.textContent = d.commission_pct + '%';
+      const desc = document.getElementById('afi-desc'); if (desc && d.discount_pct != null) desc.textContent = d.discount_pct + '%';
+      const wa = document.getElementById('afi-wa');
+      if (wa) wa.href = 'https://wa.me/?text=' + encodeURIComponent('Fiz um teste rápido de autoconhecimento no Entre Escolhas e curti. Usa meu link que você ganha desconto: ' + d.link);
+      box.style.display = 'block';
+    })
+    .catch(() => {});
+}
+
+function copiarAfiliado() {
+  const inp = document.getElementById('afi-link');
+  if (!inp) return;
+  navigator.clipboard.writeText(inp.value).then(() => {
+    const b = event && event.target; if (b) { const t = b.textContent; b.textContent = 'Copiado!'; setTimeout(() => b.textContent = t, 1800); }
+  });
 }
 
 // Já concluiu o teste mas ainda não pagou — mostra a oferta sem reiniciar o teste.
@@ -1283,7 +1371,9 @@ function showAlreadyCompleted(data) {
     <div class="intro-badge"><span class="intro-badge-dot"></span><span>Teste concluído</span></div>
     <h1>Você já concluiu<br/><span class="grad serif">este teste</span></h1>
     <p>Seu resultado está salvo. ${data.free_mode ? 'Veja o relatório completo gratuitamente' : 'Desbloqueie o relatório completo para ver tudo'}${podeRefazer ? ', ou refaça o teste se quiser' : ''}.</p>
-    <button class="btn-primary" style="width:100%;" onclick="unlockReport()">${data.free_mode ? 'Ver meu relatório grátis' : 'Desbloquear relatório completo'}</button>
+    ${data.free_mode
+      ? `<button class="btn-primary" style="width:100%;" onclick="unlockReport()">Ver meu relatório grátis</button>`
+      : ofertaHtml()}
     ${podeRefazer ? '<button class="btn-primary" style="width:100%;margin-top:10px;background:transparent;border:1px solid var(--border);color:var(--text-2);" onclick="startTest()">Refazer o teste</button>' : ''}
   `;
 }
@@ -1454,6 +1544,7 @@ function showSavedFullReport() {
       document.getElementById('r-insights-section').style.display = 'block';
       document.getElementById('paywall-box').style.display = 'none';
       document.getElementById('paid-note').style.display = 'block';
+      mostrarAfiliado();
 
       const dimsEl = document.getElementById('r-dims');
       dimsEl.innerHTML = '';
@@ -1554,6 +1645,7 @@ function showResult() {
   if (!ACCESS_TOKEN) {
     // Não deveria acontecer (gate já redireciona), mas por segurança mostra o paywall sem desbloquear
     document.getElementById('paywall-box').style.display = 'block';
+    renderOferta();
     return;
   }
 
@@ -1568,13 +1660,16 @@ function showResult() {
         document.getElementById('r-dims-section').style.display = 'block';
         document.getElementById('r-insights-section').style.display = 'block';
         document.getElementById('paid-note').style.display = 'block';
+        mostrarAfiliado();
         renderDimsAndInsights(arch, scores);
       } else {
         document.getElementById('paywall-box').style.display = 'block';
+        renderOferta();
       }
     })
     .catch(() => {
       document.getElementById('paywall-box').style.display = 'block';
+      renderOferta();
     });
 }
 
@@ -1597,15 +1692,19 @@ function freeUnlock() {
   });
 }
 
+// Qual produto está sendo comprado: 'single' (este teste) ou 'combo' (todos).
+let CHECKOUT_KIND = 'single';
+
 // Checkout TRANSPARENTE (Payment Brick): cartão + Pix dentro de um modal no nosso domínio.
-async function unlockReport() {
+async function unlockReport(kind) {
+  CHECKOUT_KIND = kind === 'combo' ? 'combo' : 'single';
   if (typeof LEAD_STATE !== 'undefined' && LEAD_STATE && LEAD_STATE.free_mode) { return freeUnlock(); }
   const errEl = document.getElementById('paywall-error');
   if (errEl) errEl.style.display = 'none';
-  if (typeof trackEvent === 'function') { trackEvent('start_checkout', { jornada: JORNADA_PARAM }); }
+  if (typeof trackEvent === 'function') { trackEvent('start_checkout', { jornada: JORNADA_PARAM, kind: CHECKOUT_KIND }); }
 
   const pub = (typeof LEAD_STATE !== 'undefined' && LEAD_STATE && LEAD_STATE.mp_public_key) || null;
-  const amount = (typeof LEAD_STATE !== 'undefined' && LEAD_STATE && LEAD_STATE.preco) || 7.97;
+  const amount = precoDoKind(CHECKOUT_KIND);
   if (!pub || typeof MercadoPago === 'undefined') { return unlockReportFallback(); } // sem Brick → popup
 
   document.getElementById('brickModal').style.display = 'flex';
@@ -1628,7 +1727,7 @@ async function unlockReport() {
         onError: (e) => { console.error('brick', e); },
         onSubmit: ({ formData }) => fetch('/api/b2b?fn=mp_process_payment', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(Object.assign({ access: ACCESS_TOKEN }, formData)),
+          body: JSON.stringify(Object.assign({ access: ACCESS_TOKEN, kind: CHECKOUT_KIND }, formData)),
         }).then(r => r.json()).then(d => {
           if (d.status === 'approved' || d.already_paid) { fecharBrick(); window.location.reload(); return; }
           if (d.pix_qr || d.pix_qr_base64) { mostrarPix(d); iniciarPollingPagamento(); return; }
@@ -1676,7 +1775,7 @@ function unlockReportFallback() {
   if (errEl) errEl.style.display = 'none';
   if (btn) { btn.disabled = true; btn.textContent = 'Abrindo pagamento...'; }
   const pop = window.open('about:blank', 'mp_checkout', 'width=480,height=760');
-  fetch('/api/mp_create_preference', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ access: ACCESS_TOKEN }) })
+  fetch('/api/mp_create_preference', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ access: ACCESS_TOKEN, kind: CHECKOUT_KIND }) })
     .then(res => res.json().catch(() => ({})).then(data => ({ ok: res.ok, data })))
     .then(({ ok, data }) => {
       if (!ok) throw new Error(data.error || 'Não foi possível iniciar o pagamento.');
@@ -1689,6 +1788,7 @@ function unlockReportFallback() {
     .catch(err => { if (pop) { try { pop.close(); } catch (e) {} } if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; } if (btn) { btn.disabled = false; btn.textContent = 'Desbloquear relatório completo'; } });
 }
 </script>
+<script src="/ref.js" defer></script>
 <script src="/analytics.js"></script>
 <script>
   if (typeof trackEvent === 'function') { trackEvent('view_test_intro', { jornada: JORNADA_PARAM }); }

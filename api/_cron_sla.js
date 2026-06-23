@@ -54,7 +54,18 @@ module.exports = async (req, res) => {
     );
     hidden = h.rowCount;
 
-    return json(res, { ok: true, refunded_sla: refunded, cold_demoted: hidden });
+    // ── 3) Liberar comissões de afiliado cuja janela CDC (8 dias) venceu sem estorno ──
+    let released = 0;
+    try {
+      const rel = await query(
+        `UPDATE affiliate_commissions
+            SET status='released', released_at=NOW()
+          WHERE status='pending' AND release_at <= NOW()
+        RETURNING id`);
+      released = rel.rowCount;
+    } catch (e) { /* tabela pode não existir antes da migração */ }
+
+    return json(res, { ok: true, refunded_sla: refunded, cold_demoted: hidden, commissions_released: released });
   } catch (e) {
     return err(res, 'cron falhou: ' + e.message, 500);
   } finally {

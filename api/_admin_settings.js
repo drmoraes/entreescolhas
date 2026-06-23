@@ -9,29 +9,46 @@ module.exports = async (req, res) => {
   if (!(await requireApiKey(req, res))) return;
   const op = String((req.query && req.query.op) || 'get');
 
-  if (op === 'get') {
-    const price = await getSetting('report_price', String(process.env.MP_REPORT_PRICE || '7.97'));
+  async function snapshot() {
+    const single = await getSetting('price_single', await getSetting('report_price', String(process.env.MP_REPORT_PRICE || '9.90')));
+    const combo = await getSetting('price_combo', '19.90');
     const free = await getSetting('free_mode', '0');
-    return json(res, { ok: true, report_price: Number(price), free_mode: free === '1' });
+    return {
+      ok: true,
+      report_price: Number(single),     // compat
+      price_single: Number(single),
+      price_combo: Number(combo),
+      free_mode: free === '1',
+    };
   }
+
+  if (op === 'get') return json(res, await snapshot());
 
   if (op === 'set') {
     if (req.method !== 'POST') return err(res, 'Use POST', 405);
     if (!adminCan((req.actor || {}).role, 'coupons')) return err(res, 'Seu perfil não pode alterar as configurações.', 403);
     const body = getJsonBody(req) || {};
-    if (body.report_price !== undefined) {
-      const v = Number(body.report_price);
-      if (!(v > 0) || v > 999) return err(res, 'Valor inválido (use algo entre 0,01 e 999).');
-      await setSetting('report_price', v.toFixed(2));
-      await logAdmin(req, 'set_report_price', `R$ ${v.toFixed(2)}`);
+
+    // price_single (aceita também o legado report_price)
+    const singleIn = body.price_single !== undefined ? body.price_single : body.report_price;
+    if (singleIn !== undefined) {
+      const v = Number(singleIn);
+      if (!(v > 0) || v > 999) return err(res, 'Preço avulso inválido (0,01 a 999).');
+      await setSetting('price_single', v.toFixed(2));
+      await setSetting('report_price', v.toFixed(2)); // mantém legado em sincronia
+      await logAdmin(req, 'set_price_single', `R$ ${v.toFixed(2)}`);
+    }
+    if (body.price_combo !== undefined) {
+      const v = Number(body.price_combo);
+      if (!(v > 0) || v > 999) return err(res, 'Preço do combo inválido (0,01 a 999).');
+      await setSetting('price_combo', v.toFixed(2));
+      await logAdmin(req, 'set_price_combo', `R$ ${v.toFixed(2)}`);
     }
     if (body.free_mode !== undefined) {
       await setSetting('free_mode', body.free_mode ? '1' : '0');
       await logAdmin(req, 'set_free_mode', body.free_mode ? 'ON' : 'OFF');
     }
-    const price = await getSetting('report_price', String(process.env.MP_REPORT_PRICE || '7.97'));
-    const free = await getSetting('free_mode', '0');
-    return json(res, { ok: true, report_price: Number(price), free_mode: free === '1' });
+    return json(res, await snapshot());
   }
 
   return err(res, 'op inválida (use get|set)');

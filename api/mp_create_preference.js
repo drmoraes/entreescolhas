@@ -2,7 +2,13 @@
 // devolve o init_point para o front-end redirecionar o usuário.
 const { setCors, json, err, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
-const { getReportPrice } = require('./_lib/settings');
+const { getPriceSingle } = require('./_lib/settings');
+const { computeAmount, createPurchase } = require('./_lib/referral-core');
+
+async function safeRefCode(leadId) {
+  try { const r = await query('SELECT referred_by_code FROM leads WHERE id=$1', [leadId]); return (r.rows[0] || {}).referred_by_code || null; }
+  catch (e) { return null; }
+}
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
@@ -13,6 +19,7 @@ module.exports = async (req, res) => {
 
   const access = String(data.access ?? '').trim();
   if (!access) return err(res, 'access obrigatório');
+  const kind = data.kind === 'combo' ? 'combo' : 'single';
 
   const { rows } = await query(
     `SELECT id, email, jornada, confirmed_at, payment_status, report_json
@@ -25,8 +32,30 @@ module.exports = async (req, res) => {
   if (!lead.confirmed_at) return err(res, 'E-mail ainda não confirmado', 403);
   if (!lead.report_json) return err(res, 'Conclua o teste antes de desbloquear o relatório', 403);
 
-  if (lead.payment_status === 'paid') {
+  if (kind === 'single' && lead.payment_status === 'paid') {
     return json(res, { ok: true, already_paid: true });
+  }
+  if (kind === 'combo') {
+    try {
+      const c = await query("SELECT 1 FROM purchases WHERE email=$1 AND kind='combo' AND status='paid' LIMIT 1", [lead.email]);
+      if (c.rows[0]) return json(res, { ok: true, already_paid: true });
+    } catch (e) { /* tabela ainda não migrada */ }
+  }
+
+  // preço/desconto/pedido no servidor; fallback legado se ainda não migrado
+  let amount, purchase = null;
+  try {
+    const refCode = await safeRefCode(lead.id);
+    const c = await computeAmount(kind, lead.email, refCode);
+    amount = c.amount;
+    purchase = await createPurchase({
+      email: lead.email, leadId: lead.id, kind, jornada: lead.jornada,
+      amount, discount: c.discount, refCode, paymentMethod: null,
+    });
+  } catch (e) {
+    console.error('mp_create_preference: fallback legado —', e.message);
+    amount = await getPriceSingle();
+    purchase = null;
   }
 
   const base = process.env.APP_BASE_URL;
@@ -35,13 +64,13 @@ module.exports = async (req, res) => {
 
   const payload = {
     items: [{
-      title: 'Relatório completo — Entre Escolhas',
+      title: kind === 'combo' ? 'Combo — todos os testes — Entre Escolhas' : 'Relatório completo — Entre Escolhas',
       quantity: 1,
       currency_id: 'BRL',
-      unit_price: await getReportPrice(),
+      unit_price: amount,
     }],
     payer: { email: lead.email },
-    external_reference: access,
+    external_reference: purchase ? `p${purchase.id}:${access}` : access,
     statement_descriptor: 'ENTREESCOLHAS',
     back_urls: {
       success: backBase,

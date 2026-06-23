@@ -33,6 +33,17 @@ module.exports = async (req, res) => {
 
   const confirmToken = genToken();
 
+  // Indicação (programa de afiliados): valida o código e veta autoindicação.
+  // Tudo best-effort — nunca pode quebrar o cadastro (ex.: antes da migração).
+  let refCode = String(data.ref ?? '').trim().toUpperCase().slice(0, 20) || null;
+  if (refCode) {
+    try {
+      const { rows: rc } = await query(
+        'SELECT owner_email FROM referral_codes WHERE code = $1', [refCode]);
+      if (!rc[0] || rc[0].owner_email === email) refCode = null; // inexistente ou autoindicação
+    } catch (e) { refCode = null; /* tabela pode não existir ainda */ }
+  }
+
   const { rows } = await query(
     'SELECT id, access_token, confirmed_at FROM leads WHERE email = $1 AND jornada = $2',
     [email, jornada]
@@ -53,6 +64,16 @@ module.exports = async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6)`,
       [nome, email, jornada, confirmToken, accessToken, ip]
     );
+  }
+
+  // Atribuição da indicação (first-touch) — separada e tolerante a falhas.
+  if (refCode) {
+    try {
+      await query(
+        `UPDATE leads SET referred_by_code = $1
+           WHERE email = $2 AND jornada = $3 AND referred_by_code IS NULL`,
+        [refCode, email, jornada]);
+    } catch (e) { /* coluna pode não existir antes da migração */ }
   }
 
   const link = `${process.env.APP_BASE_URL}/api/lead_confirm?token=${confirmToken}`;

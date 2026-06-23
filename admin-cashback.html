@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin · Afiliados — Entre Escolhas</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.svg" />
+<style>
+  :root{--bg:#08080F;--bg-card:#0F0F1E;--bg-raised:#141428;--border:rgba(108,99,255,.15);
+    --accent:#6C63FF;--accent-dim:rgba(108,99,255,.12);--text:#F0EFF8;--text-2:#9490C0;--text-3:#5E5A8A;
+    --green:#22C55E;--gold:#C9A84C;--red:#EF4444}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:14px}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;font-weight:600}
+  input,select{font-family:inherit;background:var(--bg-raised);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 12px;font-size:13px;width:100%}
+  label.fl{display:block;font-size:12px;color:var(--text-2);margin-bottom:4px}
+  .btn{background:var(--accent);color:#fff;padding:9px 16px;font-size:13px}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-2);padding:8px 13px;font-size:13px}
+  .btn-soft{background:var(--accent-dim);color:#cfcaff;padding:8px 13px;font-size:13px}
+  .muted{color:var(--text-2)}.small{font-size:12px}.t3{color:var(--text-3)}
+  .green{color:var(--green)}.red{color:var(--red)}.accent{color:var(--accent)}.gold{color:var(--gold)}
+  header{display:flex;align-items:center;gap:14px;padding:13px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(8,8,15,.92);backdrop-filter:blur(10px);z-index:5}
+  .brand{font-weight:800}.brand span{color:var(--accent)}
+  main{max-width:1100px;margin:0 auto;padding:24px}
+  .gate{max-width:380px;margin:80px auto;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:30px}
+  h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:22px 0 12px;font-weight:700}
+  table{width:100%;border-collapse:collapse;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-size:13px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border)}
+  th{color:var(--text-3);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  tr:last-child td{border:none}
+  .tag{font-size:11px;padding:2px 9px;border-radius:20px;border:1px solid var(--border);white-space:nowrap}
+  .tag.g{color:#86efac;border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)}
+  .tag.r{color:#fca5a5;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+  .tag.b{color:#7dd3fc;border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.08)}
+  .tag.y{color:#fde68a;border-color:rgba(201,168,76,.3);background:rgba(201,168,76,.08)}
+  .split{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px}
+  .kpi .v{font-size:1.5rem;font-weight:800}.kpi .l{font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media(max-width:720px){.grid4{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="brand">Entre<span>Escolhas</span> · Admin · Afiliados</div>
+  <div style="flex:1"></div>
+  <a class="btn-ghost" href="/admin-cupons.html" style="text-decoration:none">Cupons</a>
+  <button class="btn" id="refreshBtn" onclick="loadAll()" style="display:none">Atualizar</button>
+</header>
+
+<div id="gate" class="gate">
+  <h2 style="font-size:17px;margin-bottom:4px">Afiliados & Cashback</h2>
+  <p class="muted small" style="margin-bottom:16px">Informe a ADMIN_API_KEY para acessar.</p>
+  <input id="key" type="password" placeholder="ADMIN_API_KEY" onkeydown="if(event.key==='Enter')loadAll()" />
+  <button class="btn" style="width:100%;margin-top:12px" onclick="loadAll()">Entrar</button>
+  <div id="gErr" class="red small" style="margin-top:10px"></div>
+</div>
+
+<main id="dash" style="display:none"></main>
+
+<script>
+const $=id=>document.getElementById(id);let KEY='';
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function api(path,opts={}){return fetch('/api/b2b?'+path,{...opts,headers:{'X-Api-Key':KEY,...(opts.headers||{})}}).then(async r=>{if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||('Erro '+r.status));}return r.json();});}
+function brl(v){return 'R$ '+Number(v||0).toFixed(2).replace('.',',');}
+function fmtD(s){return s?new Date(s).toLocaleDateString('pt-BR'):'—';}
+function stTag(s){return s==='paid'?'<span class="tag g">pago</span>':s==='released'?'<span class="tag b">liberado</span>':s==='pending'?'<span class="tag y">pendente</span>':'<span class="tag r">cancelado</span>';}
+
+let CFG={}, LIST={}, QUEUE={};
+
+async function loadAll(){
+  KEY=KEY||$('key').value.trim();
+  if(!KEY){$('gErr').textContent='Informe a chave';return;}
+  $('gErr').textContent='';
+  try{
+    CFG=await api('fn=admin_cashback&op=settings_get');
+    LIST=await api('fn=admin_cashback&op=list');
+    QUEUE=await api('fn=admin_cashback&op=queue');
+    $('gate').style.display='none';$('dash').style.display='';$('refreshBtn').style.display='';
+    render();
+  }catch(e){$('gErr').textContent=e.message;}
+}
+
+function render(){
+  const t=LIST.totals||{};
+  $('dash').innerHTML=`
+    <div class="grid4">
+      <div class="kpi"><div class="l">Pendente</div><div class="v gold">${brl(t.pending)}</div></div>
+      <div class="kpi"><div class="l">Liberado (a pagar)</div><div class="v accent">${brl(t.released)}</div></div>
+      <div class="kpi"><div class="l">Pago</div><div class="v green">${brl(t.paid)}</div></div>
+      <div class="kpi"><div class="l">Cancelado</div><div class="v red">${brl(t.cancelled)}</div></div>
+    </div>
+
+    <h2 class="sec">Parâmetros do programa</h2>
+    <div class="card">
+      <div class="grid4">
+        <div><label class="fl">Desconto do indicado (%)</label><input id="c_disc" type="number" step="1" value="${CFG.discount_pct}"></div>
+        <div><label class="fl">Comissão do indicador (%)</label><input id="c_comm" type="number" step="1" value="${CFG.commission_pct}"></div>
+        <div><label class="fl">Janela CDC (dias)</label><input id="c_win" type="number" step="1" value="${CFG.window_days}"></div>
+        <div><label class="fl">Mínimo de saque (R$)</label><input id="c_min" type="number" step="0.01" value="${CFG.min_payout}"></div>
+      </div>
+      <div class="split" style="margin-top:12px">
+        <label class="split small"><input type="checkbox" id="c_on" style="width:auto" ${CFG.enabled?'checked':''}> Programa ativo</label>
+        <button class="btn" onclick="salvarCfg()">Salvar parâmetros</button>
+        <button class="btn-ghost" onclick="liberarAgora()">Liberar vencidos agora</button>
+        <button class="btn-ghost" onclick="migrar()">Instalar/migrar tabelas (1ª vez)</button>
+        <span id="cfgMsg" class="small"></span>
+      </div>
+      <p class="muted small" style="margin-top:8px">Comissão só é gerada em compras pagas via Pix. Liberação automática ocorre no cron diário após a janela.</p>
+    </div>
+
+    <h2 class="sec">Fila de pagamento Pix (liberado, não pago)</h2>
+    <table><thead><tr><th>Afiliado</th><th>CPF</th><th>Chave Pix</th><th>Itens</th><th>Total</th><th>Ação</th></tr></thead><tbody>
+      ${(QUEUE.data||[]).map(q=>`<tr>
+        <td><b>${esc(q.owner_name||q.referrer_email)}</b><div class="t3 small">${esc(q.referrer_email)} · ${esc(q.referrer_code)}</div></td>
+        <td class="small">${esc(q.cpf||'—')}</td>
+        <td class="small">${q.pix_key?esc(q.pix_key)+' <span class="t3">('+esc(q.pix_key_type||'')+')</span>':'<span class="red">sem chave</span>'}</td>
+        <td>${q.itens}</td>
+        <td class="accent"><b>${brl(q.total)}</b></td>
+        <td>${q.tem_pix?`<button class="btn-soft" onclick="marcarPago('${esc(q.referrer_email)}',${q.total})">Marcar pago</button>`:'<span class="t3 small">aguardando dados Pix</span>'}</td>
+      </tr>`).join('')||'<tr><td colspan="6" class="muted">Nada a pagar no momento</td></tr>'}
+    </tbody></table>
+    <p class="muted small" style="margin-top:6px">Mínimo para saque: ${brl(QUEUE.min_payout)}. Pague pelo seu banco/MP e clique em “Marcar pago” para registrar.</p>
+
+    <h2 class="sec">Indicações & comissões (${(LIST.data||[]).length})</h2>
+    <table><thead><tr><th>Indicador</th><th>Indicado</th><th>Compra</th><th>Pix?</th><th>%</th><th>Comissão</th><th>Status</th><th>Libera em</th></tr></thead><tbody>
+      ${(LIST.data||[]).map(c=>`<tr>
+        <td class="small">${esc(c.referrer_email)}<div class="t3">${esc(c.referrer_code)}</div></td>
+        <td class="small">${esc(c.referred_email)}</td>
+        <td class="small">${c.kind==='combo'?'Combo':'Avulso'} · ${brl(c.purchase_amount)}</td>
+        <td class="small">${c.payment_method==='pix'?'<span class="tag g">Pix</span>':esc(c.payment_method||'—')}</td>
+        <td>${Number(c.commission_pct)}%</td>
+        <td class="accent">${brl(c.commission_amount)}</td>
+        <td>${stTag(c.status)}</td>
+        <td class="small t3">${fmtD(c.release_at)}</td>
+      </tr>`).join('')||'<tr><td colspan="8" class="muted">Nenhuma indicação ainda</td></tr>'}
+    </tbody></table>`;
+}
+
+async function salvarCfg(){
+  const body={discount_pct:$('c_disc').value,commission_pct:$('c_comm').value,window_days:$('c_win').value,min_payout:$('c_min').value,enabled:$('c_on').checked};
+  const m=$('cfgMsg');m.textContent='Salvando…';m.className='small muted';
+  try{ await api('fn=admin_cashback&op=settings_set',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    m.textContent='Salvo ✓';m.className='small green';await loadAll();}catch(e){m.textContent=e.message;m.className='small red';}
+}
+async function liberarAgora(){
+  try{ const d=await api('fn=admin_cashback&op=release_now',{method:'POST'}); alert('Liberadas: '+d.released); await loadAll();}catch(e){alert(e.message);}
+}
+async function migrar(){
+  if(!confirm('Cria/atualiza as tabelas do Programa de Afiliados no banco. Idempotente. Continuar?'))return;
+  try{ const d=await api('fn=admin_migrate_referral'); alert('Migração OK ('+d.applied+' comandos).'); await loadAll();}catch(e){alert(e.message);}
+}
+async function marcarPago(email,total){
+  if(!confirm('Confirmar pagamento de '+brl(total)+' para '+email+'?\\nFaça o Pix antes de confirmar.'))return;
+  const tx=prompt('ID/observação do comprovante (opcional):','')||'';
+  try{ const d=await api('fn=admin_cashback&op=mark_paid',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({owner_email:email,tx_note:tx})});
+    alert('Pago: '+brl(d.amount)+' ('+d.itens+' itens)'); await loadAll();}catch(e){alert(e.message);}
+}
+(function(){try{
+  if(window.self===window.top){location.replace('/painel.html#afiliados');return;}
+  var h=document.querySelector("header");if(h)h.style.display="none";
+  var k=localStorage.getItem('ee_admin_key')||sessionStorage.getItem('ee_admin_key');
+  if(k){KEY=k;loadAll();}
+}catch(e){}})();
+</script>
+</body>
+</html>

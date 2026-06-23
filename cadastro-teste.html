@@ -100,10 +100,11 @@ function setError(msg) {
 }
 
 async function registerLead(nome, email) {
+  const ref = (typeof window.eeRef === 'function' ? window.eeRef() : null) || null;
   const res = await fetch('/api/lead_register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nome, email, jornada }),
+    body: JSON.stringify({ nome, email, jornada, ref }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || 'Não foi possível enviar o e-mail. Tente novamente.');
@@ -141,6 +142,7 @@ document.getElementById('resend-link').addEventListener('click', (e) => {
   submitBtn.textContent = 'Quero começar';
 });
 </script>
+<script src="/ref.js" defer></script>
 <script src="/analytics.js"></script>
 </body>
 </html>
