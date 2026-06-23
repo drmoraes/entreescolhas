@@ -34,6 +34,7 @@ const handlers = {
   admin_settings:     require('./_admin_settings'),
   admin_cashback:     require('./_admin_cashback'),
   admin_migrate_referral: require('./_admin_migrate_referral'),
+  admin_migrate_rh:   require('./_admin_migrate_rh'),
   referral:           require('./_referral'),
   lead_free_unlock:   require('./_lead_free_unlock'),
   stats_public:       require('./_stats_public'),

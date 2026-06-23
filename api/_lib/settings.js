@@ -86,9 +86,21 @@ async function isReferralEnabled() {
   return (await getSetting('referral_enabled', '1')) === '1';
 }
 
+// Custo de crédito (B2B) por categoria de candidato. Defaults pedidos pelo cliente.
+async function getCreditCosts() {
+  const num = async (k, def) => { const v = parseInt(await getSetting(k, null), 10); return (v >= 0 && v <= 999) ? v : def; };
+  return {
+    operacional: await num('credit_cost_operacional', 1),
+    analista: await num('credit_cost_analista', 4),
+    especialista: await num('credit_cost_especialista', 4),
+    gerencial: await num('credit_cost_gerencial', 6),
+    pcd: await num('credit_cost_pcd', 8),
+  };
+}
+
 module.exports = {
   getSetting, setSetting, getReportPrice,
   getPriceSingle, getPriceCombo, getDiscountPct, getCommissionPct,
   getReferralWindowDays, getReferralWindowCard, getWindowForMethod, isCardOrBoleto,
-  getMinPayout, isReferralEnabled,
+  getMinPayout, isReferralEnabled, getCreditCosts,
 };

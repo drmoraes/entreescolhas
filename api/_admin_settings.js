@@ -19,8 +19,18 @@ module.exports = async (req, res) => {
       price_single: Number(single),
       price_combo: Number(combo),
       free_mode: free === '1',
+      // custos de crédito (B2B) por categoria de candidato
+      credit_cost: {
+        operacional: Number(await getSetting('credit_cost_operacional', '1')),
+        analista: Number(await getSetting('credit_cost_analista', '4')),
+        especialista: Number(await getSetting('credit_cost_especialista', '4')),
+        gerencial: Number(await getSetting('credit_cost_gerencial', '6')),
+        pcd: Number(await getSetting('credit_cost_pcd', '8')),
+      },
     };
   }
+
+  const CC_KEYS = { operacional: 'credit_cost_operacional', analista: 'credit_cost_analista', especialista: 'credit_cost_especialista', gerencial: 'credit_cost_gerencial', pcd: 'credit_cost_pcd' };
 
   if (op === 'get') return json(res, await snapshot());
 
@@ -47,6 +57,17 @@ module.exports = async (req, res) => {
     if (body.free_mode !== undefined) {
       await setSetting('free_mode', body.free_mode ? '1' : '0');
       await logAdmin(req, 'set_free_mode', body.free_mode ? 'ON' : 'OFF');
+    }
+    // custos de crédito por categoria
+    if (body.credit_cost && typeof body.credit_cost === 'object') {
+      for (const [cat, key] of Object.entries(CC_KEYS)) {
+        if (body.credit_cost[cat] !== undefined) {
+          const v = parseInt(body.credit_cost[cat], 10);
+          if (!(v >= 0 && v <= 999)) return err(res, `Custo de crédito inválido para ${cat} (0–999).`);
+          await setSetting(key, String(v));
+        }
+      }
+      await logAdmin(req, 'set_credit_costs', JSON.stringify(body.credit_cost).slice(0, 120));
     }
     return json(res, await snapshot());
   }

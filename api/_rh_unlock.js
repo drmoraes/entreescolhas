@@ -8,8 +8,8 @@ const { can } = require('./_lib/perms');
 const { revealCandidate, validateContact } = require('./_lib/anonymize');
 const { confidenceScore, adherenceScore } = require('./_lib/scoring');
 const { getClientIp } = require('./_lib/rate-limit');
-
-const UNLOCK_COST = 1;
+const { creditCostFor } = require('./_lib/credits');
+const { getCreditCosts } = require('./_lib/settings');
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
@@ -47,6 +47,11 @@ module.exports = async (req, res) => {
       return err(res, 'Você já desbloqueou este candidato', 409);
     }
 
+    // custo do desbloqueio por categoria do candidato (operacional/analista/
+    // especialista/gerencial) ou PCD — parametrizável no admin.
+    const costInfo = creditCostFor(c, await getCreditCosts());
+    const UNLOCK_COST = costInfo.cost;
+
     // saldo
     const balRes = await client.query(
       'SELECT COALESCE(SUM(delta),0)::int AS s FROM credit_ledger WHERE company_id = $1', [ctx.company_id]
@@ -54,7 +59,7 @@ module.exports = async (req, res) => {
     const balance = balRes.rows[0].s;
     if (balance < UNLOCK_COST) {
       await client.query('ROLLBACK');
-      return err(res, 'Saldo de créditos insuficiente', 402);
+      return err(res, `Saldo insuficiente: este perfil custa ${UNLOCK_COST} crédito(s) e você tem ${balance}.`, 402);
     }
 
     // scores persistidos no desbloqueio
@@ -69,7 +74,7 @@ module.exports = async (req, res) => {
     await client.query(
       `INSERT INTO credit_ledger (company_id, delta, reason, ref_type, balance_after, meta)
        VALUES ($1,$2,'unlock','candidate',$3,$4)`,
-      [ctx.company_id, -UNLOCK_COST, afterDebit, JSON.stringify({ token })]
+      [ctx.company_id, -UNLOCK_COST, afterDebit, JSON.stringify({ token, categoria: costInfo.categoria, custo: UNLOCK_COST })]
     );
 
     // cria unlock
@@ -110,10 +115,11 @@ module.exports = async (req, res) => {
     await logAccess(ctx, c.id, 'reveal_pii', 'desbloqueio', ip, { unlockId, adh, conf });
 
     return json(res, {
-      unlocked: true, refunded: false, balance: afterDebit,
+      unlocked: true, refunded: false, balance: afterDebit, credits_spent: UNLOCK_COST,
+      categoria: costInfo.categoria,
       unlock: { id: unlockId, status: 'active', adherence: adh, confidence: conf },
       candidate: revealCandidate(c),
-      message: 'Candidato desbloqueado. Envie um convite para iniciar a janela de resposta (SLA 7 dias).',
+      message: `Candidato desbloqueado (${UNLOCK_COST} crédito(s)). Envie um convite para iniciar a janela de resposta (SLA 7 dias).`,
     });
   } catch (e) {
     try { await client.query('ROLLBACK'); } catch (_) {}

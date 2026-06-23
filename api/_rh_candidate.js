@@ -5,6 +5,7 @@ const { query } = require('./_lib/db');
 const { requireCompany, logAccess } = require('./_lib/b2b-auth');
 const { anonymizeCandidate, revealCandidate } = require('./_lib/anonymize');
 const { getClientIp } = require('./_lib/rate-limit');
+const { costForCandidate } = require('./_lib/credits');
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
@@ -23,6 +24,7 @@ module.exports = async (req, res) => {
 
   const criteria = {
     skills: req.query.skills ? String(req.query.skills).split(',').map((s) => s.trim()) : [],
+    setor: req.query.setor || null,
     senioridade: req.query.senioridade || null,
     work_model: req.query.work_model || null,
     cidade: req.query.cidade || null,
@@ -30,6 +32,9 @@ module.exports = async (req, res) => {
   };
 
   const dto = anonymizeCandidate(c, criteria);
+  const ci = await costForCandidate(c);
+  dto.credit_cost = ci.cost;
+  dto.categoria_efetiva = ci.categoria;
 
   // já desbloqueado por esta empresa?
   const un = await query(

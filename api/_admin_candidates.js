@@ -8,7 +8,7 @@ const { adminCan } = require('./_lib/admin-perms');
 
 // campos que o admin pode editar/criar
 const TEXT = ['nome','email','telefone','cidade','area','cargo','empresa','senioridade',
-  'experiencia','escolaridade','work_model','availability','arquetipo','linkedin','objetivo','visibility'];
+  'experiencia','escolaridade','work_model','availability','arquetipo','linkedin','objetivo','visibility','pcd_tipo'];
 const INT = ['salary_min','salary_max'];
 const BOOL = ['b2b_consent','email_verified','phone_verified','pcd'];
 
@@ -150,6 +150,25 @@ module.exports = async (req, res) => {
     const geo = body.geocode !== false;
     let criados = 0, pulados = 0, erros = 0;
     const detalhes = [];
+
+    // helpers de parsing do CSV
+    const arr = (v) => {
+      if (v == null || v === '') return null;
+      const list = String(v).split(/[;,]/).map((s) => s.trim()).filter(Boolean);
+      return list.length ? JSON.stringify(list) : null;
+    };
+    const bool = (v) => /^(true|1|sim|s|yes|y)$/i.test(String(v || '').trim());
+    const intOrNull = (v) => (v != null && v !== '' && !isNaN(Number(v))) ? Math.round(Number(v)) : null;
+    const txt = (v) => (String(v ?? '').trim() || null);
+    const cat = (v) => { const k = String(v || '').trim().toLowerCase(); return ['operacional', 'analista', 'especialista', 'gerencial'].includes(k) ? k : null; };
+
+    // colunas novas existem? (migração RH)
+    let hasCat = false;
+    try {
+      const cc = await query("SELECT 1 FROM information_schema.columns WHERE table_name='candidates' AND column_name='categoria' LIMIT 1");
+      hasCat = cc.rows.length > 0;
+    } catch (e) { hasCat = false; }
+
     for (const r of rows) {
       const nome = String(r.nome || '').trim();
       const email = String(r.email || '').toLowerCase().trim();
@@ -160,13 +179,29 @@ module.exports = async (req, res) => {
       if (geo && cep && (lat == null || lon == null)) {
         try { const g = await geocodeCep(cep); if (g) { lat = g.lat; lon = g.lon; } } catch (e) { /* segue sem geo */ }
       }
+      const cepFmt = cep ? (cep.length === 8 ? cep.slice(0, 5) + '-' + cep.slice(5) : cep) : null;
+      const consent = bool(r.b2b_consent);
+
+      // colunas base (sempre existem) + condicionais (categoria/setores)
+      const cols = ['nome', 'email', 'telefone', 'cidade', 'linkedin', 'cargo', 'empresa', 'area',
+        'senioridade', 'experiencia', 'escolaridade', 'work_model', 'availability',
+        'salary_min', 'salary_max', 'skills', 'idiomas', 'aceita_relocacao', 'contrato',
+        'pcd', 'pcd_tipo', 'arquetipo', 'cep', 'lat', 'lon',
+        'b2b_consent', 'email_verified', 'phone_verified'];
+      const vals = [nome, email, txt(r.telefone), txt(r.cidade), txt(r.linkedin), txt(r.cargo), txt(r.empresa), txt(r.area),
+        txt(r.senioridade), txt(r.experiencia), txt(r.escolaridade), txt(r.work_model), txt(r.availability),
+        intOrNull(r.salary_min), intOrNull(r.salary_max), arr(r.skills), arr(r.idiomas), bool(r.aceita_relocacao), txt(r.contrato),
+        bool(r.pcd), txt(r.pcd_tipo), txt(r.arquetipo), cepFmt, lat, lon,
+        consent, bool(r.email_verified), bool(r.phone_verified)];
+      if (hasCat) { cols.push('categoria', 'setores'); vals.push(cat(r.categoria), arr(r.setores)); }
+      // consentido no import → já entra ativo e visível na busca
+      if (consent) { cols.push('b2b_consent_at', 'last_confirmed_at'); vals.push(new Date().toISOString(), new Date().toISOString()); }
+      cols.push('source', 'public_token');
+
+      const ph = vals.map((_, i) => `$${i + 1}`).join(',');
+      const sql = `INSERT INTO candidates (${cols.join(',')}) VALUES (${ph}, 'admin-import', encode(gen_random_bytes(16),'hex'))`;
       try {
-        await query(
-          `INSERT INTO candidates (nome, email, telefone, cidade, area, cargo, senioridade, cep, lat, lon, source, public_token)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'admin-import', encode(gen_random_bytes(16),'hex'))`,
-          [nome, email, String(r.telefone || '') || null, String(r.cidade || '') || null,
-           String(r.area || '') || null, String(r.cargo || '') || null, String(r.senioridade || '') || null,
-           cep ? (cep.length === 8 ? cep.slice(0, 5) + '-' + cep.slice(5) : cep) : null, lat, lon]);
+        await query(sql, vals);
         criados++;
       } catch (e) {
         if (/unique|duplicate/i.test(e.message)) { pulados++; detalhes.push(`${email}: já existe`); }

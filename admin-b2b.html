@@ -90,7 +90,28 @@ async function carregarPreco(){
   try{ const d=await fetch('/api/b2b?fn=admin_settings&op=get',{headers:{'X-Api-Key':KEY}}).then(r=>r.json());
     if($('cfgPrice')) $('cfgPrice').value=Number(d.report_price).toFixed(2);
     if($('cfgFree')) $('cfgFree').checked=!!d.free_mode;
+    const cc=d.credit_cost||{};
+    ['operacional','analista','especialista','gerencial','pcd'].forEach(k=>{ if($('cc_'+k)&&cc[k]!=null) $('cc_'+k).value=cc[k]; });
   }catch(e){}
+}
+async function salvarCustos(){
+  const msg=$('ccMsg'); msg.textContent='Salvando…';msg.className='small muted';
+  const credit_cost={};
+  ['operacional','analista','especialista','gerencial','pcd'].forEach(k=>{ const el=$('cc_'+k); if(el&&el.value!=='') credit_cost[k]=parseInt(el.value,10); });
+  try{
+    const r=await fetch('/api/b2b?fn=admin_settings&op=set',{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':KEY},body:JSON.stringify({credit_cost})});
+    const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
+    msg.textContent='✓ Custos salvos';msg.className='small green';
+  }catch(e){msg.textContent=e.message;msg.className='small red';}
+}
+async function migrarRH(){
+  const msg=$('ccMsg'); if(!confirm('Cria as colunas de categoria/setores e os parâmetros de custo. Idempotente. Continuar?'))return;
+  msg.textContent='Migrando…';msg.className='small muted';
+  try{
+    const r=await fetch('/api/b2b?fn=admin_migrate_rh',{headers:{'X-Api-Key':KEY}});
+    const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
+    msg.textContent='✓ Migração RH OK ('+d.applied+' comandos)';msg.className='small green';carregarPreco();
+  }catch(e){msg.textContent=e.message;msg.className='small red';}
 }
 async function salvarFree(){
   const msg=$('cfgMsg'); msg.textContent='Salvando…';msg.className='small muted';
@@ -171,6 +192,23 @@ function render(d){
       <span><b>Modo grátis</b> — libera o relatório sem pagamento (foco em volume / Banco de Talentos)</span>
     </label>
     <p class="muted small" style="margin-top:8px">Com o modo grátis ligado, o paywall vira "Ver meu relatório grátis" e não cobra. Desligado = cobra o preço acima.</p>
+  </div>
+
+  <h2 class="sec">Custo de crédito por categoria (B2B)</h2>
+  <div class="kpi" style="padding:14px;max-width:680px">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+      <div><label class="muted small">Operacional</label><input id="cc_operacional" type="number" min="0" step="1" placeholder="1"></div>
+      <div><label class="muted small">Analista</label><input id="cc_analista" type="number" min="0" step="1" placeholder="4"></div>
+      <div><label class="muted small">Especialista</label><input id="cc_especialista" type="number" min="0" step="1" placeholder="4"></div>
+      <div><label class="muted small">Gerencial</label><input id="cc_gerencial" type="number" min="0" step="1" placeholder="6"></div>
+      <div><label class="muted small">PCD</label><input id="cc_pcd" type="number" min="0" step="1" placeholder="8"></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap">
+      <button class="btn" onclick="salvarCustos()">Salvar custos</button>
+      <button class="btn-ghost" onclick="migrarRH()">Instalar/migrar RH (1ª vez)</button>
+      <span id="ccMsg" class="small"></span>
+    </div>
+    <p class="muted small" style="margin-top:8px">Quantos créditos a empresa gasta ao desbloquear cada perfil. PCD tem precedência sobre a categoria. A categoria vem do CSV/cadastro ou é deduzida do cargo/senioridade.</p>
   </div>
 
   ${alertas.length?`<h2 class="sec">Alertas (${alertas.length})</h2><div class="kpis">${alertasHtml}</div>`:''}

@@ -55,6 +55,7 @@
   <div style="flex:1"></div>
   <a class="btn-ghost" href="/admin-b2b.html" style="text-decoration:none">Admin B2B</a>
   <a class="btn-ghost" href="/admin-testes.html" style="text-decoration:none">Testes</a>
+  <a class="btn-ghost" id="modeloBtn" href="/modelo-candidatos.csv" download style="text-decoration:none;display:none">⬇ Modelo CSV</a>
   <button class="btn-ghost" id="impBtn" onclick="$('csvFile').click()" style="display:none">Importar CSV</button>
   <button class="btn" id="newBtn" onclick="novo()" style="display:none">+ Incluir</button>
   <input type="file" id="csvFile" accept=".csv,text/csv" style="display:none" onchange="importCSV(this)">
@@ -84,7 +85,7 @@ async function load(){
   KEY=KEY||$('key').value.trim();
   if(!KEY){$('gErr').textContent='Informe a chave';return;}
   $('gErr').textContent='';
-  try{ const d=await api('fn=admin_candidates&op=list'); $('gate').style.display='none';$('dash').style.display='';$('newBtn').style.display='';$('impBtn').style.display='';ROWS=d.data;render(d);}
+  try{ const d=await api('fn=admin_candidates&op=list'); $('gate').style.display='none';$('dash').style.display='';$('newBtn').style.display='';$('impBtn').style.display='';$('modeloBtn').style.display='';ROWS=d.data;render(d);}
   catch(e){$('gErr').textContent=e.message;}
 }
 
@@ -108,6 +109,9 @@ function render(d){
         <option value="">Consentimento (todos)</option><option value="sim">Com consentimento</option><option value="nao">Sem consentimento</option>
       </select>
       <button class="btn-ghost" onclick="exportCSV()">Exportar CSV</button>
+      <a class="btn-ghost" href="/modelo-candidatos.csv" download style="text-decoration:none">⬇ Modelo CSV</a>
+      <button class="btn-ghost" onclick="$('csvFile').click()">Importar CSV</button>
+      <button class="btn" onclick="novo()">+ Incluir</button>
     </div>
     <div id="bulkbar" class="split" style="display:none;margin-bottom:12px;padding:8px 12px;background:var(--accent-dim);border-radius:10px">
       <span class="small"><b id="bulkn">0</b> selecionados</span>

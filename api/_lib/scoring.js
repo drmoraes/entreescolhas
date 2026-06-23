@@ -120,18 +120,29 @@ function adherenceScore(c, criteria = {}) {
   const reasons = [];
   let score = 0;
 
-  // Skills (35)
-  const want = (criteria.skills || []).map(norm).filter(Boolean);
-  const have = (Array.isArray(c.skills) ? c.skills : []).map(norm);
+  // Competências & experiência (35) — não privilegia só skill técnica.
+  // O "repertório" inclui skills + setores de experiência + cargo + área +
+  // texto de experiência. Assim, quem veio de varejo, farmácia, mercado,
+  // atendimento etc. é reconhecido, não só perfis técnicos.
+  const want = [...(criteria.skills || []), criteria.setor].map(norm).filter(Boolean);
+  const setoresArr = Array.isArray(c.setores) ? c.setores : [];
+  const have = [
+    ...(Array.isArray(c.skills) ? c.skills : []),
+    ...setoresArr, c.cargo, c.area, c.experiencia,
+  ].map(norm).filter(Boolean);
+  const temRepertorio = (Array.isArray(c.skills) && c.skills.length > 0) || setoresArr.length > 0 || !!c.experiencia;
   let skillPts;
   if (want.length === 0) {
-    skillPts = 24; // sem exigência de skills → neutro-positivo
-    reasons.push({ criterio: 'Skills', pontos: skillPts, max: 35, detalhe: 'sem skill exigida' });
+    skillPts = temRepertorio ? 30 : 24; // sem exigência → neutro-positivo
+    reasons.push({ criterio: 'Competências & experiência', pontos: skillPts, max: 35,
+      detalhe: temRepertorio ? 'repertório considerado (skills/setores/experiência)' : 'sem exigência específica' });
   } else {
     const matched = want.filter((w) => have.some((h) => h.includes(w) || w.includes(h)));
-    skillPts = Math.round((matched.length / want.length) * 35);
-    reasons.push({ criterio: 'Skills', pontos: skillPts, max: 35,
-      detalhe: `${matched.length}/${want.length} (${matched.join(', ') || '—'})` });
+    let pts = (matched.length / want.length) * 35;
+    if (matched.length === 0 && temRepertorio) pts = 8; // piso p/ experiência diversa
+    skillPts = Math.round(pts);
+    reasons.push({ criterio: 'Competências & experiência', pontos: skillPts, max: 35,
+      detalhe: `${matched.length}/${want.length} (${matched.join(', ') || (temRepertorio ? 'experiência relacionada' : '—')})` });
   }
   score += skillPts;
 

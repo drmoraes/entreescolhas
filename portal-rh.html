@@ -166,6 +166,11 @@
         <option>Tecnologia</option><option>Dados</option><option>Produto</option><option>Design</option><option>Marketing</option><option>Vendas</option></select></div>
       <div class="field"><label>Senioridade</label><select id="fSen" onchange="search()"><option value="">Qualquer</option>
         <option value="junior">Júnior</option><option value="pleno">Pleno</option><option value="senior">Sênior</option><option value="especialista">Especialista</option></select></div>
+      <div class="field"><label>Categoria do cargo</label><select id="fCat" onchange="search()"><option value="">Qualquer</option>
+        <option value="operacional">Operacional</option><option value="analista">Analista</option><option value="especialista">Especialista</option><option value="gerencial">Gerencial</option></select></div>
+      <div class="field"><label>PCD (inclusão / cota)</label><select id="fPcd" onchange="search()"><option value="">Indiferente</option>
+        <option value="true">Somente PCD</option><option value="false">Sem PCD</option></select></div>
+      <div class="field"><label>Setor de experiência</label><input id="fSetor" placeholder="ex: varejo, farmácia, mercado" oninput="debouncedSearch()" /></div>
       <div class="field"><label>Modelo</label><select id="fModel" onchange="search()"><option value="">Qualquer</option>
         <option value="remoto">Remoto</option><option value="hibrido">Híbrido</option><option value="presencial">Presencial</option></select></div>
       <div class="field"><label>Cidade/Região</label><input id="fCidade" placeholder="ex: São Paulo" oninput="debouncedSearch()" /></div>
@@ -275,8 +280,8 @@ async function geocodeJobCep(){
 }
 function buildQuery(){
   const p=new URLSearchParams();
-  const map={cargo:'fCargo',skills:'fSkills',area:'fArea',senioridade:'fSen',work_model:'fModel',cidade:'fCidade',salary_max:'fSalary',min_confidence:'fConf'};
-  for(const[k,id]of Object.entries(map)){const v=$(id).value.trim();if(v&&v!=='0')p.set(k,v);}
+  const map={cargo:'fCargo',skills:'fSkills',area:'fArea',senioridade:'fSen',categoria:'fCat',pcd:'fPcd',setor:'fSetor',work_model:'fModel',cidade:'fCidade',salary_max:'fSalary',min_confidence:'fConf'};
+  for(const[k,id]of Object.entries(map)){const el=$(id);const v=(el&&el.value||'').trim();if(v&&v!=='0')p.set(k,v);}
   if($('fCold').checked)p.set('include_cold','true');
   const cepRaw=($('fCep').value||'').replace(/\D/g,'');
   if(cepRaw.length===8)p.set('job_cep',cepRaw); // servidor geocodifica (com fallback) se preciso
@@ -305,24 +310,37 @@ function thermalBadge(c){
   if(c.thermal==='morno')return '<span class="badge warm">● Morno</span>';
   return '<span class="badge cold">● Frio</span>';
 }
+function custoLabel(c){
+  const n=(c.credit_cost!=null)?c.credit_cost:1;
+  return n+' créd.';
+}
+function pcdBadge(c){
+  return c.pcd?'<span class="badge" style="background:rgba(34,197,94,.12);color:#86efac;border:1px solid rgba(34,197,94,.3)">♿ PCD</span>':'';
+}
+function catChip(c){
+  const m={operacional:'Operacional',analista:'Analista',especialista:'Especialista',gerencial:'Gerencial',pcd:'PCD'};
+  const k=c.categoria_efetiva||c.categoria; if(!k||!m[k])return '';
+  return '<span class="chip" style="background:var(--accent-dim);color:#cfcaff">'+m[k]+'</span>';
+}
 function cardHTML(c){
-  const skills=(c.skills||[]).slice(0,5).map(s=>`<span class="chip">${esc(s)}</span>`).join('');
+  const skills=(c.skills||[]).slice(0,4).map(s=>`<span class="chip">${esc(s)}</span>`).join('');
+  const setores=(c.setores||[]).slice(0,3).map(s=>`<span class="chip" style="background:rgba(201,168,76,.10);color:#e6cf8f">${esc(s)}</span>`).join('');
   return `<div class="card">
     <div class="top">
       <div><div class="alias">${esc(c.alias)}</div><div class="role">${esc(c.cargo||c.area||'—')} · ${esc(c.senioridade||'')}</div></div>
-      ${thermalBadge(c)}
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${thermalBadge(c)}${pcdBadge(c)}</div>
     </div>
     <div class="scores">
       <div class="score-row"><span class="lbl">Aderência</span><span class="bar adh"><i style="width:${c.adherence}%"></i></span><span class="val">${c.adherence}</span></div>
       <div class="score-row"><span class="lbl">Confiança</span><span class="bar conf"><i style="width:${c.confidence}%"></i></span><span class="val">${c.confidence}</span></div>
     </div>
-    <div class="skills">${skills}</div>
-    <div class="meta"><span>📍 ${esc(c.regiao||'—')}</span>${c.proximidade?'<span style="color:var(--green)">🏠 '+esc(c.proximidade)+'</span>':''}<span>💼 ${esc(c.work_model||'—')}</span><span>⏱ ${esc(c.availability||'—')}</span>${c.salary_band?'<span>💰 '+esc(c.salary_band)+'</span>':''}</div>
+    <div class="skills">${catChip(c)}${skills}${setores}</div>
+    <div class="meta"><span>📍 ${esc(c.regiao||'—')}</span>${c.proximidade?'<span style="color:var(--green)">🏠 '+esc(c.proximidade)+'</span>':''}<span>💼 ${esc(c.work_model||'—')}</span><span>⏱ ${esc(c.availability||'—')}</span>${c.salary_band?'<span>💰 '+esc(c.salary_band)+'</span>':''}<span>💳 ${custoLabel(c)}</span></div>
     <div class="actions">
       <button class="btn-ghost" style="flex:1;padding:9px" onclick="openCandidate('${c.token}')">Ver perfil</button>
       ${c.unlocked
         ? '<button class="btn-soft" style="flex:1;padding:9px" onclick="openCandidate(\''+c.token+'\')">✓ Desbloqueado</button>'
-        : '<button class="btn" onclick="openCandidate(\''+c.token+'\')">Desbloquear</button>'}
+        : '<button class="btn" onclick="openCandidate(\''+c.token+'\')">Desbloquear · '+custoLabel(c)+'</button>'}
     </div>
   </div>`;
 }
@@ -369,7 +387,7 @@ function renderCandidate(c){
        ${wa?'<a class="btn-soft" style="text-decoration:none;display:inline-block" href="'+wa+'" target="_blank" rel="noopener">WhatsApp</a>':''}
        ${c.unlock&&c.unlock.invited_at?'':'<button class="btn" onclick="sendInvite(\''+c.token+'\')">Enviar convite por e-mail</button>'}`
     : `<button class="btn-soft" onclick="closeModal()">Fechar</button>
-       <button class="btn" id="unlockBtn" onclick="doUnlock('${c.token}')">Desbloquear · 1 crédito</button>`;
+       <button class="btn" id="unlockBtn" data-cost="${c.credit_cost!=null?c.credit_cost:1}" onclick="doUnlock('${c.token}')">Desbloquear · ${c.credit_cost!=null?c.credit_cost:1} crédito(s)</button>`;
   root.innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal">
     <div class="head">
       <div><div class="alias" style="font-size:18px">${esc(c.alias)}</div>
@@ -402,7 +420,7 @@ async function doUnlock(token){
     if(res.refunded){ toast('⚠ '+res.message); closeModal(); search(); return; }
     toast('✓ Candidato desbloqueado!');
     openCandidate(token); search();
-  }catch(e){ toast(e.message); if(btn){btn.disabled=false;btn.textContent='Desbloquear · 1 crédito';}
+  }catch(e){ toast(e.message); if(btn){btn.disabled=false;btn.textContent='Desbloquear · '+(btn.dataset.cost||1)+' crédito(s)';}
     if(/insuficiente/i.test(e.message)) openWallet(); }
 }
 function waLink(tel,nome){
