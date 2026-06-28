@@ -40,6 +40,7 @@ module.exports = async (req, res) => {
   json(res, {
     ok: true,
     nome: lead.nome,
+    email: lead.email,
     jornada: lead.jornada,
     confirmed: !!lead.confirmed_at,
     paid,

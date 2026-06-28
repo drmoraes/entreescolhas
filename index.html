@@ -75,6 +75,8 @@
         "@id": "https://www.entreescolhas.com.br/#organization",
         "name": "Entre Escolhas — Veritas Lab",
         "url": "https://www.entreescolhas.com.br/",
+        "taxID": "67.693.609/0001-64",
+        "parentOrganization": { "@type": "Organization", "name": "Grupo Ascenda" },
         "logo": {
           "@type": "ImageObject",
           "url": "https://www.entreescolhas.com.br/logo.png",
@@ -117,26 +119,45 @@
         "@id": "https://www.entreescolhas.com.br/#servico-leitura-situacional",
         "name": "Leitura Situacional de Padrões de Decisão — Entre Escolhas",
         "serviceType": "Análise comportamental situacional",
-        "description": "Análise comportamental situacional baseada em cenários reais. O teste é gratuito; o relatório completo com leitura de padrões, tensões observadas e aplicações práticas custa R$ 9,90. Não é teste psicológico nem laudo clínico.",
+        "description": "Análise comportamental situacional baseada em cenários reais. O teste é gratuito; o relatório completo com leitura de padrões, tensões observadas e aplicações práticas custa R$ 9,90 avulso, ou R$ 29,90 no combo com as 4 jornadas. Não é teste psicológico nem laudo clínico.",
         "provider": { "@id": "https://www.entreescolhas.com.br/#organization" },
         "areaServed": "BR",
         "url": "https://www.entreescolhas.com.br/",
         "image": "https://www.entreescolhas.com.br/og-image.png",
-        "offers": {
-          "@type": "Offer",
-          "price": "9.90",
-          "priceCurrency": "BRL",
-          "availability": "https://schema.org/InStock",
-          "url": "https://www.entreescolhas.com.br/",
-          "seller": { "@id": "https://www.entreescolhas.com.br/#organization" },
-          "description": "Início gratuito. Relatório completo desbloqueado por R$ 9,90 ao final da análise. Cadastro no banco de talentos gratuito e opcional.",
-          "priceValidUntil": "2026-12-31",
-          "hasMerchantReturnPolicy": {
-            "@type": "MerchantReturnPolicy",
-            "applicableCountry": "BR",
-            "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted"
+        "offers": [
+          {
+            "@type": "Offer",
+            "name": "Relatório avulso (1 jornada)",
+            "price": "9.90",
+            "priceCurrency": "BRL",
+            "availability": "https://schema.org/InStock",
+            "url": "https://www.entreescolhas.com.br/",
+            "seller": { "@id": "https://www.entreescolhas.com.br/#organization" },
+            "description": "Início gratuito. Relatório completo desta jornada desbloqueado por R$ 9,90 ao final da análise. Cadastro no banco de talentos gratuito e opcional.",
+            "priceValidUntil": "2026-12-31",
+            "hasMerchantReturnPolicy": {
+              "@type": "MerchantReturnPolicy",
+              "applicableCountry": "BR",
+              "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted"
+            }
+          },
+          {
+            "@type": "Offer",
+            "name": "Combo — as 4 jornadas",
+            "price": "29.90",
+            "priceCurrency": "BRL",
+            "availability": "https://schema.org/InStock",
+            "url": "https://www.entreescolhas.com.br/",
+            "seller": { "@id": "https://www.entreescolhas.com.br/#organization" },
+            "description": "Acesso aos relatórios completos das 4 jornadas (Leitura de Padrões de Decisão, Fit Cultural & Carreira, Scanner de Relacionamento e Bússola Vocacional) por R$ 29,90.",
+            "priceValidUntil": "2026-12-31",
+            "hasMerchantReturnPolicy": {
+              "@type": "MerchantReturnPolicy",
+              "applicableCountry": "BR",
+              "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted"
+            }
           }
-        }
+        ]
       },
       {
         "@type": "FAQPage",
@@ -171,7 +192,7 @@
             "name": "O R$ 9,90 dá acesso a quê?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Dá acesso ao teste completo e ao relatório detalhado de padrões de decisão. O cadastro no banco de talentos é gratuito e opcional. A participação não garante vaga, entrevista ou contratação."
+              "text": "Dá acesso ao teste completo e ao relatório detalhado de uma jornada (por exemplo, Padrões de Decisão). Se preferir, o combo com as 4 jornadas — Padrões de Decisão, Fit Cultural & Carreira, Scanner de Relacionamento e Bússola Vocacional — custa R$ 29,90, uma economia de R$ 9,70 em relação à compra avulsa de cada uma. O cadastro no banco de talentos é gratuito e opcional. A participação não garante vaga, entrevista ou contratação."
             }
           },
           {
@@ -1115,6 +1136,7 @@
       <a href="#como-funciona">Como funciona</a>
       <a href="#jornadas">Jornadas</a>
       <a href="/vagas.html">Vagas</a>
+      <a href="#quem-somos">Quem somos</a>
       <a href="#faq">FAQ</a>
       <a href="admin.html" id="nav-admin" class="nav-admin" aria-label="Painel Admin">Admin</a>
       <div class="nav-dd">
@@ -1144,6 +1166,7 @@
   <a href="#como-funciona" class="mobile-menu-link">Como funciona</a>
   <a href="#jornadas" class="mobile-menu-link">Jornadas</a>
   <a href="/vagas.html" class="mobile-menu-link">💼 Vagas</a>
+  <a href="#quem-somos" class="mobile-menu-link">Quem somos</a>
   <a href="#faq" class="mobile-menu-link">FAQ</a>
   <a href="portal-rh.html" class="mobile-menu-link">🏢 Empresas (RH)</a>
   <a href="meu-perfil.html" class="mobile-menu-link">👤 Candidato</a>
@@ -1492,7 +1515,7 @@
   <div class="container">
     <div class="fade-up" style="text-align:center;">
       <p class="section-label">Preço</p>
-      <h2 class="section-title" id="pricing-title">Comece grátis. Desbloqueie o relatório completo por R$ 9,90.</h2>
+      <h2 class="section-title" id="pricing-title">Comece grátis. Cada relatório por R$ 9,90 — ou as 4 jornadas por R$ 29,90.</h2>
     </div>
 
     <div class="price-card fade-up">
@@ -1508,7 +1531,24 @@
         <li><span class="check" aria-hidden="true">✓</span> Recomendações de desenvolvimento</li>
         <li><span class="check" aria-hidden="true">✓</span> Opção de cadastro gratuito no Banco de Talentos</li>
       </ul>
-      <p style="text-align:left;font-size:0.85rem;color:var(--text-3);margin:-8px 0 28px;">Relatório completo desbloqueado por <strong style="color:var(--text);">R$ 9,90</strong>, ao final da análise.</p>
+
+      <div style="display:grid;gap:10px;margin:4px 0 24px;">
+        <div style="border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+          <div style="text-align:left;">
+            <div style="font-weight:700;font-size:0.92rem;">Só esta jornada</div>
+            <div style="font-size:0.78rem;color:var(--text-3);">Relatório completo de 1 teste</div>
+          </div>
+          <div style="font-size:1.1rem;font-weight:800;white-space:nowrap;">R$ 9,90</div>
+        </div>
+        <div style="border:1.5px solid var(--accent);background:rgba(108,99,255,0.10);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+          <div style="text-align:left;">
+            <div style="font-weight:700;font-size:0.92rem;">As 4 jornadas <span style="font-size:0.62rem;background:var(--accent);color:#fff;padding:2px 7px;border-radius:20px;margin-left:4px;vertical-align:middle;">ECONOMIZE R$ 9,70</span></div>
+            <div style="font-size:0.78rem;color:var(--text-3);">Decisão, Fit Cultural, Relacionamento e Vocacional</div>
+          </div>
+          <div style="text-align:right;white-space:nowrap;"><span style="text-decoration:line-through;color:var(--text-3);font-size:0.78rem;margin-right:4px;">R$ 39,60</span><span style="font-size:1.1rem;font-weight:800;">R$ 29,90</span></div>
+        </div>
+      </div>
+      <p style="text-align:left;font-size:0.85rem;color:var(--text-3);margin:-12px 0 28px;">A escolha entre teste avulso e combo aparece ao final da sua primeira análise.</p>
 
       <a href="/cadastro-teste.html?jornada=arquetipo" class="btn-primary" style="width:100%;justify-content:center;font-size:1.05rem;" aria-label="Começar análise gratuitamente" data-event="click_start_test">
         Começar gratuitamente
@@ -1638,6 +1678,39 @@
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════════
+     QUEM SOMOS
+═══════════════════════════════════════════════════════════════ -->
+<section id="quem-somos" aria-labelledby="quem-somos-title" style="padding:80px 0;">
+  <div class="container">
+    <div class="fade-up" style="text-align:center;max-width:700px;margin:0 auto 40px;">
+      <p class="section-label">Quem somos</p>
+      <h2 class="section-title" id="quem-somos-title">Autoconhecimento não devia ser privilégio de poucos.</h2>
+      <p style="color:var(--text-2);margin-top:14px;font-size:1.02rem;">
+        O Entre Escolhas é uma iniciativa do <strong style="color:var(--text);">Grupo Ascenda</strong>, criada para colocar ferramentas reais de autoconhecimento — antes restritas a processos caros de consultoria e RH — ao alcance de qualquer pessoa, por um preço justo.
+      </p>
+    </div>
+
+    <div class="fade-up" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;max-width:920px;margin:0 auto;">
+      <div style="border:1px solid var(--border);border-radius:14px;padding:22px;text-align:left;">
+        <div style="font-size:1.6rem;margin-bottom:10px;" aria-hidden="true">🔍</div>
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:8px;">Autoconhecimento acessível</h3>
+        <p style="font-size:0.88rem;color:var(--text-2);line-height:1.55;">Análises comportamentais sérias, a partir de R$ 9,90, para que o preço nunca seja a barreira entre você e se conhecer melhor.</p>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:14px;padding:22px;text-align:left;">
+        <div style="font-size:1.6rem;margin-bottom:10px;" aria-hidden="true">🤝</div>
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:8px;">Ponte com oportunidades reais</h3>
+        <p style="font-size:0.88rem;color:var(--text-2);line-height:1.55;">Quem quiser pode cadastrar gratuitamente seu perfil no Banco de Talentos e ser encontrado por empresas que buscam exatamente esse perfil comportamental.</p>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:14px;padding:22px;text-align:left;">
+        <div style="font-size:1.6rem;margin-bottom:10px;" aria-hidden="true">🛡️</div>
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:8px;">Empresa regularizada</h3>
+        <p style="font-size:0.88rem;color:var(--text-2);line-height:1.55;">Operamos como empresa formalmente constituída (CNPJ 67.693.609/0001-64), com tratamento de dados sob a LGPD e total transparência sobre como suas informações são usadas.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
      BANCO DE TALENTOS CTA
 ═══════════════════════════════════════════════════════════════ -->
 <div class="talent-cta" role="complementary" aria-labelledby="talent-title">
@@ -1696,6 +1769,7 @@
         <div class="footer-links">
           <a href="#como-funciona">Como funciona</a>
           <a href="#jornadas">Jornadas</a>
+          <a href="#quem-somos">Quem somos</a>
           <a href="/fit-cultural.html">Fit Cultural &amp; Carreira</a>
           <a href="/scanner-relacionamento.html">Scanner de Relacionamento</a>
           <a href="/bussola-vocacional.html">Bússola Vocacional</a>
@@ -1711,8 +1785,8 @@
     </div>
 
     <div class="footer-bottom">
-      <p>© 2026 Entre Escolhas — Veritas Lab. Todos os direitos reservados.</p>
-      <p style="font-size:0.75rem;color:var(--text-3);">CNPJ em processo de abertura • Privacidade LGPD</p>
+      <p>© 2026 Entre Escolhas — Veritas Lab, uma iniciativa do Grupo Ascenda. Todos os direitos reservados.</p>
+      <p style="font-size:0.75rem;color:var(--text-3);">CNPJ 67.693.609/0001-64 • Privacidade LGPD</p>
     </div>
   </div>
 </footer>

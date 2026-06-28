@@ -26,12 +26,12 @@ async function getPriceSingle() {
   return Number(process.env.MP_REPORT_PRICE || 9.90);
 }
 
-// Preço do combo (todos os testes): banco (price_combo) → env → 19.90
+// Preço do combo (todos os testes): banco (price_combo) → env → 29.90
 async function getPriceCombo() {
   const v = await getSetting('price_combo', null);
   const n = Number(v);
   if (n > 0) return n;
-  return Number(process.env.MP_COMBO_PRICE || 19.90);
+  return Number(process.env.MP_COMBO_PRICE || 29.90);
 }
 
 // Compat: getReportPrice continua existindo e aponta para o avulso.

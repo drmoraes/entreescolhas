@@ -8,7 +8,7 @@ const STATEMENTS = [
   // ── Parâmetros configuráveis ─────────────────────────────
   `INSERT INTO app_settings (key, value, updated_at) VALUES
      ('price_single','9.90',NOW()),
-     ('price_combo','19.90',NOW()),
+     ('price_combo','29.90',NOW()),
      ('referral_discount_pct','10',NOW()),
      ('referral_commission_pct','15',NOW()),
      ('cashback_window_days','8',NOW()),
@@ -82,6 +82,11 @@ const STATEMENTS = [
   `ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS clawback_due BOOLEAN NOT NULL DEFAULT FALSE`,
   `ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS clawback_note VARCHAR(140)`,
   `CREATE INDEX IF NOT EXISTS idx_comm_clawback ON affiliate_commissions (clawback_due) WHERE clawback_due`,
+
+  // Reprecificação do combo: 19.90 → 29.90 (nova estrutura: R$9,90/teste avulso,
+  // R$29,90 no combo de todas as jornadas). Só atualiza se ainda estiver no valor
+  // antigo, para não sobrescrever um ajuste manual feito depois pelo admin.
+  `UPDATE app_settings SET value='29.90', updated_at=NOW() WHERE key='price_combo' AND value='19.90'`,
 
   // ── Lotes de pagamento Pix (fila manual) ─────────────────
   `CREATE TABLE IF NOT EXISTS affiliate_payouts (

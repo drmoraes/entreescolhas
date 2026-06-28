@@ -1300,7 +1300,7 @@ function brl(v) { return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ','); }
 
 function precoDoKind(kind) {
   const s = LEAD_STATE || {};
-  if (kind === 'combo') return s.preco_combo || s.preco_combo_base || 19.90;
+  if (kind === 'combo') return s.preco_combo || s.preco_combo_base || 29.90;
   return s.preco_single || s.preco || s.preco_single_base || 9.90;
 }
 
@@ -1749,14 +1749,18 @@ async function unlockReport(kind) {
   document.getElementById('brickModal').style.display = 'flex';
   const pixArea = document.getElementById('pixArea');
   pixArea.style.display = 'none'; pixArea.innerHTML = '';
-  document.getElementById('brickContainer').innerHTML = '';
+  const brickEl = document.getElementById('brickContainer');
+  brickEl.style.display = ''; brickEl.innerHTML = '';
 
   try {
     const mp = new MercadoPago(pub, { locale: 'pt-BR' });
     const bricks = mp.bricks();
     if (BRICK_CONTROLLER && BRICK_CONTROLLER.unmount) { try { BRICK_CONTROLLER.unmount(); } catch (e) {} }
+    // E-mail já é conhecido (confirmado no cadastro) — pré-preenche para o Brick não
+    // pedir esse dado de novo antes de gerar o Pix.
+    const payerEmail = (typeof LEAD_STATE !== 'undefined' && LEAD_STATE && LEAD_STATE.email) || undefined;
     BRICK_CONTROLLER = await bricks.create('payment', 'brickContainer', {
-      initialization: { amount: amount },
+      initialization: { amount: amount, payer: payerEmail ? { email: payerEmail } : undefined },
       customization: {
         visual: { theme: 'dark' },
         paymentMethods: { creditCard: 'all', debitCard: 'all', bankTransfer: 'all', ticket: 'all' },
@@ -1782,6 +1786,10 @@ async function unlockReport(kind) {
 }
 
 function mostrarPix(d) {
+  // Esconde o formulário do Brick (cartão/seleção) para o QR não ficar "abaixo da
+  // dobra" no mobile — sem isso o usuário precisava rolar a tela pra ver o Pix.
+  const brickEl = document.getElementById('brickContainer');
+  if (brickEl) brickEl.style.display = 'none';
   const pix = document.getElementById('pixArea');
   pix.style.display = 'block';
   const img = d.pix_qr_base64 ? `<img src="data:image/png;base64,${d.pix_qr_base64}" alt="QR Pix" style="width:200px;height:200px;background:#fff;padding:8px;border-radius:10px"/>` : '';
@@ -1792,6 +1800,8 @@ function mostrarPix(d) {
     ${d.pix_qr ? `<p style="font-size:0.75rem;word-break:break-all;margin-top:10px;color:var(--text-2)">${d.pix_qr}</p>
       <button class="btn-primary" style="width:100%;margin-top:8px" onclick="navigator.clipboard.writeText('${code}').then(()=>{this.textContent='Código copiado!'})">Copiar código Pix</button>` : ''}
     <p style="font-size:0.8rem;color:var(--text-2);margin-top:10px">Assim que o pagamento cair, o relatório libera automaticamente aqui.</p>`;
+  // Garante que o QR fique visível de imediato, mesmo em telas pequenas.
+  pix.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function fecharBrick() { const m = document.getElementById('brickModal'); if (m) m.style.display = 'none'; }
