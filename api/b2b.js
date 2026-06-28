@@ -41,6 +41,8 @@ const handlers = {
   vagas:              require('./_vagas_public'),
   vaga_apply:         require('./_vaga_apply'),
   admin_vagas:        require('./_admin_vagas'),
+  ai_diagnostico:     require('./_ai_diagnostico'),
+  admin_migrate_ai:   require('./_admin_migrate_ai'),
 };
 
 module.exports = async (req, res) => {

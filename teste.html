@@ -189,6 +189,14 @@
       <div id="r-insights"></div>
     </div>
 
+    <!-- Diagnóstico de Coaching Comportamental — gerado a partir das respostas do teste -->
+    <div id="r-coaching-section" style="display:none;max-width:560px;margin:0 auto 28px;">
+      <div class="dims-title" style="margin-bottom:10px;">Diagnóstico de coaching · como você age em cenários reais</div>
+      <div id="r-coaching-loading" style="font-size:0.85rem;color:var(--text-2);padding:14px 0;">Gerando seu diagnóstico…</div>
+      <div id="r-coaching-cards" style="display:none;gap:10px;text-align:left;"></div>
+      <p style="font-size:0.72rem;color:var(--text-3);margin-top:8px;">Gerado a partir das suas respostas. Não é um diagnóstico clínico — é um ponto de partida prático para a sua carreira.</p>
+    </div>
+
     <!-- PAYWALL (mostrado só se o relatório completo ainda não foi desbloqueado) -->
     <div id="paywall-box" style="display:none;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:32px;max-width:560px;margin:0 auto 32px;text-align:center;">
       <div style="font-size:2rem;margin-bottom:10px;">🔒</div>
@@ -1357,6 +1365,46 @@ function renderOferta() {
   if (btn) btn.style.display = 'none'; // a escolha agora é feita nos cartões
 }
 
+// Diagnóstico de Coaching Comportamental (IA) — 3 pontos: insight, oportunidade
+// e ação prática, a partir das competências identificadas no teste. Chamado só
+// depois que o relatório está liberado (pago).
+function renderDiagnosticoIA() {
+  if (!ACCESS_TOKEN) return;
+  const box = document.getElementById('r-coaching-section');
+  const loading = document.getElementById('r-coaching-loading');
+  const cards = document.getElementById('r-coaching-cards');
+  if (!box) return;
+  box.style.display = 'block';
+  loading.style.display = 'block';
+  cards.style.display = 'none';
+
+  fetch('/api/b2b?fn=ai_diagnostico', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ access: ACCESS_TOKEN }),
+  })
+    .then(res => res.json().catch(() => ({})).then(data => ({ ok: res.ok, data })))
+    .then(({ ok, data }) => {
+      if (!ok || !data.insight) { box.style.display = 'none'; return; }
+      loading.style.display = 'none';
+      cards.style.display = 'grid';
+      cards.innerHTML = `
+        <div style="border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--bg-card);">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent);font-weight:700;margin-bottom:6px;">⚡ Comportamento atual</div>
+          <div style="font-size:0.92rem;color:var(--text);line-height:1.5;">${data.insight}</div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--bg-card);">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--gold);font-weight:700;margin-bottom:6px;">🌱 Oportunidade de desenvolvimento</div>
+          <div style="font-size:0.92rem;color:var(--text);line-height:1.5;">${data.oportunidade}</div>
+        </div>
+        <div style="border:1.5px solid var(--accent);border-radius:14px;padding:16px;background:rgba(108,99,255,0.08);">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent);font-weight:700;margin-bottom:6px;">🎯 Ação prática para esta semana</div>
+          <div style="font-size:0.92rem;color:var(--text);line-height:1.5;">${data.acao_pratica}</div>
+        </div>`;
+    })
+    .catch(() => { box.style.display = 'none'; });
+}
+
 // Painel "Indique e ganhe" — mostrado ao usuário com relatório pago.
 // O link só é gerado APÓS o aceite expresso do regulamento (prova jurídica).
 function mostrarAfiliado() {
@@ -1596,6 +1644,7 @@ function showSavedFullReport() {
       document.getElementById('paywall-box').style.display = 'none';
       document.getElementById('paid-note').style.display = 'block';
       mostrarAfiliado();
+      renderDiagnosticoIA();
 
       const dimsEl = document.getElementById('r-dims');
       dimsEl.innerHTML = '';
@@ -1713,6 +1762,7 @@ function showResult() {
         document.getElementById('paid-note').style.display = 'block';
         mostrarAfiliado();
         renderDimsAndInsights(arch, scores);
+        renderDiagnosticoIA();
       } else {
         document.getElementById('paywall-box').style.display = 'block';
         renderOferta();
