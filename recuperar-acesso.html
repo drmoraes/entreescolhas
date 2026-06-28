@@ -94,6 +94,16 @@ const form = document.getElementById('recover-form');
 const errorEl = document.getElementById('rec-error');
 const submitBtn = document.getElementById('rec-submit');
 
+// Já temos nome/e-mail salvos de um cadastro anterior neste navegador? Pré-preenche
+// (e seleciona a jornada, se só houver uma) em vez de pedir tudo de novo.
+document.addEventListener('DOMContentLoaded', function () {
+  if (!window.eeIdentity) return;
+  window.eeIdentity.fill({ nome: '#rec-nome', email: '#rec-email' });
+  const saved = window.eeIdentity.get();
+  const jornadas = saved && saved.tokens ? Object.keys(saved.tokens) : [];
+  if (jornadas.length === 1) document.getElementById('rec-jornada').value = jornadas[0];
+});
+
 function setError(msg) {
   errorEl.textContent = msg;
   errorEl.classList.toggle('show', !!msg);
@@ -119,6 +129,7 @@ form.addEventListener('submit', async (e) => {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || 'Não foi possível enviar o e-mail. Tente novamente.');
+    if (window.eeIdentity) window.eeIdentity.save({ nome, email });
     document.getElementById('form-state').style.display = 'none';
     document.getElementById('success-state').classList.add('show');
     if (typeof trackEvent === 'function') { trackEvent('lead_recover', { jornada }); }
@@ -129,6 +140,7 @@ form.addEventListener('submit', async (e) => {
   }
 });
 </script>
+<script src="/identity.js" defer></script>
 <script src="/analytics.js"></script>
 </body>
 </html>

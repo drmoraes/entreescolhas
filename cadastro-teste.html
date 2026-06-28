@@ -72,7 +72,8 @@
         <button type="submit" class="btn-primary" id="lead-submit">Quero começar</button>
         <p class="msg error" id="lead-error"></p>
       </form>
-      <p class="fine">Usamos seu e-mail só para enviar o link de acesso e o relatório completo. Sem spam.<br/>Já fez esse teste antes? <a href="/recuperar-acesso.html" style="color:var(--accent);">Recupere seu acesso</a>.</p>
+      <p class="fine" id="fine-default">Usamos seu e-mail só para enviar o link de acesso e o relatório completo. Sem spam.<br/>Já fez esse teste antes? <a href="/recuperar-acesso.html" style="color:var(--accent);">Recupere seu acesso</a>.</p>
+      <p class="fine" id="fine-returning" style="display:none;">Identificamos seus dados de um cadastro anterior — já preenchemos pra você. Não é você? <a href="#" id="not-you-link" style="color:var(--accent);">Limpar campos</a>.</p>
     </div>
 
     <div class="success-box" id="success-state">
@@ -93,6 +94,27 @@ const jornada = params.get('jornada') || 'arquetipo';
 const form = document.getElementById('lead-form');
 const errorEl = document.getElementById('lead-error');
 const submitBtn = document.getElementById('lead-submit');
+
+// Já temos nome/e-mail salvos de um cadastro anterior neste navegador? Pré-preenche
+// (campos continuam editáveis) em vez de pedir tudo de novo.
+// Roda no DOMContentLoaded porque identity.js é "defer" — só existe depois desse evento.
+document.addEventListener('DOMContentLoaded', function () {
+  if (!window.eeIdentity) return;
+  const saved = window.eeIdentity.get();
+  if (!saved || (!saved.nome && !saved.email)) return;
+  window.eeIdentity.fill({ nome: '#lead-nome', email: '#lead-email' });
+  document.getElementById('fine-default').style.display = 'none';
+  document.getElementById('fine-returning').style.display = 'block';
+});
+
+document.getElementById('not-you-link')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  window.eeIdentity.clear();
+  document.getElementById('lead-nome').value = '';
+  document.getElementById('lead-email').value = '';
+  document.getElementById('fine-returning').style.display = 'none';
+  document.getElementById('fine-default').style.display = 'block';
+});
 
 function setError(msg) {
   errorEl.textContent = msg;
@@ -123,6 +145,7 @@ form.addEventListener('submit', async (e) => {
   submitBtn.textContent = 'Enviando...';
   try {
     await registerLead(nome, email);
+    if (window.eeIdentity) window.eeIdentity.save({ nome, email });
     document.getElementById('success-email').textContent = email;
     document.getElementById('form-state').style.display = 'none';
     document.getElementById('success-state').classList.add('show');
@@ -142,6 +165,7 @@ document.getElementById('resend-link').addEventListener('click', (e) => {
   submitBtn.textContent = 'Quero começar';
 });
 </script>
+<script src="/identity.js" defer></script>
 <script src="/ref.js" defer></script>
 <script src="/analytics.js"></script>
 </body>

@@ -979,6 +979,12 @@ function formatPhone(p){
 
 // Máscara de telefone ao digitar
 document.addEventListener('DOMContentLoaded', () => {
+  // Já temos nome/e-mail/telefone salvos de um cadastro anterior neste navegador?
+  // Pré-preenche o Step 1 (campos continuam editáveis) em vez de pedir tudo de novo.
+  if (window.eeIdentity) {
+    window.eeIdentity.fill({ nome: '#s1-nome', email: '#s1-email', telefone: '#s1-phone' });
+  }
+
   const phoneEl = document.getElementById('s1-phone');
   if(phoneEl){
     phoneEl.addEventListener('input', e => {
@@ -1112,6 +1118,9 @@ async function finalizarCadastro(){
     localStorage.setItem('ec_bt_submissions', JSON.stringify(existing));
   } catch(e){}
 
+  // Guarda nome/e-mail/telefone para pré-preencher outros formulários do site.
+  if (window.eeIdentity) window.eeIdentity.save({ nome: payload.nome, email: payload.email, telefone: payload.telefone });
+
   // 2. Enviar para API Locaweb (principal)
   let apiOk = false;
   try {
@@ -1167,6 +1176,7 @@ document.querySelectorAll('.check-item input').forEach(input=>{
   });
 });
 </script>
+<script src="/identity.js" defer></script>
 <script src="/analytics.js"></script>
 <script>
   if (typeof trackEvent === 'function') { trackEvent('view_talent_bank_page'); }

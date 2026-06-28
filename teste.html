@@ -1264,6 +1264,12 @@ let LEAD_STATE = null;
     })
     .then(data => {
       LEAD_STATE = data;
+      // Guarda nome/e-mail e o access_token desta jornada para pré-preencher
+      // outros formulários do site sem pedir tudo de novo.
+      if (window.eeIdentity) {
+        window.eeIdentity.save({ nome: data.nome, email: data.email });
+        window.eeIdentity.saveToken(JORNADA_PARAM, ACCESS_TOKEN);
+      }
       if (data.free_mode) aplicarModoGratis();
       if (!data.confirmed) {
         window.location.replace('/cadastro-teste.html?jornada=' + encodeURIComponent(JORNADA_PARAM));
@@ -1837,6 +1843,7 @@ function unlockReportFallback() {
     .catch(err => { if (pop) { try { pop.close(); } catch (e) {} } if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; } if (btn) { btn.disabled = false; btn.textContent = 'Desbloquear relatório completo'; } });
 }
 </script>
+<script src="/identity.js" defer></script>
 <script src="/ref.js" defer></script>
 <script src="/analytics.js"></script>
 <script>
