@@ -21,13 +21,25 @@ async function validRefFor(email, refCode) {
 }
 
 // Calcula base/desconto/valor final no servidor.
+// Upgrade para combo: se a pessoa já pagou teste(s) avulso(s) antes, o valor já
+// pago é abatido do preço do combo (ela não paga duas vezes pelo que já tem).
 async function computeAmount(kind, email, refCode) {
   const base = kind === 'combo' ? await getPriceCombo() : await getPriceSingle();
+  let credit = 0;
+  if (kind === 'combo' && email) {
+    try {
+      const { rows } = await query(
+        "SELECT COALESCE(SUM(amount),0) AS total FROM purchases WHERE email=$1 AND kind='single' AND status='paid'",
+        [email]);
+      credit = round2(Number(rows[0].total) || 0);
+    } catch (e) { credit = 0; /* tabela pode não existir antes da migração */ }
+  }
+  const baseAfterCredit = Math.max(0, round2(base - credit));
   const refOwner = await validRefFor(email, refCode);
   let discount = 0;
-  if (refOwner) discount = round2(base * (await getDiscountPct()) / 100);
-  const amount = round2(base - discount);
-  return { base: round2(base), discount, amount, refOwner };
+  if (refOwner) discount = round2(baseAfterCredit * (await getDiscountPct()) / 100);
+  const amount = round2(baseAfterCredit - discount);
+  return { base: round2(base), discount, amount, refOwner, credit };
 }
 
 // Cria (ou reusa) o pedido pendente. Devolve a linha de purchases.

@@ -53,6 +53,7 @@ module.exports = async (req, res) => {
     preco_single: single.amount,
     preco_combo_base: await getPriceCombo(),
     preco_combo: combo.amount,
+    credito_upgrade: combo.credit || 0,
     desconto_indicacao: single.discount > 0,
     referido: !!lead.referred_by_code,
     commission_pct: await getCommissionPct(),

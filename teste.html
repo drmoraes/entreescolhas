@@ -1316,18 +1316,24 @@ function ofertaHtml() {
   const single = precoDoKind('single');
   const combo = precoDoKind('combo');
   const desc = s.desconto_indicacao;
+  const credito = Number(s.credito_upgrade || 0);
   const baseS = s.preco_single_base || single;
   const baseC = s.preco_combo_base || combo;
   const economia = Math.max(0, (baseS * 4) - combo); // 4 jornadas hoje
   const riscoS = desc && baseS > single ? `<span style="text-decoration:line-through;color:var(--text-3);font-size:0.85rem;margin-right:6px;">${brl(baseS)}</span>` : '';
-  const riscoC = desc && baseC > combo ? `<span style="text-decoration:line-through;color:var(--text-3);font-size:0.85rem;margin-right:6px;">${brl(baseC)}</span>` : '';
+  const riscoC = baseC > combo ? `<span style="text-decoration:line-through;color:var(--text-3);font-size:0.85rem;margin-right:6px;">${brl(baseC)}</span>` : '';
   const tagDesc = desc ? `<div style="font-size:0.72rem;color:#22C55E;font-weight:600;margin-top:4px;">✓ Desconto de indicação aplicado</div>` : '';
+  // Já pagou avulso(s) antes? O valor pago é abatido do combo — não cobramos de novo.
+  const tagCredito = credito > 0 ? `<div style="font-size:0.72rem;color:#22C55E;font-weight:600;margin-top:4px;">✓ ${brl(credito)} já pago em teste avulso abatido do combo</div>` : '';
+  const descCombo = credito > 0
+    ? 'Acesso completo às jornadas que faltam — já com o que você pagou abatido'
+    : 'Acesso completo a todas as jornadas' + (economia > 0 ? ' — economize ' + brl(economia) : '');
   return `
     <div style="display:grid;gap:10px;text-align:left;margin-bottom:16px;">
       <button onclick="unlockReport('combo')" style="all:unset;cursor:pointer;border:1.5px solid var(--accent);background:rgba(108,99,255,0.10);border-radius:14px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
         <div>
           <div style="font-weight:700;">Todos os testes <span style="font-size:0.68rem;background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px;margin-left:6px;vertical-align:middle;">MELHOR ESCOLHA</span></div>
-          <div style="font-size:0.8rem;color:var(--text-2);margin-top:3px;">Acesso completo a todas as jornadas${economia > 0 ? ' — economize ' + brl(economia) : ''}</div>
+          <div style="font-size:0.8rem;color:var(--text-2);margin-top:3px;">${descCombo}</div>
         </div>
         <div style="text-align:right;white-space:nowrap;">${riscoC}<span style="font-size:1.25rem;font-weight:800;">${brl(combo)}</span></div>
       </button>
@@ -1339,7 +1345,7 @@ function ofertaHtml() {
         <div style="text-align:right;white-space:nowrap;">${riscoS}<span style="font-size:1.25rem;font-weight:800;">${brl(single)}</span></div>
       </button>
     </div>
-    ${tagDesc}`;
+    ${tagDesc}${tagCredito}`;
 }
 
 // Renderiza a oferta no paywall do relatório (substitui o preço fixo).
@@ -1753,6 +1759,11 @@ async function unlockReport(kind) {
   if (!pub || typeof MercadoPago === 'undefined') { return unlockReportFallback(); } // sem Brick → popup
 
   document.getElementById('brickModal').style.display = 'flex';
+  const resumoEl = document.getElementById('brickResumo');
+  if (resumoEl) {
+    resumoEl.textContent = (CHECKOUT_KIND === 'combo' ? 'Combo — acesso a todas as jornadas' : 'Este teste — relatório completo desta jornada')
+      + ' · ' + brl(amount);
+  }
   const pixArea = document.getElementById('pixArea');
   pixArea.style.display = 'none'; pixArea.innerHTML = '';
   const brickEl = document.getElementById('brickContainer');
@@ -1854,10 +1865,11 @@ function unlockReportFallback() {
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <div id="brickModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;align-items:flex-start;justify-content:center;overflow:auto;padding:20px;">
   <div style="background:#0F0F1E;border:1px solid rgba(108,99,255,.25);border-radius:16px;max-width:480px;width:100%;padding:18px;margin-top:24px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
       <strong style="font-size:1.02rem;">Desbloquear relatório completo</strong>
       <button onclick="fecharBrick()" aria-label="Fechar" style="background:none;border:none;color:#9490C0;font-size:24px;cursor:pointer;line-height:1;">×</button>
     </div>
+    <div id="brickResumo" style="font-size:0.82rem;color:var(--text-2);margin-bottom:12px;"></div>
     <div id="brickContainer"></div>
     <div id="pixArea" style="display:none;text-align:center;margin-top:10px;"></div>
   </div>
