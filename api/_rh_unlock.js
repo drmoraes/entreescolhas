@@ -30,6 +30,11 @@ module.exports = async (req, res) => {
   try {
     await client.query('BEGIN');
 
+    // Trava a linha da empresa primeiro: serializa débitos concorrentes do MESMO
+    // company_id (duas unlocks simultâneas de candidatos diferentes não podem mais
+    // ler o mesmo saldo antes de qualquer commit — evita overdraft de créditos).
+    await client.query('SELECT id FROM companies WHERE id = $1 FOR UPDATE', [ctx.company_id]);
+
     const cRes = await client.query('SELECT * FROM candidates WHERE public_token = $1 FOR UPDATE', [token]);
     const c = cRes.rows[0];
     if (!c) { await client.query('ROLLBACK'); return err(res, 'Candidato não encontrado', 404); }

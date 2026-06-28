@@ -83,14 +83,30 @@ async function applyPaidPurchase(purchaseId, paymentMethod) {
   return { ok: true, kind: p.kind, email: p.email };
 }
 
-// Estorno/arrependimento: marca o pedido como refunded e cancela a comissão pendente.
+// Estorno/arrependimento: marca o pedido como refunded e cancela a comissão.
+// 'pending'/'released' ainda não tiveram Pix enviado → simplesmente cancela (nenhum dinheiro
+// precisa voltar). 'paid' já foi pago ao afiliado → cancelar silenciosamente esconderia que
+// há um valor a recuperar, então sinalizamos clawback_due para o financeiro tratar manualmente.
 async function refundPurchase(purchaseId, reason) {
   await query("UPDATE purchases SET status='refunded', refunded_at=NOW() WHERE id=$1 AND status<>'refunded'", [purchaseId]);
+  const cancelReason = String(reason || 'estorno').slice(0, 140);
+
   await query(
     `UPDATE affiliate_commissions
         SET status='cancelled', cancelled_at=NOW(), cancel_reason=$2
       WHERE purchase_id=$1 AND status IN ('pending','released')`,
-    [purchaseId, String(reason || 'estorno').slice(0, 140)]);
+    [purchaseId, cancelReason]);
+
+  const paid = await query(
+    `UPDATE affiliate_commissions
+        SET clawback_due=TRUE, clawback_note=$2
+      WHERE purchase_id=$1 AND status='paid'
+      RETURNING id, referrer_email, commission_amount`,
+    [purchaseId, cancelReason]);
+  if (paid.rows.length) {
+    console.error('[referral] comissão já paga precisa de clawback:', paid.rows.map(r =>
+      `commission#${r.id} referrer=${r.referrer_email} valor=${r.commission_amount}`).join('; '));
+  }
 }
 
 module.exports = { round2, validRefFor, computeAmount, createPurchase, applyPaidPurchase, refundPurchase };

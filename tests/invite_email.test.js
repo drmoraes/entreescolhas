@@ -26,7 +26,7 @@ async function setup() {
   await pool.query(`CREATE TABLE companies(id serial primary key, nome text, email text, plan text default 'growth',
     status text default 'ativa', reputation int default 100, created_at timestamptz default now(), updated_at timestamptz default now())`);
   await pool.query(`CREATE TABLE company_users(id serial primary key, company_id int, nome text, email text,
-    password_hash text, role text, session_token text, session_expires timestamptz, last_login timestamptz,
+    password_hash text, role text, status text default 'ativo', session_token text, session_expires timestamptz, last_login timestamptz,
     created_at timestamptz default now(), updated_at timestamptz default now())`);
   await pool.query(`CREATE TABLE candidates(id serial primary key, nome text, email text, telefone text,
     public_token text, confirm_token text, invites_total int default 0)`);

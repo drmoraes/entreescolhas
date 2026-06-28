@@ -36,12 +36,13 @@ async function setup() {
   await pool.query(`CREATE TABLE companies(id serial primary key, nome text, email text, plan text default 'growth',
     status text default 'ativa', reputation int default 100, created_at timestamptz default now(), updated_at timestamptz default now())`);
   await pool.query(`CREATE TABLE company_users(id serial primary key, company_id int, nome text, email text,
-    password_hash text, role text, session_token text, session_expires timestamptz, last_login timestamptz,
+    password_hash text, role text, status text default 'ativo', session_token text, session_expires timestamptz, last_login timestamptz,
     created_at timestamptz default now(), updated_at timestamptz default now())`);
   await pool.query(`CREATE TABLE credit_ledger(id serial primary key, company_id int, delta int, reason text,
     ref_type text, ref_id int, balance_after int, meta jsonb, created_at timestamptz default now(), expires_at timestamptz)`);
   await pool.query(`CREATE TABLE credit_orders(id serial primary key, company_id int, package text, credits int, price numeric,
     external_reference text unique, status text default 'pending', mp_preference_id text, mp_payment_id text,
+    coupon_code text, discount numeric,
     created_at timestamptz default now(), paid_at timestamptz)`);
   await pool.query(`CREATE TABLE access_logs(id serial primary key, company_id int, company_user_id int, candidate_id int,
     action text, purpose text, ip text, meta jsonb, created_at timestamptz default now())`);

@@ -35,7 +35,7 @@ async function setup() {
     plan text default 'trial', status text default 'ativa', reputation int default 100,
     created_at timestamptz default now(), updated_at timestamptz default now())`);
   await pool.query(`CREATE TABLE company_users(id serial primary key, company_id int, nome text, email text unique,
-    password_hash text, role text default 'recruiter', session_token text, session_expires timestamptz,
+    password_hash text, role text default 'recruiter', status text default 'ativo', session_token text, session_expires timestamptz,
     last_login timestamptz, created_at timestamptz default now(), updated_at timestamptz default now())`);
   await pool.query(`CREATE TABLE credit_ledger(id serial primary key, company_id int, delta int, reason text,
     ref_type text, ref_id int, balance_after int, meta jsonb, created_at timestamptz default now(), expires_at timestamptz)`);
@@ -45,7 +45,8 @@ async function setup() {
     status text default 'novo', visibility text default 'visible', b2b_consent boolean default false, b2b_consent_at timestamptz,
     last_confirmed_at timestamptz, email_verified boolean default false, phone_verified boolean default false,
     public_token text, confirm_token text, responses_received int default 0, invites_total int default 0, notes text,
-    cep text, lat double precision, lon double precision, idiomas jsonb, aceita_relocacao boolean, contrato text)`);
+    cep text, lat double precision, lon double precision, idiomas jsonb, aceita_relocacao boolean, contrato text,
+    pcd boolean default false, pcd_tipo text)`);
   await pool.query(`CREATE TABLE unlocks(id serial primary key, company_id int, company_user_id int, candidate_id int,
     credits_spent int default 1, status text default 'active', contact_valid boolean, adherence_score int, confidence_score int,
     invited_at timestamptz, sla_deadline timestamptz, responded_at timestamptz, refunded_at timestamptz,
@@ -117,7 +118,7 @@ async function call(handler, reqOpt) { const res = mkRes(); await handler(mkReq(
   r = await call(unlock, { method: 'POST', body: { token: 'PUB_OK', criteria: { skills: ['React'] } } });
   ok('desbloqueio 200', r._status === 200);
   ok('unlocked=true', r._json.unlocked === true);
-  ok('saldo caiu para 4', r._json.balance === 4);
+  ok('saldo caiu para 1 (Ana é "pleno" => categoria analista, custo 4)', r._json.balance === 1);
   ok('revela PII (nome/email/telefone)', r._json.candidate && r._json.candidate.nome === 'Ana Silva' && !!r._json.candidate.email);
 
   console.log('\n# Desbloqueio duplicado é bloqueado');
@@ -127,7 +128,7 @@ async function call(handler, reqOpt) { const res = mkRes(); await handler(mkReq(
   console.log('\n# Antifrustração: contato inválido → estorno automático');
   r = await call(unlock, { method: 'POST', body: { token: 'PUB_BAD' } });
   ok('refunded=true', r._json.refunded === true);
-  ok('saldo volta a 4 (debita e estorna)', r._json.balance === 4);
+  ok('saldo volta a 1 (Bruno é "junior" => categoria operacional, custo 1, debita e estorna)', r._json.balance === 1);
   const vis = await pool.query("SELECT visibility FROM candidates WHERE public_token='PUB_BAD'");
   ok('perfil de contato inválido vira hidden', vis.rows[0].visibility === 'hidden');
 
@@ -154,7 +155,7 @@ async function call(handler, reqOpt) { const res = mkRes(); await handler(mkReq(
   console.log('\n# Carteira reflete o extrato');
   r = await call(wallet, { method: 'GET' });
   ok('wallet 200', r._status === 200);
-  ok('saldo final = 4', r._json.balance === 4);
+  ok('saldo final = 1', r._json.balance === 1);
   ok('extrato tem lançamentos', r._json.ledger.length >= 3);
 
   console.log('\n# Auditoria registrou reveal_pii');

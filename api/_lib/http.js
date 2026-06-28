@@ -35,11 +35,16 @@ function err(res, msg, status = 400) {
 // Aceita a CHAVE MESTRA (ADMIN_API_KEY) ou o TOKEN de um usuário admin ativo.
 // Define req.actor para atribuição/auditoria. Async (faz lookup no banco para tokens).
 async function requireApiKey(req, res) {
-  const key = req.headers['x-api-key'] || (req.query && req.query.key) || '';
-  if (key && key === process.env.ADMIN_API_KEY) {
+  // A chave mestra (ADMIN_API_KEY) só é aceita via header — nunca via query string,
+  // para não ficar gravada em logs de acesso, histórico do navegador ou Referer.
+  // Tokens de admin individuais (não a chave mestra) continuam podendo vir por query (?key=),
+  // pois são revogáveis e escopados a um único usuário.
+  const headerKey = req.headers['x-api-key'] || '';
+  if (headerKey && headerKey === process.env.ADMIN_API_KEY) {
     req.actor = { id: null, nome: 'Chave mestra', role: 'owner', master: true };
     return true;
   }
+  const key = headerKey || (req.query && req.query.key) || '';
   if (key) {
     try {
       const { query } = require('./db');

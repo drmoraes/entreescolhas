@@ -55,6 +55,9 @@ module.exports = async (req, res) => {
   try {
     await client.query('BEGIN');
 
+    // mesma trava usada em rh_unlock: serializa leituras/escritas do saldo desta empresa.
+    await client.query('SELECT id FROM companies WHERE id = $1 FOR UPDATE', [ctx.company_id]);
+
     const dRes = await client.query(
       `INSERT INTO disputes (unlock_id, company_id, reason, status, resolution, notes)
        VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,

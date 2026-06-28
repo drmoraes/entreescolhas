@@ -78,6 +78,11 @@ const STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS idx_comm_status  ON affiliate_commissions (status)`,
   `CREATE INDEX IF NOT EXISTS idx_comm_release ON affiliate_commissions (release_at)`,
 
+  // Recuperação de comissão já paga quando a compra original é estornada depois do payout.
+  `ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS clawback_due BOOLEAN NOT NULL DEFAULT FALSE`,
+  `ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS clawback_note VARCHAR(140)`,
+  `CREATE INDEX IF NOT EXISTS idx_comm_clawback ON affiliate_commissions (clawback_due) WHERE clawback_due`,
+
   // ── Lotes de pagamento Pix (fila manual) ─────────────────
   `CREATE TABLE IF NOT EXISTS affiliate_payouts (
      id           SERIAL PRIMARY KEY,
