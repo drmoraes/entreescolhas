@@ -50,18 +50,23 @@ module.exports = async (req, res) => {
   );
   const existing = rows[0];
   let jaConfirmado = false;
+  let accessToken;
 
+  // Auto-confirmação: a pessoa entra direto no teste, sem esperar clicar no
+  // e-mail. O e-mail de confirmação ainda é enviado (serve de comprovante e
+  // de link de recuperação de acesso), mas não bloqueia mais o início do teste.
   if (existing) {
+    accessToken = existing.access_token;
+    jaConfirmado = !!existing.confirmed_at;
     await query(
-      'UPDATE leads SET nome = $1, confirm_token = $2, ip = $3, updated_at = NOW() WHERE id = $4',
+      'UPDATE leads SET nome = $1, confirm_token = $2, ip = $3, confirmed_at = COALESCE(confirmed_at, NOW()), updated_at = NOW() WHERE id = $4',
       [nome, confirmToken, ip, existing.id]
     );
-    jaConfirmado = !!existing.confirmed_at;
   } else {
-    const accessToken = genToken();
+    accessToken = genToken();
     await query(
-      `INSERT INTO leads (nome, email, jornada, confirm_token, access_token, ip)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+      `INSERT INTO leads (nome, email, jornada, confirm_token, access_token, ip, confirmed_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
       [nome, email, jornada, confirmToken, accessToken, ip]
     );
   }
@@ -88,20 +93,23 @@ module.exports = async (req, res) => {
       <p>Se você não pediu este e-mail, pode ignorá-lo.</p>
     `;
   } else {
-    subject = 'Confirme seu e-mail — Entre Escolhas';
+    subject = 'Seu acesso ao Entre Escolhas';
     html = `
       <p>Olá, ${escapeHtml(nome)}!</p>
-      <p>Falta só um passo para começar sua análise gratuita no Entre Escolhas. Confirme seu e-mail clicando no link abaixo:</p>
+      <p>Seu acesso já está liberado — você já pode estar com o teste aberto em outra aba.</p>
+      <p>Guarde este e-mail: ele também serve como link de acesso/recuperação, caso precise continuar depois:</p>
       <p><a href="${link}">${link}</a></p>
       <p>Se você não pediu este e-mail, pode ignorá-lo.</p>
     `;
   }
 
+  // O envio do e-mail é best-effort: o acesso ao teste já foi liberado acima
+  // (auto-confirmado), então uma falha de e-mail não pode mais bloquear a
+  // pessoa de começar — só perde o comprovante/link de recuperação por e-mail.
   const sent = await mailer.send(email, subject, html);
   if (!sent) {
-    console.error('lead_register: falha ao enviar e-mail —', mailer.getLastError());
-    return err(res, 'Não foi possível enviar o e-mail agora. Tente novamente em alguns minutos.', 502);
+    console.error('lead_register: falha ao enviar e-mail (não bloqueante) —', mailer.getLastError());
   }
 
-  json(res, { ok: true });
+  json(res, { ok: true, access_token: accessToken });
 };

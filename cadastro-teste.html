@@ -63,23 +63,23 @@
 
     <div id="form-state">
       <h1>Antes de começar</h1>
-      <p class="sub">Informe seu nome e e-mail. Você vai receber um link de confirmação — é só clicar para iniciar a análise gratuita.</p>
+      <p class="sub">Informe seu nome e e-mail. Sem confirmação por e-mail — você já cai direto no teste.</p>
       <form id="lead-form">
         <label for="lead-nome">Nome</label>
         <input type="text" id="lead-nome" name="nome" autocomplete="name" required />
         <label for="lead-email">E-mail</label>
         <input type="email" id="lead-email" name="email" autocomplete="email" required />
-        <button type="submit" class="btn-primary" id="lead-submit">Quero começar</button>
+        <button type="submit" class="btn-primary" id="lead-submit">Começar agora</button>
         <p class="msg error" id="lead-error"></p>
       </form>
-      <p class="fine" id="fine-default">Usamos seu e-mail só para enviar o link de acesso e o relatório completo. Sem spam.<br/>Já fez esse teste antes? <a href="/recuperar-acesso.html" style="color:var(--accent);">Recupere seu acesso</a>.</p>
+      <p class="fine" id="fine-default">Usamos seu e-mail só para enviar seu link de acesso (caso precise voltar depois) e o relatório completo. Sem spam.<br/>Já fez esse teste antes? <a href="/recuperar-acesso.html" style="color:var(--accent);">Recupere seu acesso</a>.</p>
       <p class="fine" id="fine-returning" style="display:none;">Identificamos seus dados de um cadastro anterior — já preenchemos pra você. Não é você? <a href="#" id="not-you-link" style="color:var(--accent);">Limpar campos</a>.</p>
     </div>
 
     <div class="success-box" id="success-state">
       <div class="success-icon">✉️</div>
-      <h1>Confira seu e-mail</h1>
-      <p class="sub">Enviamos um link de confirmação para <strong id="success-email"></strong>. Clique nele para começar sua análise.</p>
+      <h1>Quase lá...</h1>
+      <p class="sub">Não foi possível te levar direto ao teste agora. Enviamos um link de acesso para <strong id="success-email"></strong> — clique nele para continuar.</p>
       <p class="fine">Não encontrou? Veja a caixa de spam ou <a href="#" id="resend-link" style="color:var(--accent);">peça um novo link</a>.</p>
     </div>
 
@@ -142,18 +142,28 @@ form.addEventListener('submit', async (e) => {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Informe um e-mail válido.'); return; }
 
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Enviando...';
+  submitBtn.textContent = 'Entrando...';
   try {
-    await registerLead(nome, email);
+    const data = await registerLead(nome, email);
     if (window.eeIdentity) window.eeIdentity.save({ nome, email });
+    if (typeof trackEvent === 'function') { trackEvent('lead_register', { jornada }); }
+
+    // Acesso já liberado na hora — vai direto pro teste, sem esperar e-mail.
+    if (data && data.access_token) {
+      if (window.eeIdentity) window.eeIdentity.saveToken(jornada, data.access_token);
+      window.location.href = '/teste.html?jornada=' + encodeURIComponent(jornada) + '&access=' + encodeURIComponent(data.access_token);
+      return;
+    }
+
+    // Fallback (ex.: resposta antiga de cache/API sem access_token): mantém o
+    // fluxo por e-mail como rede de segurança.
     document.getElementById('success-email').textContent = email;
     document.getElementById('form-state').style.display = 'none';
     document.getElementById('success-state').classList.add('show');
-    if (typeof trackEvent === 'function') { trackEvent('lead_register', { jornada }); }
   } catch (err) {
     setError(err.message);
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Quero começar';
+    submitBtn.textContent = 'Começar agora';
   }
 });
 
