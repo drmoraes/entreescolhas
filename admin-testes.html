@@ -74,7 +74,7 @@
 
 <script>
 const $=id=>document.getElementById(id);let KEY='';let ROWS=[];
-const JLABEL={arquetipo:'Arquétipo',bussola:'Bússola Vocacional','fit-cultural':'Fit Cultural',scanner:'Scanner de Relacionamento'};
+const JLABEL={arquetipo:'Arquétipo',bussola:'Bússola Vocacional','fit-cultural':'Ambiente Ideal',scanner:'Scanner de Relacionamento'};
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function fmtDate(s){return s?new Date(s).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';}
 function api(path,opts={}){return fetch('/api/b2b?'+path,{...opts,headers:{'X-Api-Key':KEY,...(opts.headers||{})}}).then(async r=>{if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||('Erro '+r.status));}return r.json();});}
@@ -115,7 +115,7 @@ function render(d){
         <option value="">Todas as jornadas</option>
         <option value="arquetipo">Arquétipo</option>
         <option value="bussola">Bússola Vocacional</option>
-        <option value="fit-cultural">Fit Cultural</option>
+        <option value="fit-cultural">Ambiente Ideal</option>
         <option value="scanner">Scanner de Relacionamento</option>
       </select>
       <select id="fs" style="max-width:200px" onchange="filtra()">

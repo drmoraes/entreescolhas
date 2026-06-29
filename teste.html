@@ -190,7 +190,7 @@
     </div>
 
     <!-- Diagnóstico de Coaching Comportamental — gerado a partir das respostas do teste -->
-    <div id="r-coaching-section" style="display:none;max-width:560px;margin:0 auto 28px;">
+    <div id="r-coaching-section" style="display:none;max-width:640px;margin:0 auto 28px;">
       <div class="dims-title" style="margin-bottom:10px;">Diagnóstico de coaching · como você age em cenários reais</div>
       <div id="r-coaching-loading" style="font-size:0.85rem;color:var(--text-2);padding:14px 0;">Gerando seu diagnóstico…</div>
       <div id="r-coaching-cards" style="display:none;gap:10px;text-align:left;"></div>
@@ -596,11 +596,11 @@ const JORNADAS = {
   // ─────────────────────────────────────────────────────────
   'fit-cultural': {
     badge: 'Início gratuito • Relatório completo R$ 9,90',
-    title: 'Descubra seu<br/><span class="grad serif">Perfil de Fit Cultural</span>',
+    title: 'Descubra seu<br/><span class="grad serif">Perfil de Ambiente Ideal</span>',
     desc: '10 cenários profissionais. Cada escolha revela o tipo de ambiente, cultura e dinâmica onde você performa naturalmente melhor.',
-    resultTag: 'Perfil de Fit Cultural',
+    resultTag: 'Perfil de Ambiente Ideal',
     dimsTitle: 'Suas 6 dimensões de fit',
-    shareText: 'Descobri meu perfil de fit cultural no Entre Escolhas. Análise gratuita em 20 minutos! https://www.entreescolhas.com.br/fit-cultural.html',
+    shareText: 'Descobri meu perfil de ambiente ideal no Entre Escolhas. Análise gratuita em 20 minutos! https://www.entreescolhas.com.br/fit-cultural.html',
     backLink: '/fit-cultural.html',
     dimNames: {
       AUT: 'Necessidade de autonomia',
@@ -1385,22 +1385,38 @@ function renderDiagnosticoIA() {
   })
     .then(res => res.json().catch(() => ({})).then(data => ({ ok: res.ok, data })))
     .then(({ ok, data }) => {
-      if (!ok || !data.insight) { box.style.display = 'none'; return; }
+      if (!ok || !data.resumo_executivo) { box.style.display = 'none'; return; }
       loading.style.display = 'none';
       cards.style.display = 'grid';
-      cards.innerHTML = `
-        <div style="border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--bg-card);">
-          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent);font-weight:700;margin-bottom:6px;">⚡ Comportamento atual</div>
-          <div style="font-size:0.92rem;color:var(--text);line-height:1.5;">${data.insight}</div>
-        </div>
-        <div style="border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--bg-card);">
-          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--gold);font-weight:700;margin-bottom:6px;">🌱 Oportunidade de desenvolvimento</div>
-          <div style="font-size:0.92rem;color:var(--text);line-height:1.5;">${data.oportunidade}</div>
-        </div>
-        <div style="border:1.5px solid var(--accent);border-radius:14px;padding:16px;background:rgba(108,99,255,0.08);">
-          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent);font-weight:700;margin-bottom:6px;">🎯 Ação prática para esta semana</div>
-          <div style="font-size:0.92rem;color:var(--text);line-height:1.5;">${data.acao_pratica}</div>
+
+      const card = (label, color, bg, border, text) => `
+        <div style="border:${border};border-radius:14px;padding:16px;background:${bg};">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:${color};font-weight:700;margin-bottom:6px;">${label}</div>
+          <div style="font-size:0.92rem;color:var(--text);line-height:1.5;">${text}</div>
         </div>`;
+
+      const perguntas = Array.isArray(data.perguntas_coaching) ? data.perguntas_coaching : [];
+
+      cards.innerHTML = `
+        <div style="border:1.5px solid var(--accent);border-radius:14px;padding:18px;background:rgba(108,99,255,0.08);">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent);font-weight:700;margin-bottom:6px;">🧭 Resumo executivo</div>
+          <div style="font-size:0.95rem;color:var(--text);line-height:1.55;">${data.resumo_executivo}</div>
+        </div>
+        ${card('🧩 Padrões de decisão', 'var(--accent)', 'var(--bg-card)', '1px solid var(--border)', data.padroes_decisao)}
+        ${card('🤝 Estilo de relacionamento', 'var(--accent)', 'var(--bg-card)', '1px solid var(--border)', data.estilo_relacionamento)}
+        ${card('⚡ Ponto forte', 'var(--green)', 'var(--bg-card)', '1px solid var(--border)', data.ponto_forte)}
+        ${card('🌓 Ponto cego provável', 'var(--gold)', 'var(--bg-card)', '1px solid var(--border)', data.ponto_cego)}
+        ${card('⚠️ Risco comportamental', 'var(--gold)', 'var(--bg-card)', '1px solid var(--border)', data.riscos_comportamentais)}
+        ${card('🎯 Sugestão de carreira', 'var(--accent)', 'var(--bg-card)', '1px solid var(--border)', data.sugestao_carreira)}
+        ${card('📅 Ação para os próximos 7 dias', 'var(--accent)', 'rgba(108,99,255,0.08)', '1.5px solid var(--accent)', data.plano_7_dias)}
+        ${card('🗓️ Prática para os próximos 30 dias', 'var(--accent)', 'var(--bg-card)', '1px solid var(--border)', data.plano_30_dias)}
+        ${perguntas.length ? `<div style="border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--bg-card);">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent);font-weight:700;margin-bottom:8px;">💬 Perguntas para refletir</div>
+          <ul style="margin:0;padding-left:18px;font-size:0.9rem;color:var(--text);line-height:1.6;">
+            ${perguntas.map(p => `<li>${p}</li>`).join('')}
+          </ul>
+        </div>` : ''}
+        ${card('🗣️ Para levar a uma conversa com mentor, líder ou RH', 'var(--text-2)', 'var(--bg-card)', '1px solid var(--border)', data.recomendacoes_conversa)}`;
     })
     .catch(() => { box.style.display = 'none'; });
 }
@@ -1730,7 +1746,7 @@ function showResult() {
     localStorage.setItem('ec_test_results', JSON.stringify(saved));
   } catch(e) {}
 
-  const TEST_NOMES = { arquetipo: 'Padrões de Decisão', bussola: 'Bússola Vocacional', 'fit-cultural': 'Fit Cultural', scanner: 'Scanner de Relacionamento' };
+  const TEST_NOMES = { arquetipo: 'Padrões de Decisão', bussola: 'Bússola Vocacional', 'fit-cultural': 'Ambiente Ideal', scanner: 'Scanner de Relacionamento' };
   LAST_REPORT = {
     arch: { icon: arch.icon, name: arch.name, mode: arch.mode, desc: arch.desc, insights: arch.insights },
     scores,
