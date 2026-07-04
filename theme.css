@@ -1,0 +1,89 @@
+/* ============================================================
+   EntreEscolhas — Sistema de tema claro/escuro
+   O site é dark por padrão (variáveis nos :root de cada página).
+   Este arquivo adiciona o tema CLARO via html[data-theme="light"]
+   (especificidade maior que :root, então vence sem depender da ordem)
+   e o botão flutuante de alternância.
+   ============================================================ */
+
+/* Transição suave ao trocar de tema (não afeta o 1º carregamento) */
+html.theme-ready body,
+html.theme-ready body * {
+  transition: background-color .25s ease, border-color .25s ease, color .2s ease;
+}
+
+/* ---------- TEMA CLARO ---------- */
+html[data-theme="light"] {
+  --bg:           #F6F6FB;
+  --bg-card:      #FFFFFF;
+  --bg-raised:    #F0EFF7;
+  --bg-input:     #FFFFFF;
+
+  --border:       rgba(108, 99, 255, 0.20);
+  --border-hover: rgba(108, 99, 255, 0.50);
+
+  --accent:       #5B52E0;
+  --accent-2:     #7A6CFF;
+  --accent-dim:   rgba(108, 99, 255, 0.10);
+  --accent-glow:  rgba(108, 99, 255, 0.22);
+
+  --text:         #1B1A26;
+  --text-2:       #4C495F;
+  --text-3:       #6E6A85;
+
+  /* --white permanece #FFFFFF (texto sobre botões accent) */
+  --gold:         #A9842A;
+  --gold-dim:     rgba(169, 132, 42, 0.12);
+  --green:        #15A34A;
+  --green-dim:    rgba(21, 163, 74, 0.12);
+  --red:          #DC2626;
+  --red-dim:      rgba(220, 38, 38, 0.12);
+  --blue:         #2563EB;
+  --blue-dim:     rgba(37, 99, 235, 0.12);
+
+  --shadow:       0 10px 40px rgba(60, 55, 120, 0.14);
+}
+
+/* Suaviza o overlay de ruído no tema claro (ele foi feito p/ fundo escuro) */
+html[data-theme="light"] body::before { opacity: .4; }
+
+/* ---------- BOTÃO FLUTUANTE DE TEMA ---------- */
+.theme-toggle {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 9999;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28);
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.theme-toggle:hover {
+  transform: translateY(-2px) scale(1.04);
+  border-color: var(--accent);
+  box-shadow: 0 10px 30px var(--accent-glow);
+}
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.theme-toggle svg { width: 22px; height: 22px; display: block; }
+
+/* mostra o ícone certo conforme o tema */
+.theme-toggle .icon-sun  { display: none; }
+.theme-toggle .icon-moon { display: block; }
+html[data-theme="light"] .theme-toggle .icon-sun  { display: block; }
+html[data-theme="light"] .theme-toggle .icon-moon { display: none; }
+
+@media (max-width: 640px) {
+  .theme-toggle { width: 42px; height: 42px; left: 14px; bottom: 14px; }
+}

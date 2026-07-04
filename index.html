@@ -396,6 +396,25 @@
       z-index: 1;
       max-width: 720px;
     }
+    /* Ilustração do hero (pessoa + caminhos que se bifurcam) */
+    .hero-paths {
+      position: absolute;
+      right: -20px;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0.72;
+      z-index: 0;
+      pointer-events: none;
+      max-width: 45vw;
+      height: auto;
+    }
+    /* Em telas médias, a figura vira um detalhe discreto ao fundo */
+    @media (max-width: 1279px) {
+      .hero-paths { opacity: 0.28; right: -80px; max-width: 55vw; }
+    }
+    @media (max-width: 860px) {
+      .hero-paths { display: none; }
+    }
     .badge {
       display: inline-flex;
       align-items: center;
@@ -497,12 +516,27 @@
 
     /* ── Scenario Demo ──────────────────────────────────────────── */
     .scenario-card {
-      background: var(--bg-card);
+      position: relative;
+      z-index: 1;
+      /* fundo translúcido (vidro) — a ilustração do hero aparece por trás */
+      background: rgba(15, 15, 30, 0.68);
+      -webkit-backdrop-filter: blur(10px) saturate(120%);
+      backdrop-filter: blur(10px) saturate(120%);
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 32px;
       margin-top: 56px;
       max-width: 560px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+    html[data-theme="light"] .scenario-card {
+      background: rgba(255, 255, 255, 0.72);
+      box-shadow: 0 20px 60px rgba(60, 55, 120, 0.15);
+    }
+    /* opções internas: leve translucidez p/ combinar com o vidro */
+    .scenario-opt { background: color-mix(in srgb, var(--bg-raised) 82%, transparent); }
+    @supports not (background: color-mix(in srgb, red, blue)) {
+      .scenario-opt { background: var(--bg-raised); }
     }
     .scenario-label {
       font-size: 0.75rem;
@@ -1136,6 +1170,8 @@
       flex-shrink: 0;
     }
   </style>
+  <link rel="stylesheet" href="/theme.css">
+  <script src="/theme.js"></script>
 </head>
 <body>
 
@@ -1205,7 +1241,7 @@
   <div class="orb" style="width:300px;height:300px;background:rgba(201,168,76,0.08);bottom:100px;left:-80px;"></div>
 
   <!-- Ilustração humanizada: pessoa diante de caminhos que se bifurcam — "você não escolhe por acaso" -->
-  <svg class="hero-paths" width="460" height="460" viewBox="0 0 460 460" fill="none" aria-hidden="true" style="position:absolute;right:-20px;top:50%;transform:translateY(-50%);opacity:0.9;z-index:0;pointer-events:none;">
+  <svg class="hero-paths" width="460" height="460" viewBox="0 0 460 460" fill="none" aria-hidden="true">
     <!-- figura humana em line-art -->
     <circle cx="70" cy="150" r="20" stroke="#6C63FF" stroke-width="3" fill="rgba(108,99,255,0.08)"/>
     <path d="M70 170 L70 250" stroke="#6C63FF" stroke-width="3" stroke-linecap="round"/>
