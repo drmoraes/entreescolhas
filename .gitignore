@@ -31,3 +31,7 @@ node_modules/
 .env.local
 .vercel
 .env*
+
+# Prévias internas de relatório (mockups, não publicar)
+relatorio-premium-preview.html
+arquetipos-preview.html
