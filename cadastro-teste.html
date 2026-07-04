@@ -101,6 +101,13 @@ const submitBtn = document.getElementById('lead-submit');
 // (campos continuam editáveis) em vez de pedir tudo de novo.
 // Roda no DOMContentLoaded porque identity.js é "defer" — só existe depois desse evento.
 document.addEventListener('DOMContentLoaded', function () {
+  // Prefill por e-mail vindo na URL (ex.: quem comprou o combo e vem fazer outra jornada).
+  const emailParam = (params.get('email') || '').trim().toLowerCase();
+  const nomeParam = (params.get('nome') || '').trim();
+  if (emailParam) {
+    const eEl = document.getElementById('lead-email'); if (eEl && !eEl.value) eEl.value = emailParam;
+    const nEl = document.getElementById('lead-nome'); if (nEl && nomeParam && !nEl.value) nEl.value = nomeParam;
+  }
   if (!window.eeIdentity) return;
   const saved = window.eeIdentity.get();
   if (!saved || (!saved.nome && !saved.email)) return;

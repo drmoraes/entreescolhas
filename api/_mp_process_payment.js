@@ -76,7 +76,10 @@ module.exports = async (req, res) => {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`,
-        'X-Idempotency-Key': `pay_${access}_${data.token || data.payment_method_id || 'm'}_${Date.now()}`,
+        // Chave estável por tentativa (SEM Date.now()): um duplo-clique com o mesmo
+        // token/método reusa a chave e o Mercado Pago deduplica → nunca cobra duas vezes.
+        // Tentativas distintas (novo token de cartão) geram chave nova normalmente.
+        'X-Idempotency-Key': `pay_${access}_${data.token || data.payment_method_id || 'm'}_${amount}`,
       },
       body: JSON.stringify(payment),
     });

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Combo liberado — Entre Escolhas</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --bg:#08080F;--bg-card:#0F0F1E;--bg-raised:#141428;--border:rgba(108,99,255,0.15);
+    --accent:#6C63FF;--accent-dim:rgba(108,99,255,0.12);--text:#F0EFF8;--text-2:#ABA6D4;
+    --text-3:#8782B0;--white:#fff;--gold:#C9A84C;--green:#22C55E;--red:#FF6B6B;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.6;min-height:100vh;padding:32px 20px;display:flex;align-items:center;justify-content:center;}
+  .serif{font-family:'Playfair Display',Georgia,serif;}
+  .wrap{max-width:560px;width:100%;text-align:center;}
+  .spinner{width:42px;height:42px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;margin:0 auto 22px;animation:spin .9s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .seal{width:66px;height:66px;margin:0 auto 18px;border-radius:50%;background:rgba(34,197,94,.12);border:1.5px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:2rem;}
+  h1{font-size:1.7rem;font-weight:700;letter-spacing:-.02em;margin-bottom:10px;}
+  p.sub{color:var(--text-2);font-size:.98rem;margin-bottom:26px;}
+  .grid{display:grid;gap:12px;text-align:left;}
+  a.j{display:flex;align-items:center;gap:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;text-decoration:none;color:var(--text);transition:border-color .2s,transform .15s;}
+  a.j:hover{border-color:var(--accent);transform:translateY(-1px);}
+  a.j .ic{width:42px;height:42px;flex-shrink:0;border-radius:10px;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:1.3rem;}
+  a.j .tx b{display:block;font-weight:700;font-size:.98rem;}
+  a.j .tx span{font-size:.82rem;color:var(--text-3);}
+  a.j .go{margin-left:auto;color:var(--accent);font-size:1.1rem;}
+  .note{font-size:.82rem;color:var(--text-3);margin-top:22px;}
+  .btn{display:inline-block;margin-top:18px;background:var(--accent);color:var(--white);text-decoration:none;padding:13px 26px;border-radius:12px;font-weight:700;font-size:.95rem;border:none;cursor:pointer;font-family:inherit;}
+</style>
+<link rel="stylesheet" href="/theme.css" />
+<script src="/theme.js"></script>
+</head>
+<body>
+  <div class="wrap" id="wrap">
+    <div class="spinner"></div>
+    <h1>Confirmando seu pagamento</h1>
+    <p class="sub">Aguarde um instante enquanto o Mercado Pago confirma. Isso costuma levar poucos segundos.</p>
+  </div>
+
+<script>
+  var params = new URLSearchParams(location.search);
+  var access = params.get('access') || '';
+  var wrap = document.getElementById('wrap');
+
+  var JORNADAS = [
+    { id:'arquetipo',    ic:'🧭', nome:'Padrões de Decisão',       desc:'Como você decide quando o cenário muda' },
+    { id:'fit-cultural', ic:'🏢', nome:'Ambiente Ideal & Carreira', desc:'Onde você performa naturalmente melhor' },
+    { id:'scanner',      ic:'🤝', nome:'Scanner de Relacionamento', desc:'Como você age em vínculos e conflitos' },
+    { id:'bussola',      ic:'🧲', nome:'Bússola Vocacional',        desc:'O que move as suas escolhas de carreira' },
+  ];
+
+  function linkFor(j, email) {
+    if (j.id === 'arquetipo') return '/teste.html?jornada=arquetipo&access=' + encodeURIComponent(access);
+    return '/cadastro-teste.html?jornada=' + encodeURIComponent(j.id) + (email ? '&email=' + encodeURIComponent(email) : '');
+  }
+
+  function showUnlocked(email, nome) {
+    var saud = nome ? (', ' + nome.split(' ')[0]) : '';
+    var cards = JORNADAS.map(function (j) {
+      return '<a class="j" href="' + linkFor(j, email) + '">' +
+        '<span class="ic">' + j.ic + '</span>' +
+        '<span class="tx"><b>' + j.nome + '</b><span>' + j.desc + '</span></span>' +
+        '<span class="go">→</span></a>';
+    }).join('');
+    wrap.innerHTML =
+      '<div class="seal">✓</div>' +
+      '<h1 class="serif">Combo liberado' + saud + '!</h1>' +
+      '<p class="sub">Todas as 4 jornadas já estão desbloqueadas para o seu e-mail. Comece por onde quiser — o relatório completo de cada uma libera assim que você termina.</p>' +
+      '<div class="grid">' + cards + '</div>' +
+      '<p class="note">Guarde este acesso: você também recebe tudo por e-mail e pode voltar quando quiser.</p>';
+  }
+
+  function showProcessing() {
+    wrap.innerHTML =
+      '<div class="seal" style="background:rgba(201,168,76,.12);border-color:var(--gold);">📬</div>' +
+      '<h1>Pagamento em processamento</h1>' +
+      '<p class="sub">Recebemos a confirmação, mas ainda estamos finalizando a liberação. Você vai receber tudo por e-mail em minutos — ou clique abaixo para verificar de novo.</p>' +
+      '<button class="btn" onclick="location.reload()">Já paguei — verificar agora</button>';
+  }
+
+  if (!access) {
+    location.replace('/comprar.html?kind=combo');
+  } else {
+    var attempts = 0, max = 10; // ~20s
+    (function poll() {
+      attempts++;
+      fetch('/api/lead_status?access=' + encodeURIComponent(access))
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d && d.paid) { showUnlocked(d.email, d.nome); }
+          else if (attempts >= max) { showProcessing(); }
+          else { setTimeout(poll, 2000); }
+        })
+        .catch(function () { if (attempts >= max) { showProcessing(); } else { setTimeout(poll, 2000); } });
+    })();
+  }
+</script>
+<script src="/analytics.js"></script>
+</body>
+</html>

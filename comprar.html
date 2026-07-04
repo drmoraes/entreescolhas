@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Comprar as 4 jornadas — Entre Escolhas</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --bg:#08080F;--bg-card:#0F0F1E;--bg-raised:#141428;--border:rgba(108,99,255,0.15);
+    --border-hover:rgba(108,99,255,0.4);--accent:#6C63FF;--accent-dim:rgba(108,99,255,0.12);
+    --text:#F0EFF8;--text-2:#ABA6D4;--text-3:#8782B0;--white:#fff;--gold:#C9A84C;--green:#22C55E;--red:#FF6B6B;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.6;min-height:100vh;padding:32px 20px;}
+  .serif{font-family:'Playfair Display',Georgia,serif;}
+  .wrap{max-width:520px;margin:0 auto;}
+  .logo{display:block;text-align:center;font-weight:800;font-size:1.15rem;letter-spacing:-.02em;color:var(--text);text-decoration:none;margin-bottom:24px;}
+  .logo span{color:var(--accent);}
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:30px 28px;}
+  .tagline{font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:10px;}
+  h1{font-size:1.7rem;font-weight:700;letter-spacing:-.02em;line-height:1.15;margin-bottom:12px;}
+  .price{display:flex;align-items:baseline;gap:10px;margin:14px 0 18px;}
+  .price .from{text-decoration:line-through;color:var(--text-3);font-size:1rem;}
+  .price .now{font-size:2.1rem;font-weight:800;}
+  .price .save{font-size:.68rem;background:var(--accent);color:#fff;padding:3px 10px;border-radius:20px;font-weight:700;}
+  ul.feat{list-style:none;margin:6px 0 22px;display:grid;gap:10px;}
+  ul.feat li{display:flex;gap:10px;align-items:flex-start;font-size:.92rem;color:var(--text-2);}
+  ul.feat li .c{color:var(--green);flex-shrink:0;font-weight:700;}
+  ul.feat li b{color:var(--text);font-weight:600;}
+  label{display:block;font-size:.82rem;color:var(--text-2);font-weight:600;margin:14px 0 6px;}
+  input{width:100%;background:var(--bg-raised);border:1px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:1rem;font-family:inherit;}
+  input:focus{outline:none;border-color:var(--accent);}
+  .btn{width:100%;margin-top:22px;background:var(--accent);color:var(--white);border:none;border-radius:12px;padding:16px;font-size:1.05rem;font-weight:700;font-family:inherit;cursor:pointer;transition:transform .15s,box-shadow .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px var(--accent-dim);}
+  .btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+  .trust{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:16px;font-size:.76rem;color:var(--text-3);}
+  .err{display:none;color:var(--red);font-size:.86rem;margin-top:12px;text-align:center;}
+  .alt{text-align:center;margin-top:18px;font-size:.85rem;color:var(--text-3);}
+  .alt a{color:var(--text-2);text-decoration:underline;text-underline-offset:3px;}
+  .legal{font-size:.72rem;color:var(--text-3);line-height:1.5;margin-top:20px;text-align:center;}
+</style>
+<link rel="stylesheet" href="/theme.css" />
+<script src="/theme.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <a href="/" class="logo">Entre<span>Escolhas</span></a>
+    <div class="card">
+      <div class="tagline">Combo · as 4 jornadas</div>
+      <h1 class="serif">Desbloqueie o autoconhecimento completo</h1>
+      <div class="price">
+        <span class="from">R$ 39,60</span>
+        <span class="now">R$ 29,90</span>
+        <span class="save">ECONOMIZE R$ 9,70</span>
+      </div>
+      <ul class="feat">
+        <li><span class="c">✓</span><span><b>4 jornadas completas:</b> Padrões de Decisão, Ambiente Ideal &amp; Carreira, Scanner de Relacionamento e Bússola Vocacional.</span></li>
+        <li><span class="c">✓</span><span><b>Relatório-retrato de cada uma</b> — arquétipo, dimensões pontuadas e leitura aprofundada.</span></li>
+        <li><span class="c">✓</span><span><b>Diagnóstico de coaching por IA</b> com ação prática para a semana.</span></li>
+        <li><span class="c">✓</span><span><b>Acesso permanente</b> — faça no seu ritmo, tudo já liberado com o seu e-mail.</span></li>
+      </ul>
+
+      <form id="form" novalidate>
+        <label for="nome">Seu nome</label>
+        <input id="nome" name="nome" type="text" autocomplete="name" placeholder="Como podemos te chamar" required />
+        <label for="email">Seu e-mail</label>
+        <input id="email" name="email" type="email" autocomplete="email" placeholder="voce@email.com" required />
+        <button class="btn" id="btn" type="submit">Ir para o pagamento seguro →</button>
+        <p class="err" id="err"></p>
+      </form>
+
+      <div class="trust">
+        <span>⚡ Pix libera na hora</span><span>💳 Cartão</span><span>🔒 Pagamento seguro</span>
+      </div>
+
+      <p class="alt">Prefere experimentar antes? <a href="/cadastro-teste.html?jornada=arquetipo">Faça um teste primeiro</a></p>
+
+      <p class="legal">Pagamento processado pelo Mercado Pago. Após a confirmação, todas as jornadas ficam liberadas para o seu e-mail. Esta ferramenta não é um teste psicológico e não emite diagnóstico clínico.</p>
+    </div>
+  </div>
+
+<script src="/ref.js" defer></script>
+<script>
+  (function () {
+    var form = document.getElementById('form');
+    var btn = document.getElementById('btn');
+    var err = document.getElementById('err');
+    var params = new URLSearchParams(location.search);
+    if (params.get('pagamento') === 'falhou') {
+      err.textContent = 'O pagamento não foi concluído. Você pode tentar novamente.';
+      err.style.display = 'block';
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      err.style.display = 'none';
+      var nome = document.getElementById('nome').value.trim();
+      var email = document.getElementById('email').value.trim().toLowerCase();
+      if (nome.length < 2) { err.textContent = 'Digite o seu nome.'; err.style.display = 'block'; return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'Digite um e-mail válido.'; err.style.display = 'block'; return; }
+
+      var ref = (window.eeRef && window.eeRef()) || null;
+      btn.disabled = true; btn.textContent = 'Abrindo pagamento…';
+
+      fetch('/api/b2b?fn=mp_combo_direct', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome: nome, email: email, ref: ref }),
+      })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (res) {
+          if (!res.ok) throw new Error(res.d.error || 'Não foi possível iniciar o pagamento.');
+          if (res.d.already_paid) {
+            location.href = res.d.access ? ('/combo-ativado.html?access=' + encodeURIComponent(res.d.access)) : '/';
+            return;
+          }
+          if (res.d.init_point) { location.href = res.d.init_point; return; }
+          throw new Error('Resposta inesperada. Tente novamente.');
+        })
+        .catch(function (e2) {
+          err.textContent = e2.message; err.style.display = 'block';
+          btn.disabled = false; btn.textContent = 'Ir para o pagamento seguro →';
+        });
+    });
+  })();
+</script>
+<script src="/analytics.js"></script>
+</body>
+</html>

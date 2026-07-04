@@ -31,6 +31,7 @@ const handlers = {
   cron_sla:           require('./_cron_sla'),
   cron_cart:          require('./_cron_cart'),
   mp_process_payment: require('./_mp_process_payment'),
+  mp_combo_direct:    require('./_mp_combo_direct'),
   admin_settings:     require('./_admin_settings'),
   admin_cashback:     require('./_admin_cashback'),
   admin_migrate_referral: require('./_admin_migrate_referral'),

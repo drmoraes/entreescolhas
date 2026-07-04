@@ -1853,15 +1853,21 @@ async function unlockReport(kind) {
       callbacks: {
         onReady: () => {},
         onError: (e) => { console.error('brick', e); },
-        onSubmit: ({ formData }) => fetch('/api/b2b?fn=mp_process_payment', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(Object.assign({ access: ACCESS_TOKEN, kind: CHECKOUT_KIND }, formData)),
-        }).then(r => r.json()).then(d => {
-          if (d.status === 'approved' || d.already_paid) { fecharBrick(); window.location.reload(); return; }
-          if (d.pix_qr || d.pix_qr_base64) { mostrarPix(d); iniciarPollingPagamento(); return; }
-          if (d.status === 'pending' || d.status === 'in_process') { iniciarPollingPagamento(); return; }
-          throw new Error(d.status_detail || 'Pagamento não aprovado. Tente outro método.');
-        }),
+        onSubmit: ({ formData }) => {
+          // Trava contra duplo-envio: se já há um pagamento em andamento, ignora.
+          if (window.__EE_PAYING) return Promise.resolve();
+          window.__EE_PAYING = true;
+          return fetch('/api/b2b?fn=mp_process_payment', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(Object.assign({ access: ACCESS_TOKEN, kind: CHECKOUT_KIND }, formData)),
+          }).then(r => r.json()).then(d => {
+            if (d.status === 'approved' || d.already_paid) { fecharBrick(); window.location.reload(); return; }
+            if (d.pix_qr || d.pix_qr_base64) { mostrarPix(d); iniciarPollingPagamento(); window.__EE_PAYING = false; return; }
+            if (d.status === 'pending' || d.status === 'in_process') { iniciarPollingPagamento(); window.__EE_PAYING = false; return; }
+            window.__EE_PAYING = false;
+            throw new Error(d.status_detail || 'Pagamento não aprovado. Tente outro método.');
+          }).catch(e => { window.__EE_PAYING = false; throw e; });
+        },
       },
     });
   } catch (e) {

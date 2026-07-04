@@ -1687,13 +1687,13 @@
 <section class="pricing" id="iniciar" aria-labelledby="pricing-title">
   <div class="container">
     <div class="fade-up" style="text-align:center;">
-      <p class="section-label">Preço</p>
-      <h2 class="section-title" id="pricing-title">Comece grátis. Cada relatório por R$ 9,90 — ou as 4 jornadas por R$ 29,90.</h2>
+      <p class="section-label">Planos</p>
+      <h2 class="section-title" id="pricing-title">As 4 jornadas por R$ 29,90.<br/>Ou faça um teste e leve só ele por R$ 9,90.</h2>
     </div>
 
     <div class="price-card fade-up">
-      <div class="price-amount"><span class="grad">Grátis</span></div>
-      <p class="price-desc">para começar — cadastro rápido (nome e e-mail), sem confirmação por e-mail. Você já entra direto no teste.</p>
+      <div class="price-amount"><span style="text-decoration:line-through;color:var(--text-3);font-size:1.4rem;margin-right:10px;">R$ 39,60</span><span class="grad">R$ 29,90</span></div>
+      <p class="price-desc">o combo com as 4 jornadas — acesso completo, liberado na hora para o seu e-mail. Sem pegadinha no checkout.</p>
 
       <p style="text-align:left;font-size:0.85rem;font-weight:600;color:var(--text-2);margin-bottom:12px;">O relatório completo inclui:</p>
       <ul class="price-features">
@@ -1705,28 +1705,28 @@
         <li><span class="check" aria-hidden="true">✓</span> Opção de cadastro gratuito no Banco de Talentos</li>
       </ul>
 
-      <div style="display:grid;gap:10px;margin:4px 0 24px;">
-        <div style="border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <div style="display:grid;gap:10px;margin:4px 0 22px;">
+        <a href="/comprar.html?kind=combo" data-event="click_buy_combo" style="text-decoration:none;color:inherit;border:1.5px solid var(--accent);background:rgba(108,99,255,0.10);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;transition:transform .15s,border-color .2s;">
           <div style="text-align:left;">
-            <div style="font-weight:700;font-size:0.92rem;">Só esta jornada</div>
-            <div style="font-size:0.78rem;color:var(--text-3);">Relatório completo de 1 teste</div>
-          </div>
-          <div style="font-size:1.1rem;font-weight:800;white-space:nowrap;">R$ 9,90</div>
-        </div>
-        <div style="border:1.5px solid var(--accent);background:rgba(108,99,255,0.10);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
-          <div style="text-align:left;">
-            <div style="font-weight:700;font-size:0.92rem;">As 4 jornadas <span style="font-size:0.62rem;background:var(--accent);color:#fff;padding:2px 7px;border-radius:20px;margin-left:4px;vertical-align:middle;">ECONOMIZE R$ 9,70</span></div>
+            <div style="font-weight:700;font-size:0.95rem;">As 4 jornadas <span style="font-size:0.62rem;background:var(--accent);color:#fff;padding:2px 7px;border-radius:20px;margin-left:4px;vertical-align:middle;">MELHOR ESCOLHA</span></div>
             <div style="font-size:0.78rem;color:var(--text-3);">Decisão, Ambiente Ideal, Relacionamento e Vocacional</div>
           </div>
-          <div style="text-align:right;white-space:nowrap;"><span style="text-decoration:line-through;color:var(--text-3);font-size:0.78rem;margin-right:4px;">R$ 39,60</span><span style="font-size:1.1rem;font-weight:800;">R$ 29,90</span></div>
-        </div>
+          <div style="text-align:right;white-space:nowrap;"><span style="text-decoration:line-through;color:var(--text-3);font-size:0.78rem;margin-right:4px;">R$ 39,60</span><span style="font-size:1.15rem;font-weight:800;">R$ 29,90</span> <span style="color:var(--accent);font-size:1rem;">→</span></div>
+        </a>
+        <a href="/cadastro-teste.html?jornada=arquetipo" data-event="click_start_test" style="text-decoration:none;color:inherit;border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;transition:transform .15s,border-color .2s;">
+          <div style="text-align:left;">
+            <div style="font-weight:700;font-size:0.95rem;">Só uma jornada</div>
+            <div style="font-size:0.78rem;color:var(--text-3);">Faça o teste e leve o relatório completo dele</div>
+          </div>
+          <div style="white-space:nowrap;"><span style="font-size:1.15rem;font-weight:800;">R$ 9,90</span> <span style="color:var(--accent);font-size:1rem;">→</span></div>
+        </a>
       </div>
-      <p style="text-align:left;font-size:0.85rem;color:var(--text-3);margin:-12px 0 28px;">A escolha entre teste avulso e combo aparece ao final da sua primeira análise.</p>
 
-      <a href="/cadastro-teste.html?jornada=arquetipo" class="btn-primary" style="width:100%;justify-content:center;font-size:1.05rem;" aria-label="Começar análise gratuitamente" data-event="click_start_test">
-        Começar gratuitamente
+      <a href="/comprar.html?kind=combo" class="btn-primary" style="width:100%;justify-content:center;font-size:1.05rem;" aria-label="Comprar as 4 jornadas por R$ 29,90" data-event="click_buy_combo">
+        Comprar as 4 jornadas — R$ 29,90
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
+      <p style="text-align:center;font-size:0.85rem;color:var(--text-3);margin:14px 0 0;">Prefere experimentar antes? <a href="/cadastro-teste.html?jornada=arquetipo" style="color:var(--text-2);text-decoration:underline;text-underline-offset:3px;">Faça um teste primeiro</a></p>
 
       <p class="price-legal" role="note">
         Você pode iniciar a análise gratuitamente. O cadastro no Banco de Talentos é gratuito e opcional, e a participação não garante vaga, entrevista ou contratação — seus dados comportamentais só são compartilhados com empresas parceiras mediante consentimento explícito. Esta ferramenta não é um teste psicológico e não emite diagnóstico clínico.
