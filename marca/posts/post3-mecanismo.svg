@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+      <rect width="1080" height="1350" fill="#14121F"/>
+      <rect x="96" y="150" width="54" height="3" fill="#D2A64B"/>
+      <text x="96" y="132" font-family="DejaVu Sans" font-size="26" letter-spacing="6" fill="#8681A0">O MECANISMO · 03</text>
+      <text x="96" y="400" font-family="DejaVu Serif" font-size="86" font-weight="bold" fill="#F5F2EA">O viés que</text><text x="96" y="501" font-family="DejaVu Serif" font-size="86" font-weight="bold" fill="#F5F2EA">sabota sua</text><text x="96" y="602" font-family="DejaVu Serif" font-size="86" font-weight="bold" fill="#F5F2EA">carreira se disfarça</text><text x="96" y="703" font-family="DejaVu Serif" font-size="86" font-weight="bold" fill="#8B82FF">de prudência.</text>
+      <text x="96" y="1128" font-family="DejaVu Sans" font-size="34" fill="#8681A0">Chama-se viés do status quo.</text>
+      <text x="96" y="1172" font-family="DejaVu Sans" font-size="34" fill="#8681A0">E ele é previsível — logo, treinável.</text>
+      <g stroke-linecap="round" fill="none">
+      <path d="M109 1268 L109 1250.0" stroke="#F5F2EA" stroke-width="4.0"/>
+      <path d="M109 1250.0 C109 1238.0,95.0 1238.0,87.0 1226.0" stroke="#8B82FF" stroke-width="4.0"/>
+      <path d="M109 1250.0 C109 1238.0,123.0 1238.0,131.0 1226.0" stroke="#D2A64B" stroke-width="4.0"/>
+      <circle cx="109" cy="1250.0" r="4.5" fill="#F5F2EA"/>
+    </g>
+      <text x="140" y="1272" font-family="DejaVu Sans" font-size="27" fill="#F5F2EA">@entreescolhas1</text>
+      <text x="984" y="1272" text-anchor="end" font-family="DejaVu Serif" font-size="25" fill="#8681A0" font-style="italic">Você não escolhe por acaso.</text>
+    </svg>

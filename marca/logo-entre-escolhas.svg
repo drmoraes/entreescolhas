@@ -1,0 +1,23 @@
+<svg width="1000" height="1000" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Entre Escolhas — símbolo da bifurcação">
+  <!-- Avatar Instagram · Conceito A "A Bifurcação" · fundo grafite-violeta -->
+  <rect width="1000" height="1000" fill="#14121F"/>
+
+  <!-- haste que sobe e se divide: o instante da decisão -->
+  <g fill="none" stroke-linecap="round">
+    <!-- tronco -->
+    <path d="M500 720 L500 500" stroke="#F5F2EA" stroke-width="26"/>
+    <!-- ramo esquerdo (violeta) -->
+    <path d="M500 500 C500 420, 430 400, 360 330" stroke="#5B52E0" stroke-width="26"/>
+    <!-- ramo direito (ocre) -->
+    <path d="M500 500 C500 420, 570 400, 640 330" stroke="#B0892E" stroke-width="26"/>
+  </g>
+
+  <!-- nó de decisão -->
+  <circle cx="500" cy="500" r="20" fill="#F5F2EA"/>
+  <!-- destinos -->
+  <circle cx="360" cy="330" r="15" fill="#5B52E0"/>
+  <circle cx="640" cy="330" r="15" fill="#B0892E"/>
+
+  <!-- assinatura opcional -->
+  <text x="500" y="820" text-anchor="middle" font-family="Playfair Display, Georgia, serif" font-size="58" fill="#F5F2EA" letter-spacing="1">Entre<tspan fill="#5B52E0">Escolhas</tspan></text>
+</svg>
