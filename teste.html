@@ -597,7 +597,7 @@ const JORNADAS = {
   //            IMP=impacto coletivo, COL=colaboração, SEG=segurança
   // ─────────────────────────────────────────────────────────
   'fit-cultural': {
-    badge: 'Início gratuito • Relatório completo R$ 9,90',
+    badge: 'Início gratuito • Relatório completo {single}',
     title: 'Descubra seu<br/><span class="grad serif">Perfil de Ambiente Ideal</span>',
     desc: '10 cenários profissionais. Cada escolha revela o tipo de ambiente, cultura e dinâmica onde você performa naturalmente melhor.',
     resultTag: 'Perfil de Ambiente Ideal',
@@ -802,7 +802,7 @@ const JORNADAS = {
   //            MED=mediação, NET=rede/presença, INT=profundidade
   // ─────────────────────────────────────────────────────────
   'scanner': {
-    badge: 'Início gratuito • Relatório completo R$ 9,90',
+    badge: 'Início gratuito • Relatório completo {single}',
     title: 'Seu padrão de<br/><span class="grad serif">Relacionamento Profissional</span>',
     desc: '10 cenários interpessoais. Cada escolha revela como você se conecta, influencia e reage ao conflito em contextos profissionais.',
     resultTag: 'Padrão de Relacionamento Dominante',
@@ -1008,7 +1008,7 @@ const JORNADAS = {
   //            REC=reconhecimento, AUT=autonomia
   // ─────────────────────────────────────────────────────────
   'bussola': {
-    badge: 'Início gratuito • Relatório completo R$ 9,90',
+    badge: 'Início gratuito • Relatório completo {single}',
     title: 'Descubra sua<br/><span class="grad serif">Direção Vocacional</span>',
     desc: '10 cenários de escolha profissional. Cada resposta revela o que realmente move suas decisões de carreira — propósito, impacto, segurança, criação ou reconhecimento.',
     resultTag: 'Vetor Vocacional Dominante',
@@ -1218,7 +1218,9 @@ const QUESTIONS     = JORNADA_CFG.questions;
 const ARCHETYPES    = JORNADA_CFG.archetypes;
 
 // Preenche a tela de intro dinamicamente
-document.getElementById('intro-badge-text').textContent = JORNADA_CFG.badge;
+// {single} é substituído por um span que o precos.js preenche com o preço do admin.
+document.getElementById('intro-badge-text').innerHTML =
+  JORNADA_CFG.badge.replace('{single}', '<span data-preco="single">R$ 9,90</span>');
 document.getElementById('intro-title').innerHTML = JORNADA_CFG.title;
 document.getElementById('intro-desc').textContent = JORNADA_CFG.desc;
 document.getElementById('r-tag').textContent = JORNADA_CFG.resultTag;
@@ -1930,6 +1932,7 @@ function unlockReportFallback() {
 </script>
 <script src="/identity.js" defer></script>
 <script src="/ref.js" defer></script>
+<script src="/precos.js" defer></script>
 <script src="/analytics.js"></script>
 <script>
   if (typeof trackEvent === 'function') { trackEvent('view_test_intro', { jornada: JORNADA_PARAM }); }
