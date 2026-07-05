@@ -20,7 +20,7 @@
   .btn-soft{background:var(--accent-dim);color:#cfcaff;padding:8px 13px;font-size:13px}
   .muted{color:var(--text-2)}.small{font-size:12px}.t3{color:var(--text-3)}
   .green{color:var(--green)}.red{color:var(--red)}.accent{color:var(--accent)}
-  header{display:flex;align-items:center;gap:14px;padding:13px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(8,8,15,.92);backdrop-filter:blur(10px);z-index:5}
+  header{display:flex;align-items:center;gap:14px;padding:13px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:color-mix(in srgb, var(--bg) 92%, transparent);backdrop-filter:blur(10px);z-index:5}
   .brand{font-weight:800}.brand span{color:var(--accent)}
   main{max-width:1080px;margin:0 auto;padding:24px}
   .gate{max-width:380px;margin:80px auto;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:30px}
@@ -41,8 +41,8 @@
   .spin{display:inline-block;width:16px;height:16px;border:2px solid var(--accent-dim);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite}
   @keyframes s{to{transform:rotate(360deg)}}
 </style>
-  <link rel="stylesheet" href="/theme.css">
-  <script src="/theme.js"></script>
+  <link rel="stylesheet" href="/theme.css?v=2">
+  <script src="/theme.js?v=2"></script>
 </head>
 <body>
 <header><div class="brand">Entre<span>Escolhas</span> · Admin · Usuários</div>
