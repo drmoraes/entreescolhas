@@ -47,6 +47,16 @@ html[data-theme="light"] {
 /* Suaviza o overlay de ruído no tema claro (ele foi feito p/ fundo escuro) */
 html[data-theme="light"] body::before { opacity: .4; }
 
+/* Cabeçalho no tema claro: os fundos escuros são hardcoded nas páginas e não
+   acompanham o tema. Aqui damos a versão clara (a especificidade vence o inline). */
+html[data-theme="light"] #nav.scrolled {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: var(--border);
+}
+html[data-theme="light"] .mobile-menu {
+  background: rgba(248, 248, 252, 0.98);
+}
+
 /* ---------- BOTÃO FLUTUANTE DE TEMA ---------- */
 .theme-toggle {
   position: fixed;
