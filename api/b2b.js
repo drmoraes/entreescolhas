@@ -39,6 +39,7 @@ const handlers = {
   referral:           require('./_referral'),
   lead_free_unlock:   require('./_lead_free_unlock'),
   stats_public:       require('./_stats_public'),
+  public_prices:      require('./_public_prices'),
   vagas:              require('./_vagas_public'),
   vaga_apply:         require('./_vaga_apply'),
   admin_vagas:        require('./_admin_vagas'),
