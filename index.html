@@ -414,14 +414,15 @@
       max-width: 45vw;
       height: auto;
     }
+    .hero-right { display: flex; flex-direction: column; align-items: center; }
+    .hero-right .scenario-card { margin-top: 0; }
     .hero-brain {
-      max-width: min(30vw, 340px);
-      opacity: 0.42;
-      right: 56px;
-      z-index: 0;
-      filter: drop-shadow(0 0 60px rgba(139,90,255,0.55)) drop-shadow(0 0 95px rgba(232,161,30,0.30));
+      width: min(190px, 44vw);
+      margin: 0 auto 22px;
+      display: block;
+      filter: drop-shadow(0 0 40px rgba(139,90,255,0.45)) drop-shadow(0 0 70px rgba(232,161,30,0.25));
     }
-    @media (max-width: 1279px) { .hero-brain { opacity: 0.14; right: -20px; max-width: 46vw; } }
+    @media (max-width: 640px) { .hero-brain { width: 130px; margin-bottom: 16px; } }
     /* Em telas médias, a figura vira um detalhe discreto ao fundo */
     @media (max-width: 1279px) {
       .hero-paths { opacity: 0.28; right: -80px; max-width: 55vw; }
@@ -1015,18 +1016,18 @@
       z-index: 999;
       width: 60px;
       height: 60px;
-      background: var(--accent);
+      background: #25D366;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 20px rgba(108, 99, 255, 0.4);
+      box-shadow: 0 4px 20px rgba(37, 211, 102, 0.45);
       text-decoration: none;
       transition: transform 0.2s, box-shadow 0.2s;
     }
     .wa-float:hover {
       transform: scale(1.1);
-      box-shadow: 0 8px 30px rgba(108, 99, 255, 0.55);
+      box-shadow: 0 8px 30px rgba(37, 211, 102, 0.6);
     }
     .wa-float svg { width: 32px; height: 32px; }
     @media (max-width: 640px) {
@@ -1263,9 +1264,6 @@
   <div class="orb" style="width:500px;height:500px;background:rgba(108,99,255,0.12);top:-100px;right:-100px;"></div>
   <div class="orb" style="width:300px;height:300px;background:rgba(201,168,76,0.08);bottom:100px;left:-80px;"></div>
 
-  <!-- Visual de marca: o cérebro (símbolo do Entre Escolhas) com brilho -->
-  <img class="hero-paths hero-brain" src="/logo-mark.png" alt="" aria-hidden="true" />
-
   <div class="container">
     <div class="hero-content">
       <div class="badge" role="status">
@@ -1308,6 +1306,8 @@
 
     </div>
 
+    <div class="hero-right">
+    <img class="hero-brain" src="/logo-mark.png" alt="Entre Escolhas — símbolo" />
     <!-- Demo interativo -->
     <div class="scenario-card fade-up" role="region" aria-label="Exemplo de cenário">
       <p class="scenario-label">Cenário de exemplo</p>
@@ -1332,6 +1332,7 @@
           Energizo o grupo — mudanças assim costumam esconder oportunidades
         </button>
       </div>
+    </div>
     </div>
   </div>
 </section>
@@ -1934,8 +1935,8 @@
 <!-- WhatsApp Floating Button -->
 <a href="https://wa.me/5511997480070?text=Ol%C3%A1%21+Tenho+uma+d%C3%BAvida+sobre+o+Entre+Escolhas" target="_blank" rel="noopener" class="wa-float" aria-label="Falar no WhatsApp" data-event="click_whatsapp">
   <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M16 2C8.268 2 2 8.268 2 16c0 2.478.672 4.8 1.845 6.793L2 30l7.418-1.818A13.934 13.934 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2z" fill="var(--accent)"/>
-    <path d="M22.5 19.5c-.3-.15-1.77-.873-2.044-.97-.274-.1-.473-.15-.673.15-.2.3-.77.97-.944 1.17-.174.2-.347.224-.647.075-.3-.15-1.265-.466-2.41-1.485-.89-.794-1.49-1.774-1.664-2.074-.174-.3-.018-.462.13-.61.134-.134.3-.35.45-.524.15-.175.2-.3.3-.5.1-.2.05-.374-.025-.524-.075-.15-.672-1.62-.92-2.22-.243-.583-.49-.5-.673-.51-.174-.008-.374-.01-.573-.01-.2 0-.524.075-.8.374-.274.3-1.047 1.024-1.047 2.494s1.072 2.893 1.222 3.093c.15.2 2.11 3.22 5.113 4.513.715.309 1.273.493 1.708.631.717.228 1.37.196 1.887.119.576-.085 1.77-.723 2.02-1.422.25-.7.25-1.3.175-1.424-.075-.124-.274-.199-.573-.349z" fill="white"/>
+    <path d="M16 2C8.268 2 2 8.268 2 16c0 2.478.672 4.8 1.845 6.793L2 30l7.418-1.818A13.934 13.934 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2z" fill="#fff"/>
+    <path d="M22.5 19.5c-.3-.15-1.77-.873-2.044-.97-.274-.1-.473-.15-.673.15-.2.3-.77.97-.944 1.17-.174.2-.347.224-.647.075-.3-.15-1.265-.466-2.41-1.485-.89-.794-1.49-1.774-1.664-2.074-.174-.3-.018-.462.13-.61.134-.134.3-.35.45-.524.15-.175.2-.3.3-.5.1-.2.05-.374-.025-.524-.075-.15-.672-1.62-.92-2.22-.243-.583-.49-.5-.673-.51-.174-.008-.374-.01-.573-.01-.2 0-.524.075-.8.374-.274.3-1.047 1.024-1.047 2.494s1.072 2.893 1.222 3.093c.15.2 2.11 3.22 5.113 4.513.715.309 1.273.493 1.708.631.717.228 1.37.196 1.887.119.576-.085 1.77-.723 2.02-1.422.25-.7.25-1.3.175-1.424-.075-.124-.274-.199-.573-.349z" fill="#25D366"/>
   </svg>
 </a>
 
@@ -1984,7 +1985,7 @@
     <div class="footer-bottom">
       <p>© 2026 Entre Escolhas — Veritas Lab, uma iniciativa do Grupo Ascenda. Todos os direitos reservados.</p>
       <p style="font-size:0.75rem;color:var(--text-3);">CNPJ 67.693.609/0001-64 • Privacidade LGPD</p>
-      <p class="site-version" style="font-size:0.72rem;color:var(--text-3);opacity:.75;margin-top:4px;" title="Versão publicada do site">versão 2026.07.06 · build 4</p>
+      <p class="site-version" style="font-size:0.72rem;color:var(--text-3);opacity:.75;margin-top:4px;" title="Versão publicada do site">versão 2026.07.06 · build 5</p>
     </div>
   </div>
 </footer>
