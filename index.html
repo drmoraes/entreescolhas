@@ -324,7 +324,7 @@
     .nav-inner {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 36px;
     }
     .nav-logo {
       font-size: 1.1rem;
@@ -336,7 +336,7 @@
       align-items: center;
     }
     .nav-logo span { color: var(--accent); }
-    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links { display: flex; gap: 28px; align-items: center; flex: 1; }
     .nav-links a {
       color: var(--text-2);
       text-decoration: none;
@@ -348,15 +348,16 @@
     .btn-nav {
       background: var(--accent);
       color: #fff;
-      padding: 8px 20px;
+      padding: 9px 20px;
       border-radius: 8px;
       font-size: 0.875rem;
       font-weight: 700;
       text-decoration: none;
       white-space: nowrap;
-      transition: opacity 0.2s;
+      box-shadow: 0 6px 18px var(--accent-glow);
+      transition: transform 0.2s, box-shadow 0.2s;
     }
-    .btn-nav:hover { opacity: 0.85; color: #fff; }
+    .btn-nav:hover { transform: translateY(-1px); box-shadow: 0 10px 26px var(--accent-glow); color: #fff; }
 
     /* Dropdown "Entrar" (Empresas / Candidato / Admin) */
     .nav-dd { position: relative; }
@@ -413,6 +414,14 @@
       max-width: 45vw;
       height: auto;
     }
+    .hero-brain {
+      max-width: min(38vw, 400px);
+      opacity: 0.95;
+      right: -30px;
+      filter: drop-shadow(0 0 46px rgba(139,90,255,0.42)) drop-shadow(0 0 70px rgba(232,161,30,0.20));
+      animation: heroFloat 6s ease-in-out infinite;
+    }
+    @keyframes heroFloat { 0%,100%{ transform: translateY(-50%);} 50%{ transform: translateY(calc(-50% - 14px)); } }
     /* Em telas médias, a figura vira um detalhe discreto ao fundo */
     @media (max-width: 1279px) {
       .hero-paths { opacity: 0.28; right: -80px; max-width: 55vw; }
@@ -1053,7 +1062,7 @@
     .nav-quick a:hover { color: var(--text); }
     .nav-quick .nav-quick-cta { background: var(--accent); color: #fff; padding: 8px 15px; border-radius: 10px; }
     /* Chip de preço fixo no cabeçalho (fonte única = admin) */
-    .nav-price { display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-2); border: 1px solid var(--border); border-radius: 100px; padding: 5px 12px; text-decoration: none; white-space: nowrap; transition: border-color .2s, color .2s; }
+    .nav-price { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-size: 0.82rem; color: var(--text-2); border: 1px solid var(--border); border-radius: 100px; padding: 5px 12px; text-decoration: none; white-space: nowrap; transition: border-color .2s, color .2s; }
     .nav-price b { color: var(--accent); font-weight: 700; }
     .nav-price:hover { border-color: var(--accent); color: var(--text); }
     @media (max-width: 900px) {
@@ -1254,27 +1263,8 @@
   <div class="orb" style="width:500px;height:500px;background:rgba(108,99,255,0.12);top:-100px;right:-100px;"></div>
   <div class="orb" style="width:300px;height:300px;background:rgba(201,168,76,0.08);bottom:100px;left:-80px;"></div>
 
-  <!-- Ilustração humanizada: pessoa diante de caminhos que se bifurcam — "você não escolhe por acaso" -->
-  <svg class="hero-paths" width="460" height="460" viewBox="0 0 460 460" fill="none" aria-hidden="true">
-    <!-- figura humana em line-art -->
-    <circle cx="70" cy="150" r="20" stroke="#6C63FF" stroke-width="3" fill="rgba(108,99,255,0.08)"/>
-    <path d="M70 170 L70 250" stroke="#6C63FF" stroke-width="3" stroke-linecap="round"/>
-    <path d="M70 195 L40 230" stroke="#6C63FF" stroke-width="3" stroke-linecap="round"/>
-    <path d="M70 195 L100 220" stroke="#6C63FF" stroke-width="3" stroke-linecap="round"/>
-    <path d="M70 250 L48 320" stroke="#6C63FF" stroke-width="3" stroke-linecap="round"/>
-    <path d="M70 250 L92 320" stroke="#6C63FF" stroke-width="3" stroke-linecap="round"/>
-
-    <!-- caminhos que se abrem a partir da pessoa -->
-    <path d="M70 250 C160 250, 170 80, 320 60" stroke="#6C63FF" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.55"/>
-    <path d="M70 250 C170 250, 200 170, 360 160" stroke="#6C63FF" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.8"/>
-    <path d="M70 250 C180 250, 220 290, 380 300" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7"/>
-    <path d="M70 250 C160 250, 190 380, 340 410" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.45"/>
-
-    <circle cx="320" cy="60" r="6" fill="#6C63FF" opacity="0.6"/>
-    <circle cx="360" cy="160" r="7" fill="#6C63FF"/>
-    <circle cx="380" cy="300" r="6.5" fill="#C9A84C" opacity="0.8"/>
-    <circle cx="340" cy="410" r="6" fill="#C9A84C" opacity="0.5"/>
-  </svg>
+  <!-- Visual de marca: o cérebro (símbolo do Entre Escolhas) com brilho -->
+  <img class="hero-paths hero-brain" src="/logo-mark.png" alt="" aria-hidden="true" />
 
   <div class="container">
     <div class="hero-content">

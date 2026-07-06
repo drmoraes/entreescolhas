@@ -44,9 +44,16 @@ RewriteRule ^([^\.]+)$ $1.html [NC,L]
 </IfModule>
 
 # ── Cache de ativos estáticos ───────────────────────────────────
+# HTML sempre revalidado (o visitante vê a versão nova sem limpar cache)
+<FilesMatch "\.(html)$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, must-revalidate"
+  </IfModule>
+</FilesMatch>
+
 <IfModule mod_expires.c>
   ExpiresActive On
-  ExpiresByType text/html           "access plus 1 hour"
+  ExpiresByType text/html           "access plus 0 seconds"
   ExpiresByType text/css            "access plus 1 month"
   ExpiresByType application/javascript "access plus 1 month"
   ExpiresByType image/png           "access plus 6 months"
