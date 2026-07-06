@@ -316,9 +316,10 @@
       border-bottom: 1px solid transparent;
     }
     #nav.scrolled {
-      background: color-mix(in srgb, var(--bg) 85%, transparent);
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
       backdrop-filter: blur(20px);
       border-color: var(--border);
+      box-shadow: 0 6px 24px rgba(0,0,0,.06);
     }
     .nav-inner {
       display: flex;
@@ -331,27 +332,31 @@
       color: var(--text);
       text-decoration: none;
       letter-spacing: -0.02em;
+      display: inline-flex;
+      align-items: center;
     }
     .nav-logo span { color: var(--accent); }
-    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
     .nav-links a {
       color: var(--text-2);
       text-decoration: none;
       font-size: 0.875rem;
+      white-space: nowrap;
       transition: color 0.2s;
     }
     .nav-links a:hover { color: var(--text); }
     .btn-nav {
       background: var(--accent);
-      color: var(--white);
+      color: #fff;
       padding: 8px 20px;
       border-radius: 8px;
       font-size: 0.875rem;
-      font-weight: 600;
+      font-weight: 700;
       text-decoration: none;
+      white-space: nowrap;
       transition: opacity 0.2s;
     }
-    .btn-nav:hover { opacity: 0.85; color: var(--white); }
+    .btn-nav:hover { opacity: 0.85; color: #fff; }
 
     /* Dropdown "Entrar" (Empresas / Candidato / Admin) */
     .nav-dd { position: relative; }
@@ -1188,13 +1193,13 @@
 ═══════════════════════════════════════════════════════════════ -->
 <nav id="nav">
   <div class="container nav-inner">
-    <a href="/" class="nav-logo" aria-label="Entre Escolhas — Início">Entre<span>Escolhas</span></a>
+    <a href="/" class="nav-logo" aria-label="Entre Escolhas — Início"><img src="/logo-mark.png" alt="" style="height:26px;width:auto;vertical-align:-7px;margin-right:8px" />Entre<span>Escolhas</span></a>
     <div class="nav-links">
       <a href="#como-funciona">Como funciona</a>
       <a href="#jornadas">Jornadas</a>
       <a href="/vagas.html">Vagas</a>
-      <a href="#quem-somos">Quem somos</a>
       <a href="#faq">FAQ</a>
+      <a href="#quem-somos">Quem somos</a>
       <a href="admin.html" id="nav-admin" class="nav-admin" aria-label="Painel Admin">Admin</a>
       <a href="/comprar.html?kind=combo" class="nav-price" title="Comprar as 4 jornadas" data-event="click_buy_combo">4 jornadas <b data-preco="combo">R$ 19,90</b></a>
       <div class="nav-dd">

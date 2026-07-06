@@ -7,11 +7,15 @@ Options -Indexes
 # ── HTTPS Redirect ──────────────────────────────────────────────
 RewriteEngine On
 
-# Força HTTPS
-RewriteCond %{HTTPS} off
+# Força HTTPS (proxy-aware — evita loop atrás do SSL da Locaweb)
+# Só redireciona se NEM o X-Forwarded-Proto NEM o HTTPS indicarem https.
+RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+RewriteCond %{HTTPS} !=on
 RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
 
-# Força www
+# Força www (só quando realmente não-www; roda depois do HTTPS já resolvido)
+RewriteCond %{HTTP:X-Forwarded-Proto} =https [OR]
+RewriteCond %{HTTPS} =on
 RewriteCond %{HTTP_HOST} !^www\. [NC]
 RewriteRule ^(.*)$ https://www.%{HTTP_HOST}/$1 [R=301,L]
 
