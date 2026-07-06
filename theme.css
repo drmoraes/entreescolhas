@@ -94,6 +94,26 @@ html[data-theme="light"] .mobile-menu {
 html[data-theme="light"] .theme-toggle .icon-sun  { display: block; }
 html[data-theme="light"] .theme-toggle .icon-moon { display: none; }
 
+/* ---------- VARIANTE NO HEADER (desktop) ---------- */
+.theme-toggle--nav {
+  position: static;
+  width: 40px;
+  height: 40px;
+  box-shadow: none;
+  flex: 0 0 auto;
+}
+/* no mobile, volta a flutuar pra não apertar o cabeçalho */
+@media (max-width: 900px) {
+  .theme-toggle--nav {
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    width: 44px;
+    height: 44px;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28);
+  }
+}
+
 @media (max-width: 640px) {
   .theme-toggle { width: 42px; height: 42px; left: 14px; bottom: 14px; }
 }

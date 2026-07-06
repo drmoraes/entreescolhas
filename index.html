@@ -415,13 +415,13 @@
       height: auto;
     }
     .hero-brain {
-      max-width: min(38vw, 400px);
-      opacity: 0.95;
-      right: -30px;
-      filter: drop-shadow(0 0 46px rgba(139,90,255,0.42)) drop-shadow(0 0 70px rgba(232,161,30,0.20));
-      animation: heroFloat 6s ease-in-out infinite;
+      max-width: min(30vw, 340px);
+      opacity: 0.42;
+      right: 56px;
+      z-index: 0;
+      filter: drop-shadow(0 0 60px rgba(139,90,255,0.55)) drop-shadow(0 0 95px rgba(232,161,30,0.30));
     }
-    @keyframes heroFloat { 0%,100%{ transform: translateY(-50%);} 50%{ transform: translateY(calc(-50% - 14px)); } }
+    @media (max-width: 1279px) { .hero-brain { opacity: 0.14; right: -20px; max-width: 46vw; } }
     /* Em telas médias, a figura vira um detalhe discreto ao fundo */
     @media (max-width: 1279px) {
       .hero-paths { opacity: 0.28; right: -80px; max-width: 55vw; }
