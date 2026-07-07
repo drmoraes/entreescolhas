@@ -1665,7 +1665,9 @@ function maxAttainablePerDim() {
   return maxD;
 }
 
-function calcScores() {
+// Ênfase BRUTA (0–100): proporção do máximo atingível. Honesta e comparável,
+// usada internamente para escolher o arquétipo e medir a confiança.
+function calcRawEmphasis() {
   const raw = {};
   Object.keys(JORNADA_CFG.dimNames).forEach(d => { raw[d] = 0; });
   answers.forEach((ansIdx, qIdx) => {
@@ -1682,12 +1684,24 @@ function calcScores() {
   return norm;
 }
 
-// Rótulo honesto de ÊNFASE (proporção), sem julgamento de valor.
+// Índice de ênfase para EXIBIÇÃO (40–100). Transformação linear e monotônica da
+// ênfase bruta: preserva a ordem e as diferenças relativas (segue comparável entre
+// pessoas), mas mapeia numa faixa positiva — nenhuma dimensão vira "nota baixa".
+// 40 = você aciona pouco essa dimensão · 100 = no máximo possível. Não é bom/ruim.
+function calcScores() {
+  const raw = calcRawEmphasis();
+  const disp = {};
+  Object.keys(raw).forEach(d => { disp[d] = Math.round(40 + 0.6 * raw[d]); });
+  return disp;
+}
+
+// Rótulo de ÊNFASE (escala 40–100), sempre positivo — descreve o quanto você se
+// apoia no traço, não se é "bom" ou "ruim".
 function nivelLabel(v) {
-  if (v >= 66) return 'Traço dominante';
-  if (v >= 45) return 'Bem presente';
-  if (v >= 28) return 'Presente';
-  return 'Menos acionado';
+  if (v >= 78) return 'Traço dominante';
+  if (v >= 62) return 'Bem presente';
+  if (v >= 50) return 'Presente';
+  return 'Traço de apoio';
 }
 
 // Arquétipo primário + secundário + confiança da leitura.
@@ -1714,7 +1728,7 @@ function findArchetype(scores) {
 function metodoHtml(report) {
   const conf = report && report.confianca ? report.confianca : null;
   const sec = report && report.secundario ? report.secundario : null;
-  let s = '<strong>Como lemos isto:</strong> cada barra é um <em>índice de ênfase</em> — em que proporção das 20 situações, quando a dimensão podia aparecer, você a escolheu. É uma leitura situacional dos seus padrões, não um teste clínico.';
+  let s = '<strong>Como lemos isto:</strong> cada barra é um <em>índice de ênfase</em> (40–100) — mostra o quanto você se apoia em cada dimensão, a partir das suas escolhas nos 20 cenários. Não é uma nota de bom/ruim: é o <em>desenho do seu jeito de decidir</em>. Um traço mais baixo é onde você se apoia menos — não um defeito.';
   if (conf) s += ` Confiança da leitura: <strong>${conf}%</strong>.`;
   if (sec) s += ` Você também mostra forte influência do perfil <strong>${sec}</strong>.`;
   return s;
@@ -1832,7 +1846,7 @@ function showResult() {
     trackEvent('view_report_preview');
   }
   const scores = calcScores();
-  const analysis = analyzeArchetypes(scores);
+  const analysis = analyzeArchetypes(calcRawEmphasis());
   const arch = analysis.primary;
 
   document.getElementById('r-icon').textContent = arch.icon;
