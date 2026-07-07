@@ -67,8 +67,8 @@
     .intro-rules { background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:24px; margin-bottom:36px; }
     .intro-rules h3 { font-size:0.85rem; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:16px; }
     .intro-rules ul { list-style:none; display:flex; flex-direction:column; gap:10px; }
-    .intro-rules li { display:flex; align-items:flex-start; gap:10px; font-size:0.9rem; color:var(--text-2); }
-    .intro-rules li::before { content:'→'; color:var(--accent); font-weight:700; flex-shrink:0; }
+    .intro-rules li { position:relative; padding-left:26px; font-size:0.9rem; color:var(--text-2); line-height:1.6; }
+    .intro-rules li::before { content:'→'; position:absolute; left:0; top:0; color:var(--accent); font-weight:700; }
 
     /* Question */
     .q-meta { font-size:0.78rem; color:var(--text-3); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:20px; }
@@ -203,11 +203,12 @@
     <!-- PAYWALL (mostrado só se o relatório completo ainda não foi desbloqueado) -->
     <div id="paywall-box" style="display:none;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:32px;max-width:560px;margin:0 auto 32px;text-align:center;">
       <div style="font-size:2rem;margin-bottom:10px;">🔒</div>
-      <h3 style="font-size:1.25rem;margin-bottom:8px;">Seu relatório completo está pronto</h3>
-      <p style="color:var(--text-2);font-size:0.92rem;line-height:1.6;margin-bottom:18px;">Você já viu uma prévia. O relatório completo tem muito mais:</p>
-      <div style="text-align:left;max-width:380px;margin:0 auto 20px;display:grid;gap:10px;">
-        <div style="display:flex;gap:10px;align-items:flex-start;"><span>📊</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Suas dimensões detalhadas</strong> — cada eixo do seu perfil pontuado de 0 a 100.</span></div>
-        <div style="display:flex;gap:10px;align-items:flex-start;"><span>💡</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Insights do seu arquétipo</strong> — como você decide sob pressão, na prática.</span></div>
+      <h3 style="font-size:1.25rem;margin-bottom:8px;">Você viu <em>quem</em> você é. Falta o <em>porquê</em> — e o que fazer com isso.</h3>
+      <p style="color:var(--text-2);font-size:0.92rem;line-height:1.6;margin-bottom:18px;">A prévia te deu o retrato. O relatório completo destrava a profundidade e o plano:</p>
+      <div style="text-align:left;max-width:400px;margin:0 auto 20px;display:grid;gap:10px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;"><span>🧠</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Seu perfil por inteiro</strong> — as 6 dimensões pontuadas de 0 a 100 e os dois lados que puxam suas decisões.</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start;"><span>🎯</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Onde você brilha (e onde trava)</strong> — os ambientes em que seu padrão vira vantagem, e onde ele te sabota.</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start;"><span>🤖</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Diagnóstico de coaching por IA</strong> — uma ação prática pra esta semana, feita a partir das <em>suas</em> respostas. Nada de genérico.</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;"><span>📩</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Acesso permanente</strong> — recebe por e-mail e reabre quando quiser.</span></div>
       </div>
       <div id="paywall-price-wrap">
@@ -299,7 +300,7 @@ const JORNADAS = {
     questions: [
       {
         context: "Um plano que mudou de repente",
-        text: "Você organizou tudo para um dia importante e, na última hora, os planos viram de cabeça pra baixo. O que você faz primeiro?",
+        text: "Faltam 2 horas pra uma entrega que você preparou a semana inteira. Chega a mensagem: “mudou tudo, precisa ser diferente e ainda hoje”. O que você faz primeiro?",
         opts: [
           { text: "Respiro, paro alguns minutos e monto um plano novo", dims: {SIS:3, EMO:2} },
           { text: "Converso com quem está junto pra decidir o caminho em conjunto", dims: {REL:3, AMB:1} },
@@ -309,7 +310,7 @@ const JORNADAS = {
       },
       {
         context: "Uma escolha grande, com prazo curto",
-        text: "Você precisa escolher entre duas oportunidades. Uma é segura e previsível; a outra tem mais potencial, mas também mais risco. Precisa decidir até amanhã.",
+        text: "Duas propostas na mesa. Uma é estável e você já sabe como seriam seus dias. A outra paga menos agora, mas pode te levar longe — ou dar errado. Precisa responder até amanhã de manhã.",
         opts: [
           { text: "Listo prós e contras e dou uma nota pra cada ponto", dims: {SIS:3} },
           { text: "Converso com gente que já passou por algo parecido", dims: {REL:3, EMO:1} },
@@ -319,7 +320,7 @@ const JORNADAS = {
       },
       {
         context: "Duas pessoas próximas brigadas",
-        text: "Dois amigos (ou colegas) seus estão de mal, e isso está atrapalhando todo mundo. Você acabou no meio. O que faz?",
+        text: "Dois colegas do seu time brigaram e pararam de se falar. As reuniões ficaram tensas e o trabalho travou. Sem ninguém pedir, você caiu no meio. O que faz?",
         opts: [
           { text: "Proponho uma conversa com hora marcada e foco em resolver", dims: {SIS:2, REL:2} },
           { text: "Falo com cada um em separado antes de juntar os dois", dims: {REL:3, EMO:2} },
@@ -329,7 +330,7 @@ const JORNADAS = {
       },
       {
         context: "Erro descoberto na última hora",
-        text: "Faltando pouco para entregar algo (um trabalho, uma tarefa, um compromisso), você percebe um erro sério. Consertar vai levar tempo que você não tem.",
+        text: "Quinze minutos antes de enviar, você percebe um erro sério no que ia entregar. Consertar direito levaria horas que você não tem. O que faz?",
         opts: [
           { text: "Aviso na hora quem depende disso e proponho um novo prazo", dims: {REL:3, EMO:2} },
           { text: "Faço o que der pra corrigir e entrego, mesmo um pouco atrasado", dims: {EXE:3, VEL:1} },
@@ -339,7 +340,7 @@ const JORNADAS = {
       },
       {
         context: "Falar uma verdade difícil",
-        text: "Você precisa dizer algo desconfortável para alguém de quem gosta — um erro que afetou os dois. Como conduz?",
+        text: "Você precisa dizer a um colega de quem gosta que o atraso dele travou o time — e ele ainda não sabe. Ele senta na sua frente. Como você conduz?",
         opts: [
           { text: "Direto e claro: digo o que foi, o efeito e o que muda daqui pra frente", dims: {VEL:3, SIS:1} },
           { text: "Começo entendendo o lado da pessoa antes de falar", dims: {REL:3, EMO:1} },
@@ -349,7 +350,7 @@ const JORNADAS = {
       },
       {
         context: "Começar algo do zero",
-        text: "Você decide tirar um sonho do papel (um curso, um projeto, um negócio), mas não existe manual: nada está definido. Por onde começa?",
+        text: "Você decide finalmente tirar um projeto seu do papel. Abre uma tela em branco: nada definido, nenhum passo a passo pronto. Por onde começa?",
         opts: [
           { text: "Boto a mão na massa logo e vou ajustando no caminho", dims: {EXE:3, AMB:1} },
           { text: "Faço perguntas até ter clareza pra dar o primeiro passo", dims: {SIS:3, EMO:1} },
@@ -359,7 +360,7 @@ const JORNADAS = {
       },
       {
         context: "Uma grana extra inesperada",
-        text: "Sobrou um dinheiro que você não esperava. O que faz?",
+        text: "Cai na sua conta um valor que você não esperava — o suficiente pra fazer diferença no mês. O que você faz com ele?",
         opts: [
           { text: "Guardo e planejo onde ele faz mais diferença", dims: {SIS:3, EMO:1} },
           { text: "Arrisco em algo com potencial de render mais", dims: {AMB:3, VEL:1} },
@@ -369,7 +370,7 @@ const JORNADAS = {
       },
       {
         context: "Aprender algo difícil",
-        text: "Você precisa aprender uma coisa nova e puxada, do zero. Qual é o seu jeito?",
+        text: "Seu trabalho agora exige uma ferramenta nova e complicada, que você nunca usou, e você tem duas semanas. Qual é o seu jeito de aprender?",
         opts: [
           { text: "Estudo com método: passo a passo, do básico ao avançado", dims: {SIS:3} },
           { text: "Aprendo fazendo — erro, corrijo e sigo", dims: {EXE:3, VEL:1} },
@@ -379,7 +380,7 @@ const JORNADAS = {
       },
       {
         context: "Uma mudança grande na vida",
-        text: "Você está diante de uma mudança e tanto (de cidade, de trabalho, de fase). Como lida com o frio na barriga?",
+        text: "Surge a chance de mudar de cidade por causa do trabalho. Empolga e assusta na mesma medida. Como você lida com o frio na barriga?",
         opts: [
           { text: "Organizo cada etapa pra reduzir o risco", dims: {SIS:3, EMO:1} },
           { text: "Topo logo e vou descobrindo no caminho", dims: {AMB:3, VEL:2} },
@@ -389,7 +390,7 @@ const JORNADAS = {
       },
       {
         context: "Uma semana pesada",
-        text: "Tudo acumulou ao mesmo tempo e o estresse subiu. Qual é a sua reação mais natural?",
+        text: "Segunda de manhã: três prazos no mesmo dia, a caixa de entrada lotada e o telefone tocando. O estresse sobe. Qual é a sua reação mais natural?",
         opts: [
           { text: "Faço uma lista e ataco por prioridade", dims: {SIS:3} },
           { text: "Vou resolvendo no impulso, uma coisa atrás da outra", dims: {EXE:3, VEL:2} },
@@ -399,7 +400,7 @@ const JORNADAS = {
       },
       {
         context: "Alguém precisa de você num momento ruim",
-        text: "Uma pessoa querida está passando por um perrengue e te procura. Como você aparece pra ela?",
+        text: "Tarde da noite, uma pessoa querida te liga desabando por causa de um problema sério. Como você aparece pra ela?",
         opts: [
           { text: "Escuto de verdade, sem pressa de resolver", dims: {EMO:3, REL:2} },
           { text: "Ajudo a organizar a situação e os próximos passos", dims: {SIS:3, REL:1} },
@@ -409,7 +410,7 @@ const JORNADAS = {
       },
       {
         context: "Hora de negociar",
-        text: "Você quer um valor (um preço, um acordo, um aumento) e a primeira oferta veio bem abaixo. O que faz?",
+        text: "Você pediu um aumento (ou fechou um preço) e a primeira resposta veio bem abaixo do que esperava. O silêncio pesa. O que faz?",
         opts: [
           { text: "Apresento dados e argumentos pra sustentar meu pedido", dims: {SIS:3, EXE:1} },
           { text: "Agradeço, peço um tempo e volto com uma contraproposta", dims: {EMO:3, SIS:1} },
@@ -419,7 +420,7 @@ const JORNADAS = {
       },
       {
         context: "Um sonho que está parado",
-        text: "Tem um projeto pessoal seu que vive sendo adiado. O que destrava você?",
+        text: "Tem um projeto pessoal que você adia há meses — sempre “semana que vem”. O que realmente te destrava?",
         opts: [
           { text: "Quebrar em metas pequenas e marcar no calendário", dims: {SIS:3} },
           { text: "Simplesmente começar, mesmo imperfeito", dims: {EXE:3, VEL:2} },
@@ -429,7 +430,7 @@ const JORNADAS = {
       },
       {
         context: "Recebendo uma crítica",
-        text: "Alguém te dá um retorno duro sobre algo que você fez. Qual é a sua primeira reação por dentro?",
+        text: "No meio de uma reunião, alguém critica com dureza algo que você fez — na frente de todo mundo. Qual é a sua primeira reação por dentro?",
         opts: [
           { text: "Respiro e separo o que é útil do que é só desabafo", dims: {EMO:3} },
           { text: "Analiso o que aconteceu pra entender onde melhorar", dims: {SIS:3} },
@@ -439,7 +440,7 @@ const JORNADAS = {
       },
       {
         context: "Decidir em grupo, sem acordo",
-        text: "Um grupo precisa decidir algo e ninguém concorda. O tempo está passando. O que você faz?",
+        text: "A reunião já passou do horário, o grupo precisa decidir e ninguém concorda. Todo mundo cansado. O que você faz?",
         opts: [
           { text: "Estruturo a conversa: critérios claros e uma votação", dims: {SIS:2, REL:2} },
           { text: "Proponho uma decisão e sigo — depois a gente ajusta", dims: {VEL:3, EXE:1} },
@@ -449,7 +450,7 @@ const JORNADAS = {
       },
       {
         context: "Um perrengue financeiro",
-        text: "Veio uma despesa inesperada que apertou o orçamento. Como você reage?",
+        text: "Chega uma conta inesperada que aperta o mês. Você olha o saldo e respira fundo. Como reage?",
         opts: [
           { text: "Refaço as contas e corto o que dá pra cortar", dims: {SIS:3, EMO:1} },
           { text: "Corro atrás de uma renda extra rapidinho", dims: {EXE:3, VEL:2} },
@@ -459,7 +460,7 @@ const JORNADAS = {
       },
       {
         context: "Quando tudo está previsível demais",
-        text: "Sua rotina está estável, mas meio sem graça. O que isso desperta em você?",
+        text: "Faz meses que seus dias são iguais: estável, mas meio sem graça. O que isso desperta em você?",
         opts: [
           { text: "Vontade de buscar um desafio ou algo novo", dims: {AMB:3, VEL:1} },
           { text: "Alívio — gosto de estabilidade pra construir", dims: {SIS:2, EMO:2} },
@@ -469,7 +470,7 @@ const JORNADAS = {
       },
       {
         context: "Ser referência sem ter o cargo",
-        text: "Numa situação, as pessoas começam a olhar pra você esperando direção — mesmo sem você ser 'o chefe'. Como age?",
+        text: "No meio de um problema, o time começa a olhar pra você esperando direção — mesmo você não sendo o chefe. Como age?",
         opts: [
           { text: "Organizo quem faz o quê e dou o ritmo", dims: {SIS:2, EXE:2} },
           { text: "Cuido do clima e mantenho todos juntos", dims: {REL:3, EMO:1} },
@@ -505,7 +506,7 @@ const JORNADAS = {
         icon: '🏗️',
         mode: 'Cria ordem no meio do caos',
         dims: ['SIS','AMB'],
-        desc: 'Você junta duas coisas raras: gosta de organizar e não se assusta com o incerto. Onde os outros veem bagunça, você começa a desenhar um caminho. Isso vale tanto pra um projeto no trabalho quanto pra organizar a vida quando tudo parece confuso.',
+        desc: 'Quando tudo vira bagunça, a maioria congela — você começa a desenhar. Organização e coragem pro incerto andam juntas em você, e é por isso que sempre sobra pra você achar o caminho quando ninguém sabe por onde começar.',
         insights: [
           { icon:'⚡', title:'Sua força', text:'Transformar confusão em clareza. Você consegue dar os primeiros passos mesmo quando nada está definido.' },
           { icon:'🪞', title:'Seu ponto cego', text:'Às vezes você quer estruturar tanto que demora pra sair do lugar. Nem tudo precisa estar perfeito pra começar.' },
@@ -520,7 +521,7 @@ const JORNADAS = {
         icon: '🔩',
         mode: 'Põe a mão na massa e entrega',
         dims: ['EXE','VEL'],
-        desc: 'Você não trava: decide, faz e ajusta no caminho. Tem uma energia natural pra tirar as coisas do papel — seja uma tarefa, um perrengue ou um sonho. As pessoas perto de você costumam se mover mais rápido por causa disso.',
+        desc: 'Enquanto os outros ainda debatem, você já começou. Decide, faz e ajusta no caminho — sua régua é o movimento, não a perfeição. Quem está perto de você acaba andando mais rápido também.',
         insights: [
           { icon:'⚡', title:'Sua força', text:'Fazer acontecer. Você transforma intenção em resultado mais rápido do que a maioria.' },
           { icon:'🪞', title:'Seu ponto cego', text:'A pressa pode gerar retrabalho. Às vezes correr custa mais caro do que parar 10 minutos pra pensar.' },
@@ -535,7 +536,7 @@ const JORNADAS = {
         icon: '🔗',
         mode: 'Decide pensando nas pessoas',
         dims: ['REL','EMO'],
-        desc: 'Você lê o ambiente pelas pessoas: percebe como estão se sentindo, o que não foi dito, quem precisa de apoio. Essa sensibilidade é rara e faz diferença em qualquer grupo — na família, entre amigos ou no trabalho.',
+        desc: 'Você entra numa sala e sente o clima antes de alguém falar. Percebe o que não foi dito, quem está mal, quem precisa. Essa leitura das pessoas é rara — e é o que faz confiarem em você.',
         insights: [
           { icon:'⚡', title:'Sua força', text:'Criar confiança e enxergar o que as pessoas sentem. Você une grupos e acalma tensões.' },
           { icon:'🪞', title:'Seu ponto cego', text:'Cuidar tanto dos outros que esquece de você — e adiar conversas difíceis pra não magoar ninguém.' },
@@ -550,7 +551,7 @@ const JORNADAS = {
         icon: '📐',
         mode: 'Pensa com método e capricho',
         dims: ['SIS','EXE'],
-        desc: 'Você pensa antes de agir e age com cuidado. Gosta de fazer bem feito, sem deixar pontas soltas. As pessoas confiam em você justamente porque você entrega com qualidade e consistência.',
+        desc: 'Você prefere fazer certo a fazer rápido. Pensa antes, cuida dos detalhes, não deixa ponta solta — por isso confiam no que sai da sua mão. O risco é o quase pronto virar nunca pronto.',
         insights: [
           { icon:'⚡', title:'Sua força', text:'Confiabilidade. Você entrega o que promete, com capricho — e raramente deixa algo importante passar.' },
           { icon:'🪞', title:'Seu ponto cego', text:'Buscar o perfeito pode te deixar lento ou exigente demais (com você e com os outros).' },
@@ -565,7 +566,7 @@ const JORNADAS = {
         icon: '🧭',
         mode: 'Ágil em terreno incerto',
         dims: ['AMB','VEL'],
-        desc: 'Você se move bem quando o mapa não existe. Não precisa de tudo definido: lê os sinais, testa, ajusta e segue. Em situações novas ou que mudam o tempo todo, você acha caminho onde os outros veem beco.',
+        desc: 'Mapa? Você dispensa. Onde os outros veem beco, você lê os sinais, testa e acha caminho. Quanto mais incerto o terreno, mais você brilha — e mais a rotina certinha te entedia.',
         insights: [
           { icon:'⚡', title:'Sua força', text:'Avançar no incerto sem paralisar. Você se adapta rápido e enxerga saídas criativas.' },
           { icon:'🪞', title:'Seu ponto cego', text:'Tanta adaptabilidade pode virar falta de profundidade. Algumas coisas pedem persistência, não mais um plano novo.' },
@@ -580,7 +581,7 @@ const JORNADAS = {
         icon: '🛡️',
         mode: 'Cuida das pessoas com organização',
         dims: ['REL','SIS'],
-        desc: 'Você junta cuidado com as pessoas e senso de organização. Cria ambientes onde os outros se sentem seguros e sabem o que esperar. É a pessoa em quem todos confiam — porque você é justo, presente e constante.',
+        desc: 'As pessoas se sentem seguras perto de você, e não é por acaso. Você junta cuidado com organização e cria ambientes onde todo mundo sabe onde pisa. É o alicerce silencioso de qualquer time.',
         insights: [
           { icon:'⚡', title:'Sua força', text:'Construir confiança que dura. Você cria estabilidade e cuida pra que ninguém fique pra trás.' },
           { icon:'🪞', title:'Seu ponto cego', text:'Decisões difíceis que afetam pessoas podem ser adiadas demais. Proteger todo mundo às vezes trava o necessário.' },
