@@ -1,19 +1,21 @@
 // POST /api/b2b?fn=cortesia_unlock — libera o relatório completo de GRAÇA quando
-// o link traz um CÓDIGO DE CORTESIA válido (setting `cortesia_codes`, lista
-// separada por vírgula). Diferente do free_mode global: só quem tem o código libera.
-// Marca como pago (mp_payment_id='cortesia:<code>') e envia o relatório por e-mail.
+// o link traz um CÓDIGO DE CORTESIA válido. Suporta validade e limite de usos por
+// código (setting JSON `cortesia_config`), com fallback pra lista simples ilimitada
+// (setting `cortesia_codes`). Marca como pago (mp_payment_id='cortesia:<code>') e
+// envia o relatório por e-mail.
 const { setCors, json, err, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
-const { getSetting } = require('./_lib/settings');
+const { getSetting, setSetting } = require('./_lib/settings');
 const mailer = require('./_lib/mailer');
 const { buildReportEmailHtml } = require('./_lib/report-email');
 
-function parseCodes(raw) {
-  return String(raw || '')
-    .split(/[,\n;]+/)
-    .map(s => s.trim().toUpperCase())
-    .filter(Boolean);
+function parseList(raw) {
+  return String(raw || '').split(/[,\n;]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
 }
+function loadConfig(raw) {
+  try { const a = JSON.parse(raw || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+}
+function today() { return new Date().toISOString().slice(0, 10); } // YYYY-MM-DD (UTC)
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
@@ -25,8 +27,24 @@ module.exports = async (req, res) => {
   if (!access) return err(res, 'access obrigatório');
   if (!code) return err(res, 'Código de cortesia ausente.');
 
-  const valid = parseCodes(await getSetting('cortesia_codes', ''));
-  if (!valid.includes(code)) return err(res, 'Código de cortesia inválido ou expirado.', 403);
+  // 1) Config estruturada (validade + limite). 2) fallback lista simples (ilimitada).
+  const config = loadConfig(await getSetting('cortesia_config', '[]'));
+  const simple = parseList(await getSetting('cortesia_codes', ''));
+  const entry = config.find(c => String(c.code || '').trim().toUpperCase() === code);
+
+  if (!entry && !simple.includes(code)) {
+    return err(res, 'Código de cortesia inválido ou expirado.', 403);
+  }
+  if (entry) {
+    if (entry.expires && String(entry.expires).slice(0, 10) < today()) {
+      return err(res, 'Este link de cortesia expirou.', 403);
+    }
+    const max = parseInt(entry.max_uses, 10) || 0;
+    const uses = parseInt(entry.uses, 10) || 0;
+    if (max > 0 && uses >= max) {
+      return err(res, 'Este link de cortesia atingiu o limite de usos.', 403);
+    }
+  }
 
   const { rows } = await query(
     'SELECT id, nome, email, confirmed_at, payment_status, report_json FROM leads WHERE access_token = $1', [access]);
@@ -39,6 +57,15 @@ module.exports = async (req, res) => {
   await query(
     "UPDATE leads SET payment_status='paid', mp_payment_id=$2, updated_at=NOW() WHERE id=$1",
     [lead.id, 'cortesia:' + code.slice(0, 40)]);
+
+  // Incrementa o contador de usos do código (best-effort; volume baixo).
+  if (entry) {
+    try {
+      entry.uses = (parseInt(entry.uses, 10) || 0) + 1;
+      await setSetting('cortesia_config', JSON.stringify(config));
+    } catch (e) { /* não bloqueia a liberação */ }
+  }
+
   try {
     const html = buildReportEmailHtml(lead.nome, lead.report_json);
     const ok = await mailer.send(lead.email, 'Seu relatório completo — Entre Escolhas', html);

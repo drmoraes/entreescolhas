@@ -20,6 +20,8 @@ module.exports = async (req, res) => {
       price_combo: Number(combo),
       free_mode: free === '1',
       cortesia_codes: await getSetting('cortesia_codes', ''),
+      cortesia_config: await getSetting('cortesia_config', '[]'),
+      counter_base: parseInt(await getSetting('counter_base', '0'), 10) || 0,
       // custos de crédito (B2B) por categoria de candidato
       credit_cost: {
         operacional: Number(await getSetting('credit_cost_operacional', '1')),
@@ -66,6 +68,34 @@ module.exports = async (req, res) => {
       const uniq = [...new Set(codes)].slice(0, 100);
       await setSetting('cortesia_codes', uniq.join(', '));
       await logAdmin(req, 'set_cortesia_codes', uniq.join(', ').slice(0, 120));
+    }
+    if (body.cortesia_config !== undefined) {
+      // Cortesia com validade + limite de usos. Array de {code, expires, max_uses}.
+      // Preserva o contador `uses` já existente por código (merge por code).
+      let prev = [];
+      try { prev = JSON.parse(await getSetting('cortesia_config', '[]')) || []; } catch (e) { prev = []; }
+      const prevUses = {};
+      for (const p of prev) { if (p && p.code) prevUses[String(p.code).toUpperCase()] = parseInt(p.uses, 10) || 0; }
+      const incoming = Array.isArray(body.cortesia_config) ? body.cortesia_config : [];
+      const seen = new Set();
+      const clean = [];
+      for (const it of incoming) {
+        const code = String((it && it.code) || '').trim().toUpperCase();
+        if (!code || seen.has(code)) continue;
+        seen.add(code);
+        const expires = /^\d{4}-\d{2}-\d{2}$/.test(String(it.expires || '')) ? it.expires : '';
+        const max_uses = Math.max(0, parseInt(it.max_uses, 10) || 0);
+        clean.push({ code, expires, max_uses, uses: prevUses[code] || 0 });
+        if (clean.length >= 100) break;
+      }
+      await setSetting('cortesia_config', JSON.stringify(clean));
+      await logAdmin(req, 'set_cortesia_config', clean.map(c => c.code).join(', ').slice(0, 120));
+    }
+    if (body.counter_base !== undefined) {
+      // "Ponto de partida" simbólico do contador público (prova social).
+      const v = Math.max(0, Math.min(9999999, parseInt(body.counter_base, 10) || 0));
+      await setSetting('counter_base', String(v));
+      await logAdmin(req, 'set_counter_base', String(v));
     }
     // custos de crédito por categoria
     if (body.credit_cost && typeof body.credit_cost === 'object') {

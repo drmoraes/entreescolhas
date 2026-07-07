@@ -1222,7 +1222,7 @@ const ARCHETYPES    = JORNADA_CFG.archetypes;
 // Preenche a tela de intro dinamicamente
 // {single} é substituído por um span que o precos.js preenche com o preço do admin.
 document.getElementById('intro-badge-text').innerHTML =
-  JORNADA_CFG.badge.replace('{single}', '<span data-preco="single">R$ 9,97</span>');
+  JORNADA_CFG.badge.replace('{single}', '<span data-preco="single">R$ —</span>');
 document.getElementById('intro-title').innerHTML = JORNADA_CFG.title;
 document.getElementById('intro-desc').textContent = JORNADA_CFG.desc;
 document.getElementById('r-tag').textContent = JORNADA_CFG.resultTag;

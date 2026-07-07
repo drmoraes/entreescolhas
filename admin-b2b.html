@@ -94,9 +94,49 @@ async function carregarPreco(){
     if($('cfgPrice')) $('cfgPrice').value=Number(d.report_price).toFixed(2);
     if($('cfgFree')) $('cfgFree').checked=!!d.free_mode;
     if($('cfgCortesia')) $('cfgCortesia').value=d.cortesia_codes||'';
+    if($('cfgCounter')) $('cfgCounter').value=d.counter_base||0;
+    if($('cfgCortAdv')){
+      let arr=[]; try{arr=JSON.parse(d.cortesia_config||'[]')||[];}catch(e){}
+      $('cfgCortAdv').value=arr.map(c=>[c.code,(c.expires||''),(c.max_uses||0)].join(' | ')).join('\n');
+      renderCortUsos(arr);
+    }
     const cc=d.credit_cost||{};
     ['operacional','analista','especialista','gerencial','pcd'].forEach(k=>{ if($('cc_'+k)&&cc[k]!=null) $('cc_'+k).value=cc[k]; });
   }catch(e){}
+}
+function renderCortUsos(arr){
+  const box=$('cortUsos'); if(!box)return;
+  if(!arr.length){box.innerHTML='';return;}
+  box.innerHTML='<div class="muted small" style="margin-top:8px">Usos por código:</div>'+arr.map(c=>{
+    const lim=c.max_uses?('/'+c.max_uses):' (ilimitado)';
+    const exp=c.expires?(' · expira '+c.expires):'';
+    return `<div class="small" style="padding:2px 0"><b>${c.code}</b> — ${c.uses||0}${lim} usos${exp}</div>`;
+  }).join('');
+}
+async function salvarCortAdv(){
+  const msg=$('cortAdvMsg'); msg.textContent='Salvando…';msg.className='small muted';
+  const linhas=($('cfgCortAdv').value||'').split('\n').map(l=>l.trim()).filter(Boolean);
+  const cortesia_config=linhas.map(l=>{
+    const p=l.split('|').map(s=>s.trim());
+    return { code:(p[0]||'').toUpperCase(), expires:(p[1]||''), max_uses:parseInt(p[2],10)||0 };
+  }).filter(c=>c.code);
+  try{
+    const r=await fetch('/api/b2b?fn=admin_settings&op=set',{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':KEY},body:JSON.stringify({cortesia_config})});
+    const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
+    let arr=[];try{arr=JSON.parse(d.cortesia_config||'[]')||[];}catch(e){}
+    $('cfgCortAdv').value=arr.map(c=>[c.code,(c.expires||''),(c.max_uses||0)].join(' | ')).join('\n');
+    renderCortUsos(arr);
+    msg.textContent='✓ Links de cortesia salvos';msg.className='small green';
+  }catch(e){msg.textContent=e.message;msg.className='small red';}
+}
+async function salvarCounter(){
+  const msg=$('counterMsg'); msg.textContent='Salvando…';msg.className='small muted';
+  try{
+    const r=await fetch('/api/b2b?fn=admin_settings&op=set',{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':KEY},body:JSON.stringify({counter_base:parseInt($('cfgCounter').value,10)||0})});
+    const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
+    $('cfgCounter').value=d.counter_base||0;
+    msg.textContent='✓ Contador salvo ('+(d.counter_base||0).toLocaleString('pt-BR')+' + reais)';msg.className='small green';
+  }catch(e){msg.textContent=e.message;msg.className='small red';}
 }
 async function salvarCustos(){
   const msg=$('ccMsg'); msg.textContent='Salvando…';msg.className='small muted';
@@ -207,16 +247,34 @@ function render(d){
     <p class="muted small" style="margin-top:8px">Com o modo grátis ligado, o paywall vira "Ver meu relatório grátis" e não cobra. Desligado = cobra o preço acima.</p>
   </div>
 
-  <h2 class="sec">Links de cortesia (grátis para quem tem o código)</h2>
-  <div class="kpi" style="padding:14px;max-width:680px">
-    <label class="muted small">Códigos válidos (separe por vírgula)</label>
-    <input id="cfgCortesia" type="text" style="width:100%;margin-top:4px" placeholder="IMPRENSA2026, PARCEIRO, LANCAMENTO">
-    <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
-      <button class="btn" onclick="salvarCortesia()">Salvar códigos</button>
-      <span id="cortMsg" class="small"></span>
+  <h2 class="sec">Contador público (prova social)</h2>
+  <div class="kpi" style="padding:14px;max-width:560px">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span class="muted small">Base do contador</span>
+      <input id="cfgCounter" type="number" min="0" step="1" style="width:140px" placeholder="100000">
+      <button class="btn" onclick="salvarCounter()">Salvar</button>
+      <span id="counterMsg" class="small"></span>
     </div>
-    <p class="muted small" style="margin-top:10px">Entregue o link <code>entreescolhas.com.br/teste.html?jornada=arquetipo&amp;cortesia=CODIGO</code>. Quem abrir faz o cadastro, o teste, e no fim libera o relatório completo de graça — só quem tem o código. Para revogar, apague o código daqui.</p>
+    <p class="muted small" style="margin-top:8px">Somado à contagem real de testes concluídos no contador da home ("já se descobriram"). Ex.: base <code>100000</code> mostra ~100 mil desde o início. Use com parcimônia — número muito acima do real pode soar pouco cr&iacute;vel para quem chega.</p>
+  </div>
+
+  <h2 class="sec">Links de cortesia (grátis com validade e limite)</h2>
+  <div class="kpi" style="padding:14px;max-width:680px">
+    <label class="muted small">Um código por linha: <code>CÓDIGO | validade(AAAA-MM-DD) | limite de usos</code></label>
+    <textarea id="cfgCortAdv" rows="4" style="width:100%;margin-top:4px;font-family:monospace;font-size:13px" placeholder="SEGUIDORES | 2026-07-31 | 500&#10;IMPRENSA | | 0"></textarea>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
+      <button class="btn" onclick="salvarCortAdv()">Salvar links</button>
+      <span id="cortAdvMsg" class="small"></span>
+    </div>
+    <div id="cortUsos"></div>
+    <p class="muted small" style="margin-top:10px">Validade e limite s&atilde;o opcionais: deixe em branco / <code>0</code> para sem expira&ccedil;&atilde;o ou sem limite. Link: <code>entreescolhas.com.br/teste.html?jornada=arquetipo&amp;cortesia=CÓDIGO</code>. Quem abrir faz cadastro + teste e libera o relat&oacute;rio de gra&ccedil;a. Para revogar, apague a linha.</p>
     <p class="muted small" style="margin-top:6px">Jornadas: <code>arquetipo</code>, <code>fit-cultural</code>, <code>scanner</code>, <code>bussola</code>.</p>
+    <details style="margin-top:8px"><summary class="muted small" style="cursor:pointer">C&oacute;digos simples (legado, sem limite)</summary>
+      <input id="cfgCortesia" type="text" style="width:100%;margin-top:6px" placeholder="IMPRENSA2026, PARCEIRO">
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
+        <button class="btn" onclick="salvarCortesia()">Salvar (legado)</button><span id="cortMsg" class="small"></span>
+      </div>
+    </details>
   </div>
 
   <h2 class="sec">Custo de crédito por categoria (B2B)</h2>
