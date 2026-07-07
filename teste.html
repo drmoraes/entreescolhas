@@ -185,6 +185,7 @@
     </div>
     <div class="dims-section" id="r-dims-section">
       <div class="dims-title" id="r-dims-title">Suas dimensões comportamentais</div>
+      <div id="r-metodo" style="display:none;font-size:0.78rem;color:var(--text-3);line-height:1.55;margin:-6px 0 18px;padding:10px 12px;border-left:2px solid var(--accent);background:var(--accent-dim,rgba(108,99,255,0.06));border-radius:0 8px 8px 0;"></div>
       <div id="r-dims"></div>
     </div>
     <div class="insights-section" id="r-insights-section">
@@ -1641,45 +1642,85 @@ function prevQ() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// SCORING — dinâmico, calcula max a partir das perguntas
+// SCORING — Índice de Ênfase por dimensão (0–100), honesto e comparável.
+// Método: para cada dimensão medimos em que PROPORÇÃO das situações em que ela
+// podia ser escolhida (máximo atingível ao longo dos 20 cenários) você de fato a
+// escolheu. É uma métrica ipsativa transparente — leitura situacional, não um
+// teste psicométrico clínico validado. Sem piso/teto artificiais.
 // ═══════════════════════════════════════════════════════════
+
+// Máximo atingível por dimensão: soma, em cada pergunta, do maior valor daquela
+// dimensão disponível entre as opções. É o teto real que a pessoa poderia somar.
+function maxAttainablePerDim() {
+  const maxD = {};
+  Object.keys(JORNADA_CFG.dimNames).forEach(d => { maxD[d] = 0; });
+  QUESTIONS.forEach(q => {
+    const best = {};
+    q.opts.forEach(o => Object.entries(o.dims).forEach(([d, v]) => { best[d] = Math.max(best[d] || 0, v); }));
+    Object.entries(best).forEach(([d, v]) => { maxD[d] = (maxD[d] || 0) + v; });
+  });
+  return maxD;
+}
+
 function calcScores() {
-  // Pontuação bruta por dimensão (garante todas as dimensões da jornada)
   const raw = {};
   Object.keys(JORNADA_CFG.dimNames).forEach(d => { raw[d] = 0; });
   answers.forEach((ansIdx, qIdx) => {
     if (ansIdx === null) return;
     const dims = QUESTIONS[qIdx].opts[ansIdx].dims;
-    Object.entries(dims).forEach(([d,v]) => { raw[d] = (raw[d] || 0) + v; });
+    Object.entries(dims).forEach(([d, v]) => { raw[d] = (raw[d] || 0) + v; });
   });
-
-  // Em teste de ESCOLHA FORÇADA é impossível maximizar todas as dimensões ao mesmo
-  // tempo. Por isso usamos um PERFIL RELATIVO: a dimensão mais forte da pessoa lê alto
-  // (~95) e as demais em degradê (piso 58). Resultado positivo e psicometricamente justo.
-  const vals = Object.values(raw);
-  const max = Math.max(...vals), min = Math.min(...vals);
+  const maxD = maxAttainablePerDim();
   const norm = {};
   Object.keys(raw).forEach(d => {
-    norm[d] = (max === min) ? 74 : Math.round(58 + 37 * ((raw[d] - min) / (max - min)));
+    const m = maxD[d] || 0;
+    norm[d] = m > 0 ? Math.max(0, Math.min(100, Math.round(100 * raw[d] / m))) : 0;
   });
   return norm;
 }
 
-// Classifica a nota num rótulo positivo
+// Rótulo honesto de ÊNFASE (proporção), sem julgamento de valor.
 function nivelLabel(v) {
-  if (v >= 85) return 'Traço marcante';
-  if (v >= 72) return 'Bem presente';
-  if (v >= 64) return 'Presente';
-  return 'Em desenvolvimento';
+  if (v >= 66) return 'Traço dominante';
+  if (v >= 45) return 'Bem presente';
+  if (v >= 28) return 'Presente';
+  return 'Menos acionado';
+}
+
+// Arquétipo primário + secundário + confiança da leitura.
+// match = média das dimensões que definem o arquétipo (0–100). Confiança cresce
+// com a distância entre o 1º e o 2º arquétipo. Secundário só aparece se estiver perto.
+function analyzeArchetypes(scores) {
+  const matches = ARCHETYPES.map(arch => ({
+    arch,
+    match: Math.round(arch.dims.reduce((a, d) => a + (scores[d] || 0), 0) / arch.dims.length),
+  })).sort((a, b) => b.match - a.match);
+  const top = matches[0];
+  const second = matches[1] || null;
+  const gap = second ? (top.match - second.match) : 40;
+  const confidence = Math.max(55, Math.min(96, Math.round(62 + gap * 1.6)));
+  const secondary = (second && gap <= 10) ? second.arch : null;
+  return { primary: top.arch, secondary, confidence, gap, topMatch: top.match };
 }
 
 function findArchetype(scores) {
-  let best = null, bestScore = -1;
-  ARCHETYPES.forEach(arch => {
-    const s = arch.dims.reduce((acc, d) => acc + (scores[d] || 0), 0);
-    if (s > bestScore) { bestScore = s; best = arch; }
-  });
-  return best;
+  return analyzeArchetypes(scores).primary;
+}
+
+// Texto de transparência de método exibido no relatório (dims section).
+function metodoHtml(report) {
+  const conf = report && report.confianca ? report.confianca : null;
+  const sec = report && report.secundario ? report.secundario : null;
+  let s = '<strong>Como lemos isto:</strong> cada barra é um <em>índice de ênfase</em> — em que proporção das 20 situações, quando a dimensão podia aparecer, você a escolheu. É uma leitura situacional dos seus padrões, não um teste clínico.';
+  if (conf) s += ` Confiança da leitura: <strong>${conf}%</strong>.`;
+  if (sec) s += ` Você também mostra forte influência do perfil <strong>${sec}</strong>.`;
+  return s;
+}
+function renderMetodo(report) {
+  const el = document.getElementById('r-metodo');
+  if (!el) return;
+  el.innerHTML = metodoHtml(report);
+  el.style.display = 'block';
 }
 
 let LAST_REPORT = null;
@@ -1717,6 +1758,7 @@ function showSavedFullReport() {
       document.getElementById('paid-note').style.display = 'block';
       mostrarAfiliado();
       renderDiagnosticoIA();
+      renderMetodo(report);
 
       const dimsEl = document.getElementById('r-dims');
       dimsEl.innerHTML = '';
@@ -1748,6 +1790,7 @@ function showSavedFullReport() {
 function renderDimsAndInsights(arch, scores) {
   const dimNames = JORNADA_CFG.dimNames;
   const dimInfo = JORNADA_CFG.dimInfo || {};
+  renderMetodo(LAST_REPORT);
   const dimsEl = document.getElementById('r-dims');
   dimsEl.innerHTML = '';
   Object.entries(scores).forEach(([d, v]) => {
@@ -1778,7 +1821,8 @@ function showResult() {
     trackEvent('view_report_preview');
   }
   const scores = calcScores();
-  const arch = findArchetype(scores);
+  const analysis = analyzeArchetypes(scores);
+  const arch = analysis.primary;
 
   document.getElementById('r-icon').textContent = arch.icon;
   document.getElementById('r-name').innerHTML = `<span class="grad">${arch.name}</span>`;
@@ -1806,6 +1850,8 @@ function showResult() {
   LAST_REPORT = {
     arch: { icon: arch.icon, name: arch.name, mode: arch.mode, desc: arch.desc, insights: arch.insights },
     scores,
+    confianca: analysis.confidence,
+    secundario: analysis.secondary ? analysis.secondary.name : null,
     dimNames: JORNADA_CFG.dimNames,
     dimInfo: JORNADA_CFG.dimInfo || {},
     resultTag: JORNADA_CFG.resultTag,
