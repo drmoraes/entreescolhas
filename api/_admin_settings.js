@@ -1,7 +1,7 @@
 // /api/b2b?fn=admin_settings&op=get|set — configurações editáveis no admin.
 // Hoje: preço do relatório do candidato (B2C). Set requer perfil financeiro/owner.
 const { setCors, json, err, requireApiKey, logAdmin, getJsonBody } = require('./_lib/http');
-const { getSetting, setSetting } = require('./_lib/settings');
+const { getSetting, setSetting, getPriceSingle, getPriceCombo } = require('./_lib/settings');
 const { adminCan } = require('./_lib/admin-perms');
 
 module.exports = async (req, res) => {
@@ -10,8 +10,9 @@ module.exports = async (req, res) => {
   const op = String((req.query && req.query.op) || 'get');
 
   async function snapshot() {
-    const single = await getSetting('price_single', await getSetting('report_price', String(process.env.MP_REPORT_PRICE || '9.90')));
-    const combo = await getSetting('price_combo', '19.90');
+    // Fonte única: helpers do settings.js (mesmos defaults de todo o resto do sistema).
+    const single = await getPriceSingle();
+    const combo = await getPriceCombo();
     const free = await getSetting('free_mode', '0');
     return {
       ok: true,

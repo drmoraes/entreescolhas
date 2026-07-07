@@ -1403,9 +1403,11 @@ function renderCortesia() {
 }
 
 // Libera o relatório completo de graça usando o código de cortesia.
-function cortesiaUnlock() {
-  const btn = document.getElementById('btn-unlock');
+// srcBtn: botão que disparou (a tela "já concluiu" passa `this`, pois não tem #btn-unlock).
+function cortesiaUnlock(srcBtn) {
+  const btn = document.getElementById('btn-unlock') || srcBtn || null;
   const errEl = document.getElementById('paywall-error');
+  const label = (btn && btn.textContent) || 'Liberar meu relatório grátis';
   if (errEl) errEl.style.display = 'none';
   if (btn) { btn.disabled = true; btn.textContent = 'Liberando...'; }
   fetch('/api/b2b?fn=cortesia_unlock', {
@@ -1416,7 +1418,8 @@ function cortesiaUnlock() {
     else throw new Error(d.error || 'Não foi possível liberar.');
   }).catch(e => {
     if (errEl) { errEl.textContent = e.message; errEl.style.display = 'block'; }
-    if (btn) { btn.disabled = false; btn.textContent = 'Liberar meu relatório grátis'; }
+    else { alert(e.message); }   // tela "já concluiu" não tem área de erro → feedback via alerta
+    if (btn) { btn.disabled = false; btn.textContent = label; }
   });
 }
 
@@ -1544,7 +1547,7 @@ function showAlreadyCompleted(data) {
     ${data.free_mode
       ? `<button class="btn-primary" style="width:100%;" onclick="unlockReport()">Ver meu relatório grátis</button>`
       : (CORTESIA_CODE
-        ? `<button class="btn-primary" style="width:100%;background:#16a34a;border-color:#16a34a;" onclick="cortesiaUnlock()">🎁 Liberar meu relatório grátis</button>`
+        ? `<button class="btn-primary" style="width:100%;background:#16a34a;border-color:#16a34a;" onclick="cortesiaUnlock(this)">🎁 Liberar meu relatório grátis</button>`
         : ofertaHtml())}
     ${podeRefazer ? '<button class="btn-primary" style="width:100%;margin-top:10px;background:transparent;border:1px solid var(--border);color:var(--text-2);" onclick="startTest()">Refazer o teste</button>' : ''}
   `;
@@ -1728,8 +1731,16 @@ let LAST_REPORT = null;
 function showSavedFullReport() {
   fetch('/api/lead_report?access=' + encodeURIComponent(ACCESS_TOKEN))
     .then(res => res.json().catch(() => ({})).then(data => ({ ok: res.ok, data })))
-    .then(({ ok, data }) => {
+    .then(async ({ ok, data }) => {
       if (!ok || !data.report) {
+        // Antes de mostrar "processando", tenta confirmar direto no MP (não depende do webhook).
+        try {
+          const rec = await fetch('/api/b2b?fn=mp_reconcile', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ access: ACCESS_TOKEN }),
+          }).then(r => r.json());
+          if (rec && rec.paid) { window.location.reload(); return; }
+        } catch (e) { /* segue pro estado de processamento */ }
         // Pagamento pode ainda estar em processamento (webhook assíncrono)
         document.getElementById('intro-badge-text').textContent = 'Processando pagamento…';
         showScreen('screen-intro');
@@ -1999,9 +2010,13 @@ function fecharBrick() { const m = document.getElementById('brickModal'); if (m)
 
 // Escuta o status no servidor (webhook marca 'paid'); ao aprovar, recarrega e mostra o relatório.
 function iniciarPollingPagamento() {
+  // Reconciliação ativa: consulta o MP direto (não depende do webhook).
   const poll = setInterval(async () => {
     try {
-      const d = await fetch('/api/lead_status?access=' + encodeURIComponent(ACCESS_TOKEN)).then(r => r.json());
+      const d = await fetch('/api/b2b?fn=mp_reconcile', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access: ACCESS_TOKEN }),
+      }).then(r => r.json());
       if (d && d.paid) { clearInterval(poll); fecharBrick(); window.location.reload(); }
     } catch (e) { /* tenta no próximo tick */ }
   }, 3000);
@@ -2022,7 +2037,7 @@ function unlockReportFallback() {
       if (data.already_paid) { if (pop) { try { pop.close(); } catch (e) {} } window.location.reload(); return; }
       if (pop) { pop.location.href = data.init_point; } else { window.location.href = data.init_point; return; }
       if (btn) btn.textContent = 'Aguardando pagamento...';
-      const poll = setInterval(async () => { try { const d = await fetch('/api/lead_status?access=' + encodeURIComponent(ACCESS_TOKEN)).then(r => r.json()); if (d && d.paid) { clearInterval(poll); if (pop) { try { pop.close(); } catch (e) {} } window.location.reload(); } } catch (e) {} }, 3000);
+      const poll = setInterval(async () => { try { const d = await fetch('/api/b2b?fn=mp_reconcile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ access: ACCESS_TOKEN }) }).then(r => r.json()); if (d && d.paid) { clearInterval(poll); if (pop) { try { pop.close(); } catch (e) {} } window.location.reload(); } } catch (e) {} }, 3000);
       setTimeout(() => clearInterval(poll), 300000);
     })
     .catch(err => { if (pop) { try { pop.close(); } catch (e) {} } if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; } if (btn) { btn.disabled = false; btn.textContent = 'Desbloquear relatório completo'; } });

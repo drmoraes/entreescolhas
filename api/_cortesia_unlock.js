@@ -7,7 +7,7 @@ const { setCors, json, err, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
 const { getSetting, setSetting } = require('./_lib/settings');
 const mailer = require('./_lib/mailer');
-const { buildReportEmailHtml } = require('./_lib/report-email');
+const { sendReportAndMark } = require('./_lib/report-email');
 
 function parseList(raw) {
   return String(raw || '').split(/[,\n;]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
@@ -66,11 +66,7 @@ module.exports = async (req, res) => {
     } catch (e) { /* não bloqueia a liberação */ }
   }
 
-  try {
-    const html = buildReportEmailHtml(lead.nome, lead.report_json);
-    const ok = await mailer.send(lead.email, 'Seu relatório completo — Entre Escolhas', html);
-    if (ok) await query('UPDATE leads SET report_sent_at = NOW() WHERE id = $1', [lead.id]);
-  } catch (e) { /* não bloqueia */ }
+  await sendReportAndMark({ query, mailer, setSetting, getSetting }, lead);
 
   return json(res, { ok: true });
 };

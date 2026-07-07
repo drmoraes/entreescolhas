@@ -3,9 +3,9 @@
 // (mp_payment_id='free') e envia o relatório por e-mail. Empurra pro Banco de Talentos.
 const { setCors, json, err, getJsonBody } = require('./_lib/http');
 const { query } = require('./_lib/db');
-const { getSetting } = require('./_lib/settings');
+const { getSetting, setSetting } = require('./_lib/settings');
 const mailer = require('./_lib/mailer');
-const { buildReportEmailHtml } = require('./_lib/report-email');
+const { sendReportAndMark } = require('./_lib/report-email');
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
@@ -27,11 +27,7 @@ module.exports = async (req, res) => {
   if (lead.payment_status === 'paid') return json(res, { ok: true, already: true });
 
   await query("UPDATE leads SET payment_status='paid', mp_payment_id='free', updated_at=NOW() WHERE id=$1", [lead.id]);
-  try {
-    const html = buildReportEmailHtml(lead.nome, lead.report_json);
-    const ok = await mailer.send(lead.email, 'Seu relatório completo — Entre Escolhas', html);
-    if (ok) await query('UPDATE leads SET report_sent_at = NOW() WHERE id = $1', [lead.id]);
-  } catch (e) { /* não bloqueia */ }
+  await sendReportAndMark({ query, mailer, setSetting, getSetting }, lead);
 
   return json(res, { ok: true });
 };

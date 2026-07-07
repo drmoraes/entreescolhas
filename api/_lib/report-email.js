@@ -45,4 +45,35 @@ function buildReportEmailHtml(nome, report) {
     `;
 }
 
-module.exports = { buildReportEmailHtml };
+// Envia o relatório e marca report_sent_at em caso de sucesso. Em caso de FALHA,
+// não bloqueia a liberação (o usuário já vê o relatório na tela), mas registra o
+// erro de forma VISÍVEL: log no servidor (Vercel) + última falha em app_settings
+// (`last_report_email_error`) e contador (`report_email_failures`) para o admin.
+// Recebe {query, mailer, setSetting, getSetting} por injeção (evita ciclo de imports).
+async function sendReportAndMark(deps, lead) {
+  const { query, mailer, setSetting, getSetting } = deps;
+  try {
+    const html = buildReportEmailHtml(lead.nome, lead.report_json);
+    const ok = await mailer.send(lead.email, 'Seu relatório completo — Entre Escolhas', html);
+    if (ok) {
+      await query('UPDATE leads SET report_sent_at = NOW() WHERE id = $1', [lead.id]);
+      return { ok: true };
+    }
+    const msg = (mailer.getLastError && mailer.getLastError()) || 'envio retornou falso';
+    console.error('[report-email] FALHA ao enviar para', lead.email, '-', msg);
+    try {
+      if (setSetting) await setSetting('last_report_email_error', new Date().toISOString() + ' · ' + lead.email + ' · ' + String(msg).slice(0, 160));
+      if (setSetting && getSetting) {
+        const n = (parseInt(await getSetting('report_email_failures', '0'), 10) || 0) + 1;
+        await setSetting('report_email_failures', String(n));
+      }
+    } catch (e2) { /* registro é best-effort */ }
+    return { ok: false, error: msg };
+  } catch (e) {
+    console.error('[report-email] ERRO ao enviar para', lead && lead.email, '-', e && e.message);
+    try { if (setSetting) await setSetting('last_report_email_error', new Date().toISOString() + ' · ' + (lead && lead.email) + ' · ' + (e && e.message)); } catch (e2) {}
+    return { ok: false, error: e && e.message };
+  }
+}
+
+module.exports = { buildReportEmailHtml, sendReportAndMark };

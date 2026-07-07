@@ -2,14 +2,14 @@
 // Sem autenticação, cacheável. A home, o checkout e o cabeçalho leem daqui, então
 // mudar o preço no admin reflete em todos os canais automaticamente.
 const { setCors, json } = require('./_lib/http');
-const { getPriceSingle, getPriceCombo } = require('./_lib/settings');
+const { getPriceSingle, getPriceCombo, DEFAULT_SINGLE, DEFAULT_COMBO } = require('./_lib/settings');
 
 function fmt(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
 
-  let single = 9.90, combo = 29.90;
+  let single = DEFAULT_SINGLE, combo = DEFAULT_COMBO;
   try { single = await getPriceSingle(); } catch (e) {}
   try { combo = await getPriceCombo(); } catch (e) {}
 

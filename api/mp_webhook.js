@@ -4,7 +4,8 @@
 // para evitar reenvios em loop.
 const { query } = require('./_lib/db');
 const mailer = require('./_lib/mailer');
-const { buildReportEmailHtml } = require('./_lib/report-email');
+const { sendReportAndMark } = require('./_lib/report-email');
+const { getSetting, setSetting } = require('./_lib/settings');
 const { applyPaidPurchase, refundPurchase } = require('./_lib/referral-core');
 
 // external_reference pode vir como 'p{purchaseId}:{access}' (novo) ou só '{access}' (legado)
@@ -69,13 +70,7 @@ module.exports = async (req, res) => {
           );
         }
         if (lead.report_json && !lead.report_sent_at) {
-          const html = buildReportEmailHtml(lead.nome, lead.report_json);
-          const sent = await mailer.send(lead.email, 'Seu relatório completo — Entre Escolhas', html);
-          if (sent) {
-            await query('UPDATE leads SET report_sent_at = NOW() WHERE id = $1', [lead.id]);
-          } else {
-            console.error('mp_webhook: falha ao enviar e-mail —', mailer.getLastError());
-          }
+          await sendReportAndMark({ query, mailer, setSetting, getSetting }, lead);
         }
       }
     }

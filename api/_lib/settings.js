@@ -16,22 +16,26 @@ async function setSetting(key, value) {
     [key, String(value)]);
 }
 
-// Preço do teste avulso (B2C): banco (price_single) → legado (report_price) → env → 9.90
+// ── FONTE ÚNICA dos defaults de preço (evita valores divergentes por arquivo) ──
+const DEFAULT_SINGLE = 9.97;   // preço do teste avulso
+const DEFAULT_COMBO  = 19.90;  // preço do combo (todos os testes)
+
+// Preço do teste avulso (B2C): banco (price_single) → legado (report_price) → env → default
 async function getPriceSingle() {
   const v = await getSetting('price_single', null);
   const n = Number(v);
   if (n > 0) return n;
   const legacy = Number(await getSetting('report_price', null));
   if (legacy > 0) return legacy;
-  return Number(process.env.MP_REPORT_PRICE || 9.90);
+  return Number(process.env.MP_REPORT_PRICE || DEFAULT_SINGLE);
 }
 
-// Preço do combo (todos os testes): banco (price_combo) → env → 29.90
+// Preço do combo (todos os testes): banco (price_combo) → env → default
 async function getPriceCombo() {
   const v = await getSetting('price_combo', null);
   const n = Number(v);
   if (n > 0) return n;
-  return Number(process.env.MP_COMBO_PRICE || 29.90);
+  return Number(process.env.MP_COMBO_PRICE || DEFAULT_COMBO);
 }
 
 // Compat: getReportPrice continua existindo e aponta para o avulso.
@@ -103,4 +107,5 @@ module.exports = {
   getPriceSingle, getPriceCombo, getDiscountPct, getCommissionPct,
   getReferralWindowDays, getReferralWindowCard, getWindowForMethod, isCardOrBoleto,
   getMinPayout, isReferralEnabled, getCreditCosts,
+  DEFAULT_SINGLE, DEFAULT_COMBO,
 };
