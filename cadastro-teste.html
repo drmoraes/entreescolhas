@@ -83,7 +83,7 @@
       <div class="success-icon">✉️</div>
       <h1>Quase lá...</h1>
       <p class="sub">Não foi possível te levar direto ao teste agora. Enviamos um link de acesso para <strong id="success-email"></strong> — clique nele para continuar.</p>
-      <p class="fine">Não encontrou? Veja a caixa de spam ou <a href="#" id="resend-link" style="color:var(--accent);">peça um novo link</a>.</p>
+      <p class="fine">Não encontrou? Veja a caixa de spam ou <a href="#" id="resend-link" style="color:var(--accent);">voltar e tentar de novo</a>.</p>
     </div>
 
   </div>
@@ -182,7 +182,7 @@ document.getElementById('resend-link').addEventListener('click', (e) => {
   document.getElementById('success-state').classList.remove('show');
   document.getElementById('form-state').style.display = 'block';
   submitBtn.disabled = false;
-  submitBtn.textContent = 'Quero começar';
+  submitBtn.textContent = 'Começar agora';
 });
 </script>
 <script src="/identity.js" defer></script>

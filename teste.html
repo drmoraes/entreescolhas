@@ -97,7 +97,9 @@
     .dims-section { background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:28px; margin-bottom:28px; }
     .dims-title { font-size:0.75rem; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:20px; }
     .dim-item { margin-bottom:16px; }
-    .dim-label { display:flex; justify-content:space-between; font-size:0.82rem; color:var(--text-2); margin-bottom:6px; }
+    .dim-label { display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:0.82rem; color:var(--text-2); margin-bottom:6px; }
+    .dim-label > span:first-child { min-width:0; flex:1 1 auto; }
+    .dim-label > span:last-child { flex:0 0 auto; white-space:nowrap; font-variant-numeric:tabular-nums; }
     .dim-bar-bg { height:6px; background:var(--bg-raised); border-radius:100px; overflow:hidden; }
     .dim-bar { height:100%; background:linear-gradient(90deg,var(--accent),#A89BFF); border-radius:100px; width:0; transition:width 1.2s cubic-bezier(0.4,0,0.2,1); }
     .insights-section { background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:28px; margin-bottom:28px; }
@@ -117,6 +119,19 @@
     @media(max-width:600px) {
       .q-nav { flex-direction:column; gap:12px; }
       .btn-next, .btn-back { width:100%; justify-content:center; }
+      /* Respiro no mobile: caixas do resultado com padding menor e nada colado nas bordas */
+      .dims-section, .insights-section { padding:18px 16px !important; border-radius:14px; }
+      #paywall-box { padding:22px 16px !important; }
+      #afiliado-box { padding:18px 16px !important; }
+      #r-coaching-section .coach-card, #r-coaching-cards > div { padding:14px !important; }
+      .result-desc { font-size:0.95rem; }
+      .dim-label { font-size:0.8rem; }
+      /* Espaço no fim pra o botão flutuante de tema não cobrir o CTA/aviso final */
+      #screen-result { padding-bottom:90px; }
+      /* Linha de afiliado (WhatsApp/Copiar) não estoura a largura */
+      #afi-reveal { flex-direction:column; align-items:stretch; }
+      #afi-reveal #afi-link { min-width:0 !important; width:100%; }
+      #afi-reveal .btn-primary, #afi-reveal .btn-outline { width:100%; }
     }
   </style>
   <link rel="stylesheet" href="/theme.css?v=3">
@@ -207,7 +222,7 @@
       <h3 style="font-size:1.25rem;margin-bottom:8px;">Você viu <em>quem</em> você é. Falta o <em>porquê</em> — e o que fazer com isso.</h3>
       <p style="color:var(--text-2);font-size:0.92rem;line-height:1.6;margin-bottom:18px;">A prévia te deu o retrato. O relatório completo destrava a profundidade e o plano:</p>
       <div style="text-align:left;max-width:400px;margin:0 auto 20px;display:grid;gap:10px;">
-        <div style="display:flex;gap:10px;align-items:flex-start;"><span>🧠</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Seu perfil por inteiro</strong> — as 6 dimensões pontuadas de 0 a 100 e os dois lados que puxam suas decisões.</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start;"><span>🧠</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Seu perfil por inteiro</strong> — as 6 dimensões no índice de ênfase (40 a 100) e os dois lados que puxam suas decisões.</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;"><span>🎯</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Onde você brilha (e onde trava)</strong> — os ambientes em que seu padrão vira vantagem, e onde ele te sabota.</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;"><span>🤖</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Diagnóstico de coaching por IA</strong> — uma ação prática pra esta semana, feita a partir das <em>suas</em> respostas. Nada de genérico.</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;"><span>📩</span><span style="color:var(--text-2);font-size:0.9rem;"><strong style="color:var(--text);">Acesso permanente</strong> — recebe por e-mail e reabre quando quiser.</span></div>
@@ -241,7 +256,7 @@
       <div id="afi-reveal" style="display:none;">
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
           <input id="afi-link" readonly style="flex:1;min-width:200px;background:var(--bg-raised, #141428);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:12px 14px;font-size:0.85rem;" value="" />
-          <button class="btn-primary" style="white-space:nowrap;" onclick="copiarAfiliado()">Copiar link</button>
+          <button class="btn-primary" style="white-space:nowrap;" onclick="copiarAfiliado(event)">Copiar link</button>
           <a id="afi-wa" class="btn-primary" style="white-space:nowrap;background:#25D366;text-decoration:none;" target="_blank" rel="noopener">WhatsApp</a>
         </div>
         <p style="font-size:0.74rem;color:var(--text-3);margin-top:12px;">✓ Aceite registrado. Comissão gerada em qualquer pagamento aprovado e liberada após o prazo de segurança (8 dias no Pix; 30–45 dias em cartão/boleto). <a href="/regulamento-afiliados.html" target="_blank" style="color:var(--accent);">Regras</a>.</p>
@@ -1332,8 +1347,8 @@ function brl(v) { return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ','); }
 
 function precoDoKind(kind) {
   const s = LEAD_STATE || {};
-  if (kind === 'combo') return s.preco_combo || s.preco_combo_base || 29.90;
-  return s.preco_single || s.preco || s.preco_single_base || 9.90;
+  if (kind === 'combo') return s.preco_combo || s.preco_combo_base || 19.90;
+  return s.preco_single || s.preco || s.preco_single_base || 9.97;
 }
 
 // Monta os dois cartões de oferta (combo em destaque) com preços vindos do servidor.
@@ -1526,11 +1541,12 @@ async function gerarAfiliado(silencioso) {
   if (btn && !silencioso) { btn.disabled = false; btn.textContent = 'Gerar meu link de indicação'; }
 }
 
-function copiarAfiliado() {
+function copiarAfiliado(ev) {
   const inp = document.getElementById('afi-link');
   if (!inp) return;
+  const b = (ev && ev.currentTarget) || (typeof event !== 'undefined' && event && event.target) || null;
   navigator.clipboard.writeText(inp.value).then(() => {
-    const b = event && event.target; if (b) { const t = b.textContent; b.textContent = 'Copiado!'; setTimeout(() => b.textContent = t, 1800); }
+    if (b) { const t = b.textContent; b.textContent = 'Copiado!'; setTimeout(() => b.textContent = t, 1800); }
   });
 }
 
@@ -1728,7 +1744,8 @@ function findArchetype(scores) {
 function metodoHtml(report) {
   const conf = report && report.confianca ? report.confianca : null;
   const sec = report && report.secundario ? report.secundario : null;
-  let s = '<strong>Como lemos isto:</strong> cada barra é um <em>índice de ênfase</em> (40–100) — mostra o quanto você se apoia em cada dimensão, a partir das suas escolhas nos 20 cenários. Não é uma nota de bom/ruim: é o <em>desenho do seu jeito de decidir</em>. Um traço mais baixo é onde você se apoia menos — não um defeito.';
+  const nQ = (typeof QUESTIONS !== 'undefined' && QUESTIONS.length) ? QUESTIONS.length : 20;
+  let s = '<strong>Como lemos isto:</strong> cada barra é um <em>índice de ênfase</em> (40–100) — mostra o quanto você se apoia em cada dimensão, a partir das suas escolhas nos ' + nQ + ' cenários. Não é uma nota de bom/ruim: é o <em>desenho do seu jeito de decidir</em>. Um traço mais baixo é onde você se apoia menos — não um defeito.';
   if (conf) s += ` Confiança da leitura: <strong>${conf}%</strong>.`;
   if (sec) s += ` Você também mostra forte influência do perfil <strong>${sec}</strong>.`;
   return s;
