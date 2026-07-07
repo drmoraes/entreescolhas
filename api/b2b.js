@@ -38,6 +38,7 @@ const handlers = {
   admin_migrate_rh:   require('./_admin_migrate_rh'),
   referral:           require('./_referral'),
   lead_free_unlock:   require('./_lead_free_unlock'),
+  cortesia_unlock:    require('./_cortesia_unlock'),
   stats_public:       require('./_stats_public'),
   public_prices:      require('./_public_prices'),
   vagas:              require('./_vagas_public'),

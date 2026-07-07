@@ -93,6 +93,7 @@ async function carregarPreco(){
   try{ const d=await fetch('/api/b2b?fn=admin_settings&op=get',{headers:{'X-Api-Key':KEY}}).then(r=>r.json());
     if($('cfgPrice')) $('cfgPrice').value=Number(d.report_price).toFixed(2);
     if($('cfgFree')) $('cfgFree').checked=!!d.free_mode;
+    if($('cfgCortesia')) $('cfgCortesia').value=d.cortesia_codes||'';
     const cc=d.credit_cost||{};
     ['operacional','analista','especialista','gerencial','pcd'].forEach(k=>{ if($('cc_'+k)&&cc[k]!=null) $('cc_'+k).value=cc[k]; });
   }catch(e){}
@@ -122,6 +123,15 @@ async function salvarFree(){
     const r=await fetch('/api/b2b?fn=admin_settings&op=set',{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':KEY},body:JSON.stringify({free_mode:$('cfgFree').checked})});
     const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
     msg.textContent=d.free_mode?'✓ Modo grátis LIGADO':'✓ Modo grátis desligado (cobrando)';msg.className='small green';
+  }catch(e){msg.textContent=e.message;msg.className='small red';}
+}
+async function salvarCortesia(){
+  const msg=$('cortMsg'); msg.textContent='Salvando…';msg.className='small muted';
+  try{
+    const r=await fetch('/api/b2b?fn=admin_settings&op=set',{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':KEY},body:JSON.stringify({cortesia_codes:$('cfgCortesia').value})});
+    const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
+    $('cfgCortesia').value=d.cortesia_codes||'';
+    msg.textContent='✓ Códigos salvos';msg.className='small green';
   }catch(e){msg.textContent=e.message;msg.className='small red';}
 }
 async function salvarPreco(){
@@ -195,6 +205,18 @@ function render(d){
       <span><b>Modo grátis</b> — libera o relatório sem pagamento (foco em volume / Banco de Talentos)</span>
     </label>
     <p class="muted small" style="margin-top:8px">Com o modo grátis ligado, o paywall vira "Ver meu relatório grátis" e não cobra. Desligado = cobra o preço acima.</p>
+  </div>
+
+  <h2 class="sec">Links de cortesia (grátis para quem tem o código)</h2>
+  <div class="kpi" style="padding:14px;max-width:680px">
+    <label class="muted small">Códigos válidos (separe por vírgula)</label>
+    <input id="cfgCortesia" type="text" style="width:100%;margin-top:4px" placeholder="IMPRENSA2026, PARCEIRO, LANCAMENTO">
+    <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
+      <button class="btn" onclick="salvarCortesia()">Salvar códigos</button>
+      <span id="cortMsg" class="small"></span>
+    </div>
+    <p class="muted small" style="margin-top:10px">Entregue o link <code>entreescolhas.com.br/teste.html?jornada=arquetipo&amp;cortesia=CODIGO</code>. Quem abrir faz o cadastro, o teste, e no fim libera o relatório completo de graça — só quem tem o código. Para revogar, apague o código daqui.</p>
+    <p class="muted small" style="margin-top:6px">Jornadas: <code>arquetipo</code>, <code>fit-cultural</code>, <code>scanner</code>, <code>bussola</code>.</p>
   </div>
 
   <h2 class="sec">Custo de crédito por categoria (B2B)</h2>

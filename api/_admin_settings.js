@@ -19,6 +19,7 @@ module.exports = async (req, res) => {
       price_single: Number(single),
       price_combo: Number(combo),
       free_mode: free === '1',
+      cortesia_codes: await getSetting('cortesia_codes', ''),
       // custos de crédito (B2B) por categoria de candidato
       credit_cost: {
         operacional: Number(await getSetting('credit_cost_operacional', '1')),
@@ -57,6 +58,14 @@ module.exports = async (req, res) => {
     if (body.free_mode !== undefined) {
       await setSetting('free_mode', body.free_mode ? '1' : '0');
       await logAdmin(req, 'set_free_mode', body.free_mode ? 'ON' : 'OFF');
+    }
+    if (body.cortesia_codes !== undefined) {
+      // Lista de códigos de cortesia (link ?cortesia=CODIGO libera grátis).
+      const codes = String(body.cortesia_codes || '')
+        .split(/[,\n;]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
+      const uniq = [...new Set(codes)].slice(0, 100);
+      await setSetting('cortesia_codes', uniq.join(', '));
+      await logAdmin(req, 'set_cortesia_codes', uniq.join(', ').slice(0, 120));
     }
     // custos de crédito por categoria
     if (body.credit_cost && typeof body.credit_cost === 'object') {

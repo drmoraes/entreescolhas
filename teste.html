@@ -1243,6 +1243,17 @@ if (shareLink) {
 let ACCESS_TOKEN = null;
 let LEAD_STATE = null;
 
+// Código de cortesia (link ?cortesia=CODIGO). Guardado em localStorage para
+// sobreviver ao redirect de cadastro/confirmação e ser usado no paywall.
+let CORTESIA_CODE = '';
+(function captureCortesia() {
+  try {
+    const c = (new URLSearchParams(window.location.search).get('cortesia') || '').trim().toUpperCase();
+    if (c) localStorage.setItem('ee_cortesia', c);
+    CORTESIA_CODE = c || (localStorage.getItem('ee_cortesia') || '');
+  } catch (e) { CORTESIA_CODE = ''; }
+})();
+
 (function initAccessGate() {
   const urlAccess = new URLSearchParams(window.location.search).get('access');
   const storageKey = 'ec_access_' + JORNADA_PARAM;
@@ -1365,10 +1376,47 @@ function ofertaHtml() {
 // Renderiza a oferta no paywall do relatório (substitui o preço fixo).
 function renderOferta() {
   if (LEAD_STATE && LEAD_STATE.free_mode) return;
+  // Link de cortesia: substitui a oferta paga por um botão de liberação grátis.
+  if (CORTESIA_CODE) return renderCortesia();
   const wrap = document.getElementById('paywall-price-wrap');
   const btn = document.getElementById('btn-unlock');
   if (wrap) wrap.innerHTML = ofertaHtml();
   if (btn) btn.style.display = 'none'; // a escolha agora é feita nos cartões
+}
+
+// Paywall no modo CORTESIA: sem preço, botão verde que libera grátis com o código.
+function renderCortesia() {
+  const wrap = document.getElementById('paywall-price-wrap');
+  const btn = document.getElementById('btn-unlock');
+  if (wrap) wrap.innerHTML =
+    '<div style="background:rgba(34,197,94,.10);border:1px solid rgba(34,197,94,.35);border-radius:14px;padding:14px 16px;margin-bottom:4px;">' +
+    '<div style="font-size:1.4rem;margin-bottom:4px;">🎁</div>' +
+    '<strong style="color:var(--text);">Cortesia liberada</strong>' +
+    '<div style="color:var(--text-2);font-size:0.85rem;margin-top:4px;">Você recebeu um acesso gratuito ao relatório completo. É só liberar.</div>' +
+    '</div>';
+  if (btn) {
+    btn.style.display = 'block';
+    btn.textContent = 'Liberar meu relatório grátis';
+    btn.setAttribute('onclick', 'cortesiaUnlock()');
+  }
+}
+
+// Libera o relatório completo de graça usando o código de cortesia.
+function cortesiaUnlock() {
+  const btn = document.getElementById('btn-unlock');
+  const errEl = document.getElementById('paywall-error');
+  if (errEl) errEl.style.display = 'none';
+  if (btn) { btn.disabled = true; btn.textContent = 'Liberando...'; }
+  fetch('/api/b2b?fn=cortesia_unlock', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ access: ACCESS_TOKEN, code: CORTESIA_CODE }),
+  }).then(r => r.json()).then(d => {
+    if (d.ok) { try { localStorage.removeItem('ee_cortesia'); } catch (e) {} window.location.reload(); }
+    else throw new Error(d.error || 'Não foi possível liberar.');
+  }).catch(e => {
+    if (errEl) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Liberar meu relatório grátis'; }
+  });
 }
 
 // Diagnóstico de Coaching Comportamental (IA) — 3 pontos: insight, oportunidade
@@ -1491,10 +1539,12 @@ function showAlreadyCompleted(data) {
   intro.innerHTML = `
     <div class="intro-badge"><span class="intro-badge-dot"></span><span>Teste concluído</span></div>
     <h1>Você já concluiu<br/><span class="grad serif">este teste</span></h1>
-    <p>Seu resultado está salvo. ${data.free_mode ? 'Veja o relatório completo gratuitamente' : 'Desbloqueie o relatório completo para ver tudo'}${podeRefazer ? ', ou refaça o teste se quiser' : ''}.</p>
+    <p>Seu resultado está salvo. ${(data.free_mode || CORTESIA_CODE) ? 'Veja o relatório completo gratuitamente' : 'Desbloqueie o relatório completo para ver tudo'}${podeRefazer ? ', ou refaça o teste se quiser' : ''}.</p>
     ${data.free_mode
       ? `<button class="btn-primary" style="width:100%;" onclick="unlockReport()">Ver meu relatório grátis</button>`
-      : ofertaHtml()}
+      : (CORTESIA_CODE
+        ? `<button class="btn-primary" style="width:100%;background:#16a34a;border-color:#16a34a;" onclick="cortesiaUnlock()">🎁 Liberar meu relatório grátis</button>`
+        : ofertaHtml())}
     ${podeRefazer ? '<button class="btn-primary" style="width:100%;margin-top:10px;background:transparent;border:1px solid var(--border);color:var(--text-2);" onclick="startTest()">Refazer o teste</button>' : ''}
   `;
 }
