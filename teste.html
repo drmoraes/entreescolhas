@@ -133,6 +133,19 @@
       #afi-reveal #afi-link { min-width:0 !important; width:100%; }
       #afi-reveal .btn-primary, #afi-reveal .btn-outline { width:100%; }
     }
+    /* ── Impressão / Baixar em PDF: só o relatório, em tema claro e limpo ── */
+    @media print {
+      html { --bg:#fff; --bg-card:#fff; --bg-raised:#f1f1f4; --bg-input:#fff;
+        --text:#14131c; --text-2:#3c3a4a; --text-3:#6a6780; --border:#d7d5e2; --border-hover:#b4b0c8; }
+      body { background:#fff !important; }
+      body::before, .orb, nav, .theme-toggle, .result-ctas, .result-share,
+      #afiliado-box, .site-version, .no-print, #paywall-box, #brickModal,
+      #wa-float, .wa-float { display:none !important; }
+      .container { padding:0 !important; max-width:100% !important; }
+      #screen-result { padding:0 !important; }
+      .dims-section, .insights-section, #r-coaching-cards > div { break-inside:avoid; }
+      a[href]:after { content:'' !important; }
+    }
   </style>
   <link rel="stylesheet" href="/theme.css?v=3">
   <script src="/theme.js?v=3"></script>
@@ -1509,7 +1522,7 @@ function renderDiagnosticoIA(contexto) {
       // Painel opcional de contexto (afinar a análise)
       const jaTemCtx = !!window.__EE_DIAG_CTX;
       const painelCtx = `
-        <details ${jaTemCtx ? '' : 'open'} style="border:1px dashed var(--border-hover);border-radius:14px;padding:16px;margin-bottom:14px;background:var(--accent-dim,rgba(108,99,255,0.05));">
+        <details class="no-print" ${jaTemCtx ? '' : 'open'} style="border:1px dashed var(--border-hover);border-radius:14px;padding:16px;margin-bottom:14px;background:var(--accent-dim,rgba(108,99,255,0.05));">
           <summary style="cursor:pointer;font-size:0.85rem;font-weight:700;color:var(--accent);">🎯 ${jaTemCtx ? 'Análise cruzada com o seu contexto ✓ — editar' : 'Afine seu diagnóstico (opcional, 30s)'}</summary>
           <p style="font-size:0.82rem;color:var(--text-2);margin:10px 0;">Preencha e receba a leitura cruzada com o seu momento profissional. Você pode pular — o diagnóstico acima já vale.</p>
           <div style="display:grid;gap:10px;">
@@ -1526,7 +1539,12 @@ function renderDiagnosticoIA(contexto) {
           </div>
         </details>`;
 
-      cards.innerHTML = painelCtx +
+      const selo = data.gerado_por === 'ia'
+        ? '<span style="display:inline-flex;align-items:center;gap:6px;font-size:0.72rem;font-weight:700;color:var(--accent);background:var(--accent-dim,rgba(108,99,255,0.1));border:1px solid var(--border);border-radius:20px;padding:5px 12px;">✨ Análise gerada por IA</span>'
+        : '';
+      const topo = `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">${selo || '<span></span>'}
+        <button class="no-print btn-primary" style="background:transparent;border:1px solid var(--border-hover);color:var(--accent);padding:8px 16px;font-size:0.85rem;flex:0 0 auto;" onclick="window.print()">📄 Baixar em PDF</button></div>`;
+      cards.innerHTML = topo + painelCtx +
         bloco('🛡️', 'Alinhamento metodológico', par(data.alinhamento), { cor: 'var(--accent)', bg: 'rgba(108,99,255,0.08)', border: '1.5px solid var(--accent)' }) +
         bloco('⚡', 'Mapa de potência e alavancagem', listaObj(data.mapa_potencia), { cor: 'var(--green)' }) +
         bloco('⚠️', 'Matriz de descarrilhamento e pontos cegos', listaObj(data.descarrilhamento), { cor: 'var(--gold)' }) +
@@ -1538,7 +1556,7 @@ function renderDiagnosticoIA(contexto) {
           <div style="font-size:0.9rem;font-weight:700;color:var(--text);margin-bottom:4px;">⚡ O próximo passo da sua jornada</div>
           <div style="font-size:0.86rem;color:var(--text-2);line-height:1.55;margin-bottom:12px;">Liderança se faz pelo exemplo e pela vulnerabilidade. Compartilhe um insight desta jornada no seu Instagram — copie a frase e marque a gente nos stories:</div>
           <div style="font-size:0.86rem;color:var(--text);font-style:italic;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px;line-height:1.5;">${ecoEsc(fraseCompartilhar)}</div>
-          <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
+          <div class="no-print" style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
             <button class="btn-primary" style="flex:1 1 140px;background:transparent;border:1.5px solid var(--accent);color:var(--accent);" onclick="copiarFraseDiag(this)">📋 Copiar frase</button>
             <button class="btn-primary" style="flex:1 1 160px;background:linear-gradient(90deg,#833AB4,#E1306C,#F77737);border:none;" onclick="compartilharInstagram(this)">📲 Compartilhar no Instagram</button>
           </div>
