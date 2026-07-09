@@ -20,7 +20,7 @@
   'use strict';
 
   // Aceita também window.EE_GA4_ID definido antes deste script (opcional).
-  var GA4_MEASUREMENT_ID = window.EE_GA4_ID || 'G-NMX9DD5H8C';
+  var GA4_MEASUREMENT_ID = window.EE_GA4_ID || 'G-2QPD9MZBLQ';
 
   var GA4_ACTIVE = /^G-[A-Z0-9]{6,}$/.test(GA4_MEASUREMENT_ID) &&
                    GA4_MEASUREMENT_ID !== 'G-XXXXXXXXXX';
