@@ -210,8 +210,8 @@
 
     <!-- Diagnóstico de Coaching Comportamental — gerado a partir das respostas do teste -->
     <div id="r-coaching-section" style="display:none;max-width:640px;margin:0 auto 28px;">
-      <div class="dims-title" style="margin-bottom:10px;">Diagnóstico de coaching · como você age em cenários reais</div>
-      <div id="r-coaching-loading" style="font-size:0.85rem;color:var(--text-2);padding:14px 0;">Gerando seu diagnóstico…</div>
+      <div class="dims-title" style="margin-bottom:10px;">Diagnóstico executivo por IA · leitura psicométrica do seu perfil</div>
+      <div id="r-coaching-loading" style="font-size:0.85rem;color:var(--text-2);padding:14px 0;">Gerando seu diagnóstico executivo…</div>
       <div id="r-coaching-cards" style="display:none;gap:10px;text-align:left;"></div>
       <p style="font-size:0.72rem;color:var(--text-3);margin-top:8px;">Gerado a partir das suas respostas. Não é um diagnóstico clínico — é um ponto de partida prático para a sua carreira.</p>
     </div>
@@ -1451,7 +1451,14 @@ function cortesiaUnlock(srcBtn) {
 // Diagnóstico de Coaching Comportamental (IA) — 3 pontos: insight, oportunidade
 // e ação prática, a partir das competências identificadas no teste. Chamado só
 // depois que o relatório está liberado (pago).
-function renderDiagnosticoIA() {
+function ecoEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function ecoBarra(pct) { const n = Math.max(0, Math.min(10, Math.round((pct || 0) / 10))); return '█'.repeat(n) + '░'.repeat(10 - n); }
+function ecoStatusCor(s) { return s === 'Destaque' ? 'var(--green)' : s === 'Atenção' ? 'var(--gold)' : 'var(--accent)'; }
+
+// Diagnóstico por IA — relatório psicométrico executivo (7 seções). Chamado após
+// o relatório ser liberado (pago). `contexto` (opcional) cruza a análise com
+// senioridade/segmento/desafio do cliente.
+function renderDiagnosticoIA(contexto) {
   if (!ACCESS_TOKEN) return;
   const box = document.getElementById('r-coaching-section');
   const loading = document.getElementById('r-coaching-loading');
@@ -1462,46 +1469,94 @@ function renderDiagnosticoIA() {
   cards.style.display = 'none';
 
   fetch('/api/b2b?fn=ai_diagnostico', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ access: ACCESS_TOKEN }),
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ access: ACCESS_TOKEN, contexto: contexto || undefined, regen: !!contexto }),
   })
     .then(res => res.json().catch(() => ({})).then(data => ({ ok: res.ok, data })))
     .then(({ ok, data }) => {
-      if (!ok || !data.resumo_executivo) { box.style.display = 'none'; return; }
+      if (!ok || !data.alinhamento) { box.style.display = 'none'; return; }
       loading.style.display = 'none';
-      cards.style.display = 'grid';
+      cards.style.display = 'block';
+      window.__EE_DIAG_CTX = contexto || window.__EE_DIAG_CTX || null;
 
-      const card = (label, color, bg, border, text) => `
-        <div style="border:${border};border-radius:14px;padding:16px;background:${bg};">
-          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:${color};font-weight:700;margin-bottom:6px;">${label}</div>
-          <div style="font-size:0.92rem;color:var(--text);line-height:1.5;">${text}</div>
+      const bloco = (icone, titulo, corpo, opts) => {
+        opts = opts || {};
+        return `<div style="border:${opts.border || '1px solid var(--border)'};border-radius:14px;padding:18px;background:${opts.bg || 'var(--bg-card)'};margin-bottom:12px;">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:${opts.cor || 'var(--accent)'};font-weight:700;margin-bottom:8px;">${icone} ${titulo}</div>
+          ${corpo}</div>`;
+      };
+      const par = t => `<div style="font-size:0.94rem;color:var(--text);line-height:1.6;">${ecoEsc(t)}</div>`;
+      const listaObj = arr => (arr || []).map(o => `<div style="margin-bottom:10px;">
+          <div style="font-weight:700;color:var(--text);font-size:0.92rem;">${ecoEsc(o.titulo)}</div>
+          <div style="font-size:0.9rem;color:var(--text-2);line-height:1.55;">${ecoEsc(o.texto)}</div></div>`).join('');
+
+      // Comparativo ilustrativo (barras de bloco)
+      const comp = (data.comparativo || []).map(c => `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+          <span style="flex:1 1 120px;min-width:0;font-size:0.86rem;color:var(--text);">${ecoEsc(c.dimensao)}</span>
+          <span style="font-family:monospace;font-size:0.9rem;letter-spacing:1px;color:${ecoStatusCor(c.status)};">${ecoBarra(c.percent)}</span>
+          <span style="font-size:0.8rem;color:var(--text-2);width:38px;text-align:right;">${c.percent}%</span>
+          <span style="font-size:0.68rem;font-weight:700;color:${ecoStatusCor(c.status)};background:rgba(108,99,255,.08);border:1px solid var(--border);border-radius:6px;padding:2px 7px;">${ecoEsc(c.status)}</span>
+        </div>`).join('');
+
+      const plano = (data.plano_acao || []).map((p, i) => `
+        <div style="display:flex;gap:10px;margin-bottom:8px;">
+          <span style="flex:0 0 22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:0.78rem;font-weight:700;display:flex;align-items:center;justify-content:center;">${i + 1}</span>
+          <span style="font-size:0.9rem;color:var(--text);line-height:1.5;">${ecoEsc(p)}</span></div>`).join('');
+
+      const fraseCompartilhar = 'Mapeando meus pontos de alavancagem e pontos cegos com o diagnóstico do @entreescolhas1. O desenvolvimento real começa quando encaramos nossos descarrilhadores de frente. Descubra seu perfil em entreescolhas.com.br 🚀';
+
+      // Painel opcional de contexto (afinar a análise)
+      const jaTemCtx = !!window.__EE_DIAG_CTX;
+      const painelCtx = `
+        <details ${jaTemCtx ? '' : 'open'} style="border:1px dashed var(--border-hover);border-radius:14px;padding:16px;margin-bottom:14px;background:var(--accent-dim,rgba(108,99,255,0.05));">
+          <summary style="cursor:pointer;font-size:0.85rem;font-weight:700;color:var(--accent);">🎯 ${jaTemCtx ? 'Análise cruzada com o seu contexto ✓ — editar' : 'Afine seu diagnóstico (opcional, 30s)'}</summary>
+          <p style="font-size:0.82rem;color:var(--text-2);margin:10px 0;">Preencha e receba a leitura cruzada com o seu momento profissional. Você pode pular — o diagnóstico acima já vale.</p>
+          <div style="display:grid;gap:10px;">
+            <select id="dg-senioridade" style="width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input,var(--bg-card));color:var(--text);font-size:0.9rem;">
+              <option value="">Senioridade / escopo atual…</option>
+              <option>Estudante / início de carreira</option><option>Analista / pleno</option>
+              <option>Especialista / sênior</option><option>Coordenação / gestão</option>
+              <option>Gerência</option><option>Diretoria / C-Level</option><option>Empreendedor(a)</option>
+            </select>
+            <input id="dg-segmento" placeholder="Segmento (ex.: tecnologia, saúde, varejo…)" style="width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input,var(--bg-card));color:var(--text);font-size:0.9rem;" />
+            <textarea id="dg-desafio" rows="2" placeholder="Seu maior desafio / gargalo atual" style="width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input,var(--bg-card));color:var(--text);font-size:0.9rem;resize:vertical;"></textarea>
+            <button class="btn-primary" style="width:100%;" onclick="gerarDiagComContexto()">Gerar análise cruzada</button>
+            <span id="dg-msg" style="font-size:0.8rem;color:var(--text-3);"></span>
+          </div>
+        </details>`;
+
+      cards.innerHTML = painelCtx +
+        bloco('🛡️', 'Alinhamento metodológico', par(data.alinhamento), { cor: 'var(--accent)', bg: 'rgba(108,99,255,0.08)', border: '1.5px solid var(--accent)' }) +
+        bloco('⚡', 'Mapa de potência e alavancagem', listaObj(data.mapa_potencia), { cor: 'var(--green)' }) +
+        bloco('⚠️', 'Matriz de descarrilhamento e pontos cegos', listaObj(data.descarrilhamento), { cor: 'var(--gold)' }) +
+        bloco('🎯', 'Contexto de ROI máximo e delegação', par(data.roi_ambiente), {}) +
+        bloco('📊', 'Comparativo de mercado <span style="text-transform:none;font-weight:500;color:var(--text-3)">(ilustrativo)</span>', comp, {}) +
+        bloco('🧭', 'Diagnóstico final', par(data.veredito), { cor: 'var(--accent)', bg: 'rgba(108,99,255,0.08)', border: '1.5px solid var(--accent)' }) +
+        bloco('🚀', 'Plano de ação — próximos passos', plano, {}) +
+        `<div style="border:1.5px solid var(--gold);border-radius:14px;padding:18px;background:var(--gold-dim,rgba(201,162,39,.08));margin-bottom:4px;">
+          <div style="font-size:0.9rem;font-weight:700;color:var(--text);margin-bottom:4px;">⚡ O próximo passo da sua jornada</div>
+          <div style="font-size:0.86rem;color:var(--text-2);line-height:1.55;margin-bottom:12px;">Liderança se faz pelo exemplo e pela vulnerabilidade. Compartilhe um insight desta jornada no seu Instagram — copie a frase e marque a gente nos stories:</div>
+          <div style="font-size:0.86rem;color:var(--text);font-style:italic;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px;line-height:1.5;">${ecoEsc(fraseCompartilhar)}</div>
+          <button class="btn-primary" style="width:100%;margin-top:10px;" onclick="copiarFraseDiag(this)">📋 Copiar frase</button>
         </div>`;
-
-      const perguntas = Array.isArray(data.perguntas_coaching) ? data.perguntas_coaching : [];
-
-      cards.innerHTML = `
-        <div style="border:1.5px solid var(--accent);border-radius:14px;padding:18px;background:rgba(108,99,255,0.08);">
-          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent);font-weight:700;margin-bottom:6px;">🧭 Resumo executivo</div>
-          <div style="font-size:0.95rem;color:var(--text);line-height:1.55;">${data.resumo_executivo}</div>
-        </div>
-        ${card('🧩 Padrões de decisão', 'var(--accent)', 'var(--bg-card)', '1px solid var(--border)', data.padroes_decisao)}
-        ${card('🤝 Estilo de relacionamento', 'var(--accent)', 'var(--bg-card)', '1px solid var(--border)', data.estilo_relacionamento)}
-        ${card('⚡ Ponto forte', 'var(--green)', 'var(--bg-card)', '1px solid var(--border)', data.ponto_forte)}
-        ${card('🌓 Ponto cego provável', 'var(--gold)', 'var(--bg-card)', '1px solid var(--border)', data.ponto_cego)}
-        ${card('⚠️ Risco comportamental', 'var(--gold)', 'var(--bg-card)', '1px solid var(--border)', data.riscos_comportamentais)}
-        ${card('🎯 Sugestão de carreira', 'var(--accent)', 'var(--bg-card)', '1px solid var(--border)', data.sugestao_carreira)}
-        ${card('📅 Ação para os próximos 7 dias', 'var(--accent)', 'rgba(108,99,255,0.08)', '1.5px solid var(--accent)', data.plano_7_dias)}
-        ${card('🗓️ Prática para os próximos 30 dias', 'var(--accent)', 'var(--bg-card)', '1px solid var(--border)', data.plano_30_dias)}
-        ${perguntas.length ? `<div style="border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--bg-card);">
-          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent);font-weight:700;margin-bottom:8px;">💬 Perguntas para refletir</div>
-          <ul style="margin:0;padding-left:18px;font-size:0.9rem;color:var(--text);line-height:1.6;">
-            ${perguntas.map(p => `<li>${p}</li>`).join('')}
-          </ul>
-        </div>` : ''}
-        ${card('🗣️ Para levar a uma conversa com mentor, líder ou RH', 'var(--text-2)', 'var(--bg-card)', '1px solid var(--border)', data.recomendacoes_conversa)}`;
     })
     .catch(() => { box.style.display = 'none'; });
+}
+function gerarDiagComContexto() {
+  const s = (document.getElementById('dg-senioridade') || {}).value || '';
+  const seg = (document.getElementById('dg-segmento') || {}).value || '';
+  const d = (document.getElementById('dg-desafio') || {}).value || '';
+  const msg = document.getElementById('dg-msg');
+  if (!s && !seg && !d) { if (msg) msg.textContent = 'Preencha ao menos um campo (ou use o diagnóstico acima).'; return; }
+  if (msg) msg.textContent = 'Gerando sua análise cruzada…';
+  renderDiagnosticoIA({ senioridade: s, segmento: seg, desafio: d });
+}
+function copiarFraseDiag(btn) {
+  const frase = 'Mapeando meus pontos de alavancagem e pontos cegos com o diagnóstico do @entreescolhas1. O desenvolvimento real começa quando encaramos nossos descarrilhadores de frente. Descubra seu perfil em entreescolhas.com.br 🚀';
+  navigator.clipboard.writeText(frase).then(() => {
+    if (btn) { const t = btn.textContent; btn.textContent = '✓ Copiado!'; setTimeout(() => btn.textContent = t, 1800); }
+  });
 }
 
 // Painel "Indique e ganhe" — mostrado ao usuário com relatório pago.
