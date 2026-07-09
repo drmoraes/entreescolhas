@@ -120,6 +120,9 @@ function montarPrompts(jornada, archName, scores, dimNames, ctx) {
     '"comparativo" (array com EXATAMENTE 4 objetos {"dimensao","percent","status"} — percent inteiro 0-100 baseado nas notas recebidas; status igual a "Atenção", "Alinhado" ou "Destaque"; é um comparativo ILUSTRATIVO/referencial, não estatística real), ' +
     '"veredito" (1 parágrafo: síntese madura cruzando contexto + inventário, com hipótese sobre o próximo passo de carreira), ' +
     '"plano_acao" (array com EXATAMENTE 3 strings — PDI de curtíssimo prazo, execução imediata, focado no desafio atual). ' +
+    'PROFUNDIDADE (obrigatória — o cliente pagou premium): cada bloco de TEXTO deve ser DENSO e substancial (4 a 6 frases), específico e acionável, sempre citando as dimensões e as notas recebidas — nada de frases genéricas de RH. ' +
+    'Em "mapa_potencia", cada força deve trazer uma aplicação CONCRETA (um exemplo de situação real). Em "descarrilhamento", cada item deve ter: o gatilho que dispara o risco, o sinal de alerta observável, e um antídoto prático. ' +
+    'QUANDO O CONTEXTO DO CLIENTE (senioridade, segmento, maior desafio) FOR INFORMADO: aprofunde ainda mais — referencie explicitamente a senioridade, o segmento e o desafio em CADA seção, com exemplos aplicáveis ao dia a dia real dele, e calibre o vocabulário ao nível informado. ' +
     'Cada bloco deve se basear nas notas recebidas, nunca em generalidades vagas.';
 
   const user =
@@ -139,19 +142,19 @@ function validar(p) {
   if (!Array.isArray(p.descarrilhamento) || !p.descarrilhamento.length) return null;
   if (!Array.isArray(p.comparativo) || p.comparativo.length < 3) return null;
   if (!Array.isArray(p.plano_acao) || p.plano_acao.length < 3) return null;
-  const clampBlk = a => a.slice(0, 4).map(o => ({ titulo: String(o.titulo || '').slice(0, 80), texto: String(o.texto || '').slice(0, 700) }));
+  const clampBlk = a => a.slice(0, 4).map(o => ({ titulo: String(o.titulo || '').slice(0, 90), texto: String(o.texto || '').slice(0, 1200) }));
   return {
-    alinhamento: String(p.alinhamento).slice(0, 900),
+    alinhamento: String(p.alinhamento).slice(0, 1500),
     mapa_potencia: clampBlk(p.mapa_potencia).slice(0, 3),
     descarrilhamento: clampBlk(p.descarrilhamento),
-    roi_ambiente: String(p.roi_ambiente).slice(0, 900),
+    roi_ambiente: String(p.roi_ambiente).slice(0, 1500),
     comparativo: p.comparativo.slice(0, 4).map(o => ({
       dimensao: String(o.dimensao || '').slice(0, 60),
       percent: Math.max(0, Math.min(100, parseInt(o.percent, 10) || 0)),
       status: ['Atenção', 'Alinhado', 'Destaque'].includes(o.status) ? o.status : 'Alinhado',
     })),
-    veredito: String(p.veredito).slice(0, 900),
-    plano_acao: p.plano_acao.slice(0, 3).map(s => String(s).slice(0, 400)),
+    veredito: String(p.veredito).slice(0, 1500),
+    plano_acao: p.plano_acao.slice(0, 3).map(s => String(s).slice(0, 650)),
     gerado_por: 'ia',
   };
 }

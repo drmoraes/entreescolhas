@@ -1538,7 +1538,10 @@ function renderDiagnosticoIA(contexto) {
           <div style="font-size:0.9rem;font-weight:700;color:var(--text);margin-bottom:4px;">⚡ O próximo passo da sua jornada</div>
           <div style="font-size:0.86rem;color:var(--text-2);line-height:1.55;margin-bottom:12px;">Liderança se faz pelo exemplo e pela vulnerabilidade. Compartilhe um insight desta jornada no seu Instagram — copie a frase e marque a gente nos stories:</div>
           <div style="font-size:0.86rem;color:var(--text);font-style:italic;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px;line-height:1.5;">${ecoEsc(fraseCompartilhar)}</div>
-          <button class="btn-primary" style="width:100%;margin-top:10px;" onclick="copiarFraseDiag(this)">📋 Copiar frase</button>
+          <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
+            <button class="btn-primary" style="flex:1 1 140px;background:transparent;border:1.5px solid var(--accent);color:var(--accent);" onclick="copiarFraseDiag(this)">📋 Copiar frase</button>
+            <button class="btn-primary" style="flex:1 1 160px;background:linear-gradient(90deg,#833AB4,#E1306C,#F77737);border:none;" onclick="compartilharInstagram(this)">📲 Compartilhar no Instagram</button>
+          </div>
         </div>`;
     })
     .catch(() => { box.style.display = 'none'; });
@@ -1552,11 +1555,22 @@ function gerarDiagComContexto() {
   if (msg) msg.textContent = 'Gerando sua análise cruzada…';
   renderDiagnosticoIA({ senioridade: s, segmento: seg, desafio: d });
 }
+var FRASE_DIAG = 'Mapeando meus pontos de alavancagem e pontos cegos com o diagnóstico do @entreescolhas1. O desenvolvimento real começa quando encaramos nossos descarrilhadores de frente. Descubra seu perfil em entreescolhas.com.br 🚀';
 function copiarFraseDiag(btn) {
-  const frase = 'Mapeando meus pontos de alavancagem e pontos cegos com o diagnóstico do @entreescolhas1. O desenvolvimento real começa quando encaramos nossos descarrilhadores de frente. Descubra seu perfil em entreescolhas.com.br 🚀';
-  navigator.clipboard.writeText(frase).then(() => {
+  navigator.clipboard.writeText(FRASE_DIAG).then(() => {
     if (btn) { const t = btn.textContent; btn.textContent = '✓ Copiado!'; setTimeout(() => btn.textContent = t, 1800); }
   });
+}
+// Compartilhar direto: no celular abre a folha nativa (com o Instagram na lista);
+// no desktop copia a frase e abre o Instagram numa nova aba.
+function compartilharInstagram(btn) {
+  try { navigator.clipboard.writeText(FRASE_DIAG); } catch (e) {}
+  if (navigator.share) {
+    navigator.share({ text: FRASE_DIAG, url: 'https://entreescolhas.com.br' }).catch(() => {});
+  } else {
+    if (btn) { const t = btn.textContent; btn.textContent = '✓ Frase copiada — abrindo o Instagram'; setTimeout(() => btn.textContent = t, 2600); }
+    window.open('https://www.instagram.com/', '_blank');
+  }
 }
 
 // Painel "Indique e ganhe" — mostrado ao usuário com relatório pago.
