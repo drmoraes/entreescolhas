@@ -251,15 +251,11 @@
 
   <!-- ═══════════════════════════════════════════════════════════════
        GOOGLE ANALYTICS 4
-       TODO: Substituir G-XXXXXXXXXX pelo seu Measurement ID real
+       O GA4 é carregado de forma CENTRALIZADA por /analytics.js (incluído
+       em todas as páginas). Para ativar, basta colar o seu Measurement ID
+       na constante GA4_MEASUREMENT_ID no topo de /analytics.js — não é
+       preciso editar página por página.
   ═══════════════════════════════════════════════════════════════ -->
-  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
-  </script> -->
 
   <!-- Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -2065,7 +2061,7 @@
     <div class="footer-bottom">
       <p>© 2026 Entre Escolhas — Veritas Lab, uma iniciativa do Grupo Ascenda. Todos os direitos reservados.</p>
       <p style="font-size:0.75rem;color:var(--text-3);">CNPJ 67.693.609/0001-64 • Privacidade LGPD</p>
-      <p class="site-version" style="font-size:0.72rem;color:var(--text-3);opacity:.75;margin-top:4px;" title="Versão publicada do site">versão 2026.07.09 · build 17</p>
+      <p class="site-version" style="font-size:0.72rem;color:var(--text-3);opacity:.75;margin-top:4px;" title="Versão publicada do site">versão 2026.07.09 · build 18</p>
     </div>
   </div>
 </footer>

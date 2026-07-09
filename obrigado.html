@@ -65,6 +65,9 @@
           .then(res => res.json())
           .then(data => {
             if (data.paid) {
+              if (typeof window.trackPurchaseOnce === 'function') {
+                window.trackPurchaseOnce({ kind: 'single', value: (data.preco_single || data.preco || 0), journey: jornada, transaction_id: access });
+              }
               goToReport();
             } else if (attempts >= maxAttempts) {
               showTimeoutState();

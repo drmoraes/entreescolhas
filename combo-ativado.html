@@ -95,7 +95,12 @@
       fetch('/api/lead_status?access=' + encodeURIComponent(access))
         .then(function (r) { return r.json(); })
         .then(function (d) {
-          if (d && d.paid) { showUnlocked(d.email, d.nome); }
+          if (d && d.paid) {
+            if (typeof window.trackPurchaseOnce === 'function') {
+              window.trackPurchaseOnce({ kind: 'combo', value: (d.preco_combo || d.preco_combo_base || 0), journey: 'combo', transaction_id: access });
+            }
+            showUnlocked(d.email, d.nome);
+          }
           else if (attempts >= max) { showProcessing(); }
           else { setTimeout(poll, 2000); }
         })

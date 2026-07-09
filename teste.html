@@ -2053,13 +2053,33 @@ function freeUnlock() {
 // Qual produto está sendo comprado: 'single' (este teste) ou 'combo' (todos).
 let CHECKOUT_KIND = 'single';
 
+// Registra a compra no analytics (GA4) uma única vez por transação.
+// txid: id do pagamento (cartão) ou, na falta, o próprio access token da jornada.
+function firePurchase(txid) {
+  if (typeof window.trackPurchaseOnce !== 'function') return;
+  try {
+    window.trackPurchaseOnce({
+      kind: CHECKOUT_KIND,
+      value: precoDoKind(CHECKOUT_KIND),
+      journey: JORNADA_PARAM,
+      transaction_id: txid || ACCESS_TOKEN,
+    });
+  } catch (e) { /* nunca deixa o analytics travar o fluxo de pagamento */ }
+}
+
 // Checkout TRANSPARENTE (Payment Brick): cartão + Pix dentro de um modal no nosso domínio.
 async function unlockReport(kind) {
   CHECKOUT_KIND = kind === 'combo' ? 'combo' : 'single';
   if (typeof LEAD_STATE !== 'undefined' && LEAD_STATE && LEAD_STATE.free_mode) { return freeUnlock(); }
   const errEl = document.getElementById('paywall-error');
   if (errEl) errEl.style.display = 'none';
-  if (typeof trackEvent === 'function') { trackEvent('start_checkout', { jornada: JORNADA_PARAM, kind: CHECKOUT_KIND }); }
+  if (typeof trackEvent === 'function') {
+    trackEvent('start_checkout', {
+      jornada: JORNADA_PARAM, kind: CHECKOUT_KIND,
+      value: precoDoKind(CHECKOUT_KIND), currency: 'BRL',
+      items: [{ item_id: CHECKOUT_KIND === 'combo' ? 'combo_4_jornadas' : ('jornada_' + JORNADA_PARAM), item_category: CHECKOUT_KIND, price: precoDoKind(CHECKOUT_KIND), quantity: 1 }]
+    });
+  }
 
   const pub = (typeof LEAD_STATE !== 'undefined' && LEAD_STATE && LEAD_STATE.mp_public_key) || null;
   const amount = precoDoKind(CHECKOUT_KIND);
@@ -2106,7 +2126,7 @@ async function unlockReport(kind) {
             body: JSON.stringify(Object.assign({ access: ACCESS_TOKEN, kind: CHECKOUT_KIND }, formData)),
           }).then(r => r.json()).then(d => {
             clearTimeout(tmo);
-            if (d.status === 'approved' || d.already_paid) { fecharBrick(); window.location.reload(); return; }
+            if (d.status === 'approved' || d.already_paid) { if (d.status === 'approved') firePurchase(d.payment_id || d.id); fecharBrick(); window.location.reload(); return; }
             if (d.pix_qr || d.pix_qr_base64) { mostrarPix(d); iniciarPollingPagamento(); window.__EE_PAYING = false; return; }
             if (d.status === 'pending' || d.status === 'in_process') { iniciarPollingPagamento(); window.__EE_PAYING = false; return; }
             window.__EE_PAYING = false;
@@ -2166,7 +2186,7 @@ function iniciarPollingPagamento() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ access: ACCESS_TOKEN }),
       }).then(r => r.json());
-      if (d && d.paid) { clearInterval(poll); fecharBrick(); window.location.reload(); }
+      if (d && d.paid) { clearInterval(poll); firePurchase(); fecharBrick(); window.location.reload(); }
     } catch (e) { /* tenta no próximo tick */ }
   }, 3000);
   setTimeout(() => clearInterval(poll), 600000);
@@ -2186,7 +2206,7 @@ function unlockReportFallback() {
       if (data.already_paid) { if (pop) { try { pop.close(); } catch (e) {} } window.location.reload(); return; }
       if (pop) { pop.location.href = data.init_point; } else { window.location.href = data.init_point; return; }
       if (btn) btn.textContent = 'Aguardando pagamento...';
-      const poll = setInterval(async () => { try { const d = await fetch('/api/b2b?fn=mp_reconcile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ access: ACCESS_TOKEN }) }).then(r => r.json()); if (d && d.paid) { clearInterval(poll); if (pop) { try { pop.close(); } catch (e) {} } window.location.reload(); } } catch (e) {} }, 3000);
+      const poll = setInterval(async () => { try { const d = await fetch('/api/b2b?fn=mp_reconcile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ access: ACCESS_TOKEN }) }).then(r => r.json()); if (d && d.paid) { clearInterval(poll); firePurchase(); if (pop) { try { pop.close(); } catch (e) {} } window.location.reload(); } } catch (e) {} }, 3000);
       setTimeout(() => clearInterval(poll), 300000);
     })
     .catch(err => { if (pop) { try { pop.close(); } catch (e) {} } if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; } if (btn) { btn.disabled = false; btn.textContent = 'Desbloquear relatório completo'; } });

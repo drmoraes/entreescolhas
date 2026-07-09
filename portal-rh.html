@@ -501,5 +501,6 @@ async function buy(pkg){
 /* ===== Boot ===== */
 if(SESSION){ api('/b2b?fn=wallet').then(w=>{BALANCE=w.balance;enterApp(false);}).catch(()=>{localStorage.removeItem('rh_session');SESSION='';}); }
 </script>
+  <script src="/analytics.js"></script>
 </body>
 </html>
