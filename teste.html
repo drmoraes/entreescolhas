@@ -1303,7 +1303,7 @@ let CORTESIA_CODE = '';
       if (!res.ok) throw new Error('invalid');
       return res.json();
     })
-    .then(data => {
+    .then(async data => {
       LEAD_STATE = data;
       // Guarda nome/e-mail e o access_token desta jornada para pré-preencher
       // outros formulários do site sem pedir tudo de novo.
@@ -1322,6 +1322,16 @@ let CORTESIA_CODE = '';
         return;
       }
       if (data.has_report) {           // já concluiu (não pagou) → oferta, sem reiniciar
+        // RECUPERAÇÃO DE PAGAMENTO: se um pagamento foi aprovado no cartão mas a tela
+        // travou / a função não marcou como pago, confirmamos DIRETO no Mercado Pago
+        // antes de mostrar a oferta de novo — assim ninguém paga e fica sem o relatório.
+        try {
+          const rec = await fetch('/api/b2b?fn=mp_reconcile', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ access: ACCESS_TOKEN }),
+          }).then(r => r.json());
+          if (rec && rec.paid) { showSavedFullReport(); return; }
+        } catch (e) { /* segue pra oferta normal */ }
         showAlreadyCompleted(data);
         return;
       }
@@ -1999,16 +2009,37 @@ async function unlockReport(kind) {
           // Trava contra duplo-envio: se já há um pagamento em andamento, ignora.
           if (window.__EE_PAYING) return Promise.resolve();
           window.__EE_PAYING = true;
+          // Tempo-limite: se a resposta demorar (função lenta/instável), não deixa a
+          // tela travar pra sempre — aborta, confirma direto no MP e recarrega se pagou.
+          const ctrl = new AbortController();
+          const tmo = setTimeout(() => ctrl.abort(), 25000);
           return fetch('/api/b2b?fn=mp_process_payment', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
+            signal: ctrl.signal,
             body: JSON.stringify(Object.assign({ access: ACCESS_TOKEN, kind: CHECKOUT_KIND }, formData)),
           }).then(r => r.json()).then(d => {
+            clearTimeout(tmo);
             if (d.status === 'approved' || d.already_paid) { fecharBrick(); window.location.reload(); return; }
             if (d.pix_qr || d.pix_qr_base64) { mostrarPix(d); iniciarPollingPagamento(); window.__EE_PAYING = false; return; }
             if (d.status === 'pending' || d.status === 'in_process') { iniciarPollingPagamento(); window.__EE_PAYING = false; return; }
             window.__EE_PAYING = false;
             throw new Error(d.status_detail || 'Pagamento não aprovado. Tente outro método.');
-          }).catch(e => { window.__EE_PAYING = false; throw e; });
+          }).catch(async e => {
+            clearTimeout(tmo);
+            window.__EE_PAYING = false;
+            // Se demorou/abortou, o pagamento pode ter passado no MP mesmo assim:
+            // tenta reconciliar e, se pago, recarrega mostrando o relatório.
+            try {
+              const rec = await fetch('/api/b2b?fn=mp_reconcile', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ access: ACCESS_TOKEN }),
+              }).then(r => r.json());
+              if (rec && rec.paid) { fecharBrick(); window.location.reload(); return; }
+            } catch (e2) {}
+            throw (e && e.name === 'AbortError')
+              ? new Error('A confirmação demorou. Se o valor foi cobrado, seu relatório já será liberado ao recarregar — não pague de novo.')
+              : e;
+          });
         },
       },
     });
