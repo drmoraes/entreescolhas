@@ -2,7 +2,7 @@
 // se libera o teste, mostra paywall ou já mostra o relatório pago.
 const { setCors, json, err } = require('./_lib/http');
 const { query } = require('./_lib/db');
-const { getSetting, getPriceSingle, getPriceCombo, getCommissionPct } = require('./_lib/settings');
+const { getSetting, getPriceSingle, getPriceSingleAnchor, getPriceCombo, getCommissionPct } = require('./_lib/settings');
 const { computeAmount } = require('./_lib/referral-core');
 
 module.exports = async (req, res) => {
@@ -49,7 +49,7 @@ module.exports = async (req, res) => {
     has_report: lead.report_json !== null,
     mp_public_key: process.env.MP_PUBLIC_KEY || null,
     preco: single.amount,                 // compat: avulso já com desconto
-    preco_single_base: await getPriceSingle(),
+    preco_single_base: await getPriceSingleAnchor(), // âncora "de R$99" (riscado)
     preco_single: single.amount,
     preco_combo_base: await getPriceCombo(),
     preco_combo: combo.amount,

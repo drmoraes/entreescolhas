@@ -4,19 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Análise de Padrões de Decisão — Entre Escolhas</title>
-  <meta name="description" content="Comece gratuitamente sua análise situacional de padrões de decisão. Leva cerca de 20 minutos. Relatório completo por R$ 9,97 ao final." />
+  <meta name="description" content="Comece gratuitamente sua análise situacional de padrões de decisão. Leva cerca de 20 minutos. Relatório completo por R$ 14,97 ao final." />
   <meta name="robots" content="noindex, follow" />
   <link rel="canonical" href="https://www.entreescolhas.com.br/teste.html" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.entreescolhas.com.br/teste.html" />
   <meta property="og:site_name" content="Entre Escolhas" />
   <meta property="og:title" content="Análise de Padrões de Decisão — Entre Escolhas" />
-  <meta property="og:description" content="Comece gratuitamente. Relatório completo por R$ 9,97 ao final da análise." />
+  <meta property="og:description" content="Comece gratuitamente. Relatório completo por R$ 14,97 ao final da análise." />
   <meta property="og:image" content="https://www.entreescolhas.com.br/og-image.png" />
   <meta property="og:locale" content="pt_BR" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Análise de Padrões de Decisão — Entre Escolhas" />
-  <meta name="twitter:description" content="Comece gratuitamente. Relatório completo por R$ 9,97 ao final da análise." />
+  <meta name="twitter:description" content="Comece gratuitamente. Relatório completo por R$ 14,97 ao final da análise." />
   <meta name="twitter:image" content="https://www.entreescolhas.com.br/og-image.png" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1241,10 +1241,72 @@ const JORNADAS = {
 }; // end JORNADAS
 
 // ═══════════════════════════════════════════════════════════
+// JORNADA UNIFICADA — "Perfil Completo Entre Escolhas"
+// UM teste (24 cenários = 6 por bloco) que costura os 4 testes num retrato
+// único: como você DECIDE, onde você RENDE, como você se RELACIONA e o que te
+// MOVE. Composta por referência às 4 jornadas acima — não duplica conteúdo.
+// A pontuação é feita POR BLOCO: o mesmo código de dimensão pode significar
+// coisas diferentes em blocos diferentes (ex.: PRO = processo no bloco Ambiente
+// e propósito no bloco O-que-te-move), então cada bloco é pontuado isolado.
+// ═══════════════════════════════════════════════════════════
+(function montarPerfilCompleto() {
+  const blocosDef = [
+    { key:'decisao',   src:'arquetipo',    titulo:'Como você decide',      subtitulo:'Seu comportamento diante de escolhas e pressão' },
+    { key:'ambiente',  src:'fit-cultural', titulo:'Seu ambiente ideal',    subtitulo:'A cultura e o contexto onde você rende mais' },
+    { key:'relacao',   src:'scanner',      titulo:'Seu estilo de relação', subtitulo:'Como você se conecta, influencia e lida com conflito' },
+    { key:'proposito', src:'bussola',      titulo:'O que te move',         subtitulo:'Os motores das suas escolhas de carreira' },
+  ];
+  // Se alguma jornada-fonte faltar, aborta sem quebrar o site.
+  if (blocosDef.some(b => !JORNADAS[b.src] || !Array.isArray(JORNADAS[b.src].questions))) return;
+
+  const blocos = blocosDef.map(b => {
+    const j = JORNADAS[b.src];
+    return {
+      key: b.key,
+      titulo: b.titulo,
+      subtitulo: b.subtitulo,
+      dimNames: j.dimNames,
+      dimInfo: j.dimInfo || {},
+      archetypes: j.archetypes,
+      resultTag: j.resultTag,
+      // 6 cenários por bloco, cada um marcado com o bloco a que pertence.
+      questions: j.questions.slice(0, 6).map(q => Object.assign({}, q, { _bloco: b.key })),
+    };
+  });
+
+  // Sequência linear das 24 perguntas (o runner do teste consome .questions).
+  const questions = blocos.reduce((acc, b) => acc.concat(b.questions), []);
+
+  // dimNames/dimInfo agregados (prefixados por bloco p/ evitar colisão de código),
+  // só para compatibilidade de leitura; a pontuação real acontece por bloco.
+  const dimNames = {}, dimInfo = {};
+  blocos.forEach(b => Object.keys(b.dimNames).forEach(d => {
+    dimNames[b.key + ':' + d] = b.dimNames[d];
+    if (b.dimInfo[d]) dimInfo[b.key + ':' + d] = b.dimInfo[d];
+  }));
+
+  JORNADAS['perfil'] = {
+    perfilCompleto: true,
+    blocos,
+    badge: 'Comece grátis • Perfil completo {single} ao final',
+    title: 'Seu<br/><span class="grad serif">Perfil Completo</span>',
+    desc: '24 situações reais em 4 blocos da sua vida profissional: como você decide, onde rende melhor, como se relaciona e o que te move. Ao final, um retrato completo — com uma leitura de IA que costura os 4 blocos numa síntese só sua.',
+    resultTag: 'Seu Perfil Completo',
+    dimsTitle: 'Seu perfil em 4 blocos',
+    shareText: 'Descobri meu Perfil Completo no Entre Escolhas — como decido, onde rendo, como me relaciono e o que me move. Faça o seu: https://www.entreescolhas.com.br',
+    backLink: '/',
+    dimNames,
+    dimInfo,
+    questions,
+    archetypes: blocos[0].archetypes, // fallback p/ código legado; o perfil usa arquétipos por bloco
+  };
+})();
+
+// ═══════════════════════════════════════════════════════════
 // INIT — ler parâmetro e configurar a jornada
 // ═══════════════════════════════════════════════════════════
-const JORNADA_PARAM = new URLSearchParams(window.location.search).get('jornada') || 'arquetipo';
-const JORNADA_CFG   = JORNADAS[JORNADA_PARAM] || JORNADAS['arquetipo'];
+const JORNADA_PARAM = new URLSearchParams(window.location.search).get('jornada') || 'perfil';
+const JORNADA_CFG   = JORNADAS[JORNADA_PARAM] || JORNADAS['perfil'] || JORNADAS['arquetipo'];
 const QUESTIONS     = JORNADA_CFG.questions;
 const ARCHETYPES    = JORNADA_CFG.archetypes;
 
@@ -1371,13 +1433,28 @@ function brl(v) { return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ','); }
 function precoDoKind(kind) {
   const s = LEAD_STATE || {};
   if (kind === 'combo') return s.preco_combo || s.preco_combo_base || 19.90;
-  return s.preco_single || s.preco || s.preco_single_base || 9.97;
+  return s.preco_single || s.preco || 14.97;
 }
 
 // Monta os dois cartões de oferta (combo em destaque) com preços vindos do servidor.
 function ofertaHtml() {
   const s = LEAD_STATE || {};
   const single = precoDoKind('single');
+
+  // Perfil Completo: OFERTA ÚNICA (sem combo). "De R$99 por R$14,97."
+  if (typeof JORNADA_CFG !== 'undefined' && JORNADA_CFG.perfilCompleto) {
+    const baseP = Number(s.preco_single_base || 0);
+    const riscoP = baseP > single ? `<span style="text-decoration:line-through;color:var(--text-3);font-size:1rem;margin-right:8px;">${brl(baseP)}</span>` : '';
+    const tag = s.desconto_indicacao ? `<div style="font-size:0.72rem;color:#22C55E;font-weight:600;margin-top:8px;">✓ Desconto de indicação aplicado</div>` : '';
+    return `
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:0.82rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Perfil Completo — pagamento único</div>
+        <div style="margin-bottom:2px;">${riscoP}<span class="grad" style="font-size:2rem;font-weight:800;">${brl(single)}</span></div>
+        <div style="font-size:0.8rem;color:var(--text-2);">Os 4 blocos + síntese de IA + PDF. Acesso permanente.</div>
+        ${tag}
+      </div>`;
+  }
+
   const combo = precoDoKind('combo');
   const desc = s.desconto_indicacao;
   const credito = Number(s.credito_upgrade || 0);
@@ -1420,7 +1497,13 @@ function renderOferta() {
   const wrap = document.getElementById('paywall-price-wrap');
   const btn = document.getElementById('btn-unlock');
   if (wrap) wrap.innerHTML = ofertaHtml();
-  if (btn) btn.style.display = 'none'; // a escolha agora é feita nos cartões
+  // Perfil Completo: oferta única → mostra o botão "Desbloquear" (chama unlockReport('single')).
+  // Jornadas antigas: a escolha é feita nos cartões → esconde o botão.
+  const perfil = (typeof JORNADA_CFG !== 'undefined' && JORNADA_CFG.perfilCompleto);
+  if (btn) {
+    if (perfil) { btn.style.display = 'block'; btn.textContent = 'Desbloquear meu Perfil Completo'; btn.setAttribute('onclick', "unlockReport('single')"); }
+    else { btn.style.display = 'none'; }
+  }
 }
 
 // Paywall no modo CORTESIA: sem preço, botão verde que libera grátis com o código.
@@ -1833,12 +1916,95 @@ function analyzeArchetypes(scores) {
   return { primary: top.arch, secondary, confidence, gap, topMatch: top.match };
 }
 
+// ═══════════════════════════════════════════════════════════
+// ENGINE MULTI-BLOCO — usado pela jornada "Perfil Completo".
+// Versões genéricas das funções acima que recebem (perguntas, respostas,
+// dimensões, arquétipos) por parâmetro, permitindo pontuar CADA bloco de forma
+// isolada. Isso é obrigatório: o mesmo código de dimensão (ex.: PRO, AUT, SEG,
+// IMP) aparece em blocos diferentes com significados diferentes, então não pode
+// haver um acumulador global — cada bloco tem o seu.
+// ═══════════════════════════════════════════════════════════
+function _maxAttainable(questions, dimKeys) {
+  const maxD = {}; dimKeys.forEach(d => { maxD[d] = 0; });
+  questions.forEach(q => {
+    const best = {};
+    q.opts.forEach(o => Object.entries(o.dims).forEach(([d, v]) => {
+      if (d in maxD) best[d] = Math.max(best[d] || 0, v);
+    }));
+    Object.entries(best).forEach(([d, v]) => { maxD[d] += v; });
+  });
+  return maxD;
+}
+
+// Ênfase bruta (0–100) de um conjunto de perguntas/respostas restrito às dimKeys.
+// answersArr[i] corresponde a questions[i] (índice da opção escolhida ou null).
+function _rawEmphasis(questions, answersArr, dimKeys) {
+  const raw = {}; dimKeys.forEach(d => { raw[d] = 0; });
+  answersArr.forEach((ansIdx, i) => {
+    if (ansIdx === null || ansIdx === undefined) return;
+    const opt = questions[i] && questions[i].opts[ansIdx];
+    if (!opt) return;
+    Object.entries(opt.dims).forEach(([d, v]) => { if (d in raw) raw[d] += v; });
+  });
+  const maxD = _maxAttainable(questions, dimKeys);
+  const norm = {};
+  dimKeys.forEach(d => {
+    const m = maxD[d] || 0;
+    norm[d] = m > 0 ? Math.max(0, Math.min(100, Math.round(100 * raw[d] / m))) : 0;
+  });
+  return norm;
+}
+
+// Mesma seleção de arquétipo da jornada simples, mas com arquétipos por parâmetro.
+function _analyzeArch(scores, archetypes) {
+  const matches = archetypes.map(arch => ({
+    arch,
+    match: Math.round(arch.dims.reduce((a, d) => a + (scores[d] || 0), 0) / arch.dims.length),
+  })).sort((a, b) => b.match - a.match);
+  const top = matches[0];
+  const second = matches[1] || null;
+  const gap = second ? (top.match - second.match) : 40;
+  const confidence = Math.max(55, Math.min(96, Math.round(62 + gap * 1.6)));
+  const secondary = (second && gap <= 10) ? second.arch : null;
+  return { primary: top.arch, secondary, confidence, gap, topMatch: top.match };
+}
+
+// Pontua os 4 blocos do Perfil Completo. Retorna um array com, por bloco:
+// { bloco, raw (0–100 honesto), scores (40–100 exibição), analysis (arquétipo) }.
+// As respostas de cada bloco são a fatia correspondente de `answers` (as 24
+// perguntas estão em sequência: bloco 1 = 0–5, bloco 2 = 6–11, etc.).
+function scorePerfil() {
+  const blocos = (JORNADA_CFG.blocos || []);
+  let offset = 0;
+  return blocos.map(b => {
+    const dimKeys = Object.keys(b.dimNames);
+    const n = b.questions.length;
+    const bAnswers = answers.slice(offset, offset + n);
+    offset += n;
+    const raw = _rawEmphasis(b.questions, bAnswers, dimKeys);
+    const scores = {}; dimKeys.forEach(d => { scores[d] = Math.round(40 + 0.6 * raw[d]); });
+    const analysis = _analyzeArch(raw, b.archetypes); // seleção pelo bruto (como na jornada simples)
+    return { bloco: b, raw, scores, analysis };
+  });
+}
+
 function findArchetype(scores) {
   return analyzeArchetypes(scores).primary;
 }
 
 // Texto de transparência de método exibido no relatório (dims section).
 function metodoHtml(report) {
+  // Perfil Completo: metodologia dos 4 blocos.
+  if (report && report.perfilCompleto) {
+    return '<strong>Metodologia — como o seu Perfil Completo é montado:</strong> '
+      + 'Você respondeu a <strong>24 cenários situacionais</strong> divididos em 4 blocos (6 cada): '
+      + '<em>como você decide</em>, <em>seu ambiente ideal</em>, <em>seu estilo de relação</em> e <em>o que te move</em>. '
+      + 'Em vez de perguntar “como você é”, cada cenário observa <em>o que você escolhe</em> quando há trade-offs reais — é uma medida <strong>ipsativa</strong> (comparativa entre as suas próprias tendências), não um teste psicométrico clínico validado. '
+      + 'Cada bloco é pontuado <strong>isoladamente</strong>: para cada dimensão medimos em que proporção das vezes em que ela podia ser escolhida você de fato a escolheu, e normalizamos num <em>índice de ênfase de 40 a 100</em>. '
+      + '40 = você aciona pouco aquela dimensão · 100 = no máximo possível. Não é nota de bom/ruim — é o desenho do seu padrão. '
+      + 'Dentro de cada bloco, o índice define o seu <strong>arquétipo dominante</strong> (o mais próximo do seu perfil), e a “confiança” cresce quanto mais o 1º arquétipo se destaca do 2º. '
+      + 'A <strong>síntese de IA</strong> cruza os 4 blocos para uma leitura única. Isto é autoconhecimento aplicado — não substitui avaliação psicológica ou clínica.';
+  }
   const conf = report && report.confianca ? report.confianca : null;
   const sec = report && report.secundario ? report.secundario : null;
   const nQ = (typeof QUESTIONS !== 'undefined' && QUESTIONS.length) ? QUESTIONS.length : 20;
@@ -1884,6 +2050,22 @@ function showSavedFullReport() {
         return;
       }
       const report = data.report;
+
+      // Perfil Completo pago: renderiza os 4 blocos desbloqueados e encerra aqui.
+      if (report.perfilCompleto && Array.isArray(report.blocos)) {
+        _setPerfilHero(report);
+        document.getElementById('r-mode').textContent = 'Perfil completo desbloqueado';
+        document.getElementById('r-desc').textContent = 'Seu retrato profissional em 4 blocos, com a síntese de IA que costura tudo.';
+        document.getElementById('paywall-box').style.display = 'none';
+        document.getElementById('paid-note').style.display = 'block';
+        renderPerfilReport(report, true);
+        mostrarAfiliado();
+        renderDiagnosticoIA();
+        renderMetodo(report);
+        showScreen('screen-result');
+        return;
+      }
+
       const arch = report.arch || {};
       document.getElementById('r-icon').textContent = arch.icon || '✨';
       document.getElementById('r-name').innerHTML = `<span class="grad">${arch.name || ''}</span>`;
@@ -1954,11 +2136,168 @@ function renderDimsAndInsights(arch, scores) {
   }, 200);
 }
 
+// ═══════════════════════════════════════════════════════════
+// RENDER — Relatório do "Perfil Completo" (4 blocos).
+// Grátis: bloco 1 completo + blocos 2–4 bloqueados. Pago: os 4 completos,
+// com glossário (dimInfo) por dimensão e insights.
+// ═══════════════════════════════════════════════════════════
+function _perfilDimsHtml(b, paid) {
+  return Object.entries(b.scores).map(([d, v]) => {
+    const label = (b.dimNames && b.dimNames[d]) || d;
+    const info = (paid && b.dimInfo && b.dimInfo[d])
+      ? `<div style="font-size:.8rem;color:var(--text-2);margin-top:5px;line-height:1.5">${b.dimInfo[d]}</div>` : '';
+    return `<div class="dim-item">
+      <div class="dim-label"><span>${label} · <small style="color:var(--accent)">${nivelLabel(v)}</small></span><span>${v}/100</span></div>
+      <div class="dim-bar-bg"><div class="dim-bar" data-width="${v}" style="width:0%"></div></div>
+      ${info}
+    </div>`;
+  }).join('');
+}
+
+function _perfilBlocoHtml(b, idx, paid) {
+  const locked = !paid && idx > 0;
+  const arch = b.arch || {};
+  const head = `<div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;">
+      <span style="flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:var(--accent-dim,rgba(108,99,255,0.12));color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;">${idx + 1}</span>
+      <div><div style="font-weight:700;font-size:1.02rem;">${b.titulo}</div>
+      <div style="font-size:0.82rem;color:var(--text-3);">${b.subtitulo || ''}</div></div>
+    </div>`;
+  if (locked) {
+    return `<div style="border:1px solid var(--border);border-radius:16px;padding:20px 18px;margin-bottom:14px;background:var(--bg-card);">
+      ${head}
+      <div style="text-align:center;padding:14px 8px;color:var(--text-2);">
+        <div style="font-size:1.5rem;margin-bottom:6px;">🔒</div>
+        <div style="font-size:0.9rem;"><strong style="color:var(--text);">${b.titulo}</strong> faz parte do seu Perfil Completo.</div>
+        <div style="font-size:0.82rem;color:var(--text-3);margin-top:4px;">Desbloqueie para ver seu arquétipo, as 6 dimensões e o que fazer com isso.</div>
+      </div>
+    </div>`;
+  }
+  return `<div style="border:1px solid var(--border);border-radius:16px;padding:22px 18px;margin-bottom:14px;background:var(--bg-card);">
+    ${head}
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px;">
+      <span style="font-size:1.7rem;">${arch.icon || '✨'}</span>
+      <div><div class="grad" style="font-weight:800;font-size:1.15rem;">${arch.name || ''}</div>
+      <div style="font-size:0.8rem;color:var(--text-3);">${arch.mode || ''}${b.confianca ? ` · confiança ${b.confianca}%` : ''}</div></div>
+    </div>
+    ${arch.desc ? `<p style="font-size:0.9rem;color:var(--text-2);line-height:1.6;margin-bottom:16px;">${arch.desc}</p>` : ''}
+    <div>${_perfilDimsHtml(b, paid)}</div>
+    ${paid && arch.insights && arch.insights.length ? `<div style="margin-top:16px;display:grid;gap:10px;">${arch.insights.map(i => `<div class="insight"><span class="insight-icon">${i.icon}</span><div class="insight-text"><strong>${i.title}</strong><span>${i.text}</span></div></div>`).join('')}</div>` : ''}
+  </div>`;
+}
+
+// Glossário: todas as dimensões dos 4 blocos, agrupadas, com a definição de cada.
+function _perfilGlossarioHtml(report) {
+  const blocos = (report.blocos || []).map(b => {
+    const itens = Object.keys(b.dimNames || {}).map(d => {
+      const nome = b.dimNames[d];
+      const def = (b.dimInfo && b.dimInfo[d]) ? b.dimInfo[d] : '';
+      return `<div style="margin-bottom:10px;"><strong style="color:var(--text);font-size:0.88rem;">${nome}</strong>${def ? `<div style="font-size:0.82rem;color:var(--text-2);line-height:1.5;margin-top:2px;">${def}</div>` : ''}</div>`;
+    }).join('');
+    return `<div style="margin-bottom:18px;"><div style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--accent);font-weight:700;margin-bottom:8px;">${b.titulo}</div>${itens}</div>`;
+  }).join('');
+  return `<details style="margin-top:8px;border:1px solid var(--border);border-radius:14px;background:var(--bg-card);padding:0 18px;">
+    <summary style="cursor:pointer;padding:16px 0;font-weight:700;font-size:0.95rem;list-style:none;">📖 Glossário — o que cada dimensão significa</summary>
+    <div style="padding:4px 0 18px;">${blocos}</div>
+  </details>`;
+}
+
+function renderPerfilReport(report, paid) {
+  const el = document.getElementById('r-dims');
+  if (!el || !report || !report.blocos) return;
+  let html = report.blocos.map((b, i) => _perfilBlocoHtml(b, i, paid)).join('');
+  if (paid) html += _perfilGlossarioHtml(report);
+  el.innerHTML = html;
+  const t = document.getElementById('r-dims-title');
+  if (t) t.textContent = paid ? 'Seu perfil completo — 4 blocos' : 'Seu perfil — bloco 1 de 4 liberado';
+  document.getElementById('r-dims-section').style.display = 'block';
+  document.getElementById('r-insights-section').style.display = 'none';
+  renderMetodo(report); // metodologia sempre visível (grátis e pago) — constrói confiança
+  setTimeout(() => document.querySelectorAll('.dim-bar').forEach(bar => { bar.style.width = bar.dataset.width + '%'; }), 200);
+}
+
+// Monta o payload do relatório (LAST_REPORT) do Perfil Completo a partir da
+// pontuação por bloco. Serve para salvar, reabrir pago, PDF e síntese de IA.
+function buildPerfilReport(results) {
+  const blocos = results.map(r => ({
+    key: r.bloco.key, titulo: r.bloco.titulo, subtitulo: r.bloco.subtitulo,
+    arch: { icon: r.analysis.primary.icon, name: r.analysis.primary.name, mode: r.analysis.primary.mode, desc: r.analysis.primary.desc, insights: r.analysis.primary.insights },
+    scores: r.scores, dimNames: r.bloco.dimNames, dimInfo: r.bloco.dimInfo || {},
+    confianca: r.analysis.confidence, secundario: r.analysis.secondary ? r.analysis.secondary.name : null,
+  }));
+  return {
+    perfilCompleto: true, blocos,
+    resultTag: JORNADA_CFG.resultTag,
+    nome: (typeof LEAD_STATE !== 'undefined' && LEAD_STATE && LEAD_STATE.nome) || '',
+    testNome: 'Perfil Completo',
+    data: new Date().toISOString(),
+  };
+}
+
+function _setPerfilHero(report) {
+  const b0 = (report.blocos && report.blocos[0]) || {};
+  const arch0 = b0.arch || {};
+  document.getElementById('r-icon').textContent = arch0.icon || '✨';
+  document.getElementById('r-name').innerHTML = `<span class="grad">Seu Perfil Completo</span>`;
+  document.getElementById('r-tag').textContent = report.resultTag || 'Seu Perfil Completo';
+}
+
+function showResultPerfil() {
+  const results = scorePerfil();
+  const b0 = results[0];
+  const arch0 = b0.analysis.primary;
+  LAST_REPORT = buildPerfilReport(results);
+
+  _setPerfilHero(LAST_REPORT);
+  document.getElementById('r-mode').textContent = 'Bloco 1 de 4 liberado · como você decide';
+  document.getElementById('r-desc').textContent = 'Você respondeu aos 24 cenários. Abaixo, o retrato do seu jeito de decidir — e os outros 3 blocos do seu perfil, prontos para desbloquear.';
+  document.getElementById('paywall-box').style.display = 'none';
+  document.getElementById('paid-note').style.display = 'none';
+
+  showScreen('screen-result'); updateProgress();
+
+  try {
+    const saved = JSON.parse(localStorage.getItem('ec_test_results') || '[]');
+    saved.push({ jornada: 'perfil', archetype: arch0.id, date: new Date().toISOString() });
+    localStorage.setItem('ec_test_results', JSON.stringify(saved));
+  } catch (e) {}
+
+  if (!ACCESS_TOKEN) {
+    renderPerfilReport(LAST_REPORT, false);
+    document.getElementById('paywall-box').style.display = 'block';
+    renderOferta();
+    return;
+  }
+
+  fetch('/api/lead_save_report', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ access: ACCESS_TOKEN, report: LAST_REPORT }),
+  })
+    .then(res => res.json().catch(() => ({})).then(data => ({ ok: res.ok, data })))
+    .then(({ ok, data }) => {
+      if (ok && data.paid) {
+        renderPerfilReport(LAST_REPORT, true);
+        document.getElementById('paid-note').style.display = 'block';
+        mostrarAfiliado();
+        renderDiagnosticoIA();
+      } else {
+        renderPerfilReport(LAST_REPORT, false);
+        document.getElementById('paywall-box').style.display = 'block';
+        renderOferta();
+      }
+    })
+    .catch(() => {
+      renderPerfilReport(LAST_REPORT, false);
+      document.getElementById('paywall-box').style.display = 'block';
+      renderOferta();
+    });
+}
+
 function showResult() {
   if (typeof trackEvent === 'function') {
     trackEvent('complete_test');
     trackEvent('view_report_preview');
   }
+  if (JORNADA_CFG.perfilCompleto) return showResultPerfil();
   const scores = calcScores();
   const analysis = analyzeArchetypes(calcRawEmphasis());
   const arch = analysis.primary;

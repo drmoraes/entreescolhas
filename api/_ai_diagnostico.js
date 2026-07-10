@@ -54,11 +54,30 @@ module.exports = async (req, res) => {
   }
 
   const report = lead.report_json;
-  const archName = (report.arch && report.arch.name) || null;
-  const scores = report.scores || {};
-  const dimNames = report.dimNames || {};
 
-  const diag = await gerarDiagnostico({ jornada: lead.jornada, archName, scores, dimNames, contexto });
+  let archName, scores, dimNames, jornadaTipo = lead.jornada;
+  if (report && report.perfilCompleto && Array.isArray(report.blocos)) {
+    // Perfil Completo: costura os 4 blocos numa entrada única para a IA cruzar.
+    // archName vira a identidade combinada; scores/dimNames são mesclados com
+    // prefixo do bloco (evita colisão de códigos entre blocos).
+    jornadaTipo = 'perfil';
+    archName = report.blocos.map(b => `${b.titulo}: ${b.arch && b.arch.name}`).join(' · ');
+    scores = {}; dimNames = {};
+    report.blocos.forEach(b => {
+      const pref = (b.titulo || b.key) + ' — ';
+      Object.keys(b.scores || {}).forEach(d => {
+        const nome = (b.dimNames && b.dimNames[d]) || d;
+        scores[pref + nome] = b.scores[d];
+        dimNames[pref + nome] = nome;
+      });
+    });
+  } else {
+    archName = (report.arch && report.arch.name) || null;
+    scores = report.scores || {};
+    dimNames = report.dimNames || {};
+  }
+
+  const diag = await gerarDiagnostico({ jornada: jornadaTipo, archName, scores, dimNames, contexto });
 
   try {
     await query('UPDATE leads SET ai_diagnostico_json = $1, updated_at = NOW() WHERE id = $2', [JSON.stringify(diag), lead.id]);
