@@ -22,14 +22,17 @@ const DEFAULT_SINGLE = 14.97;  // preço do Perfil Completo (teste unificado)
 const DEFAULT_SINGLE_BASE = 99.00; // preço-âncora exibido riscado ("de R$99")
 const DEFAULT_COMBO  = 19.90;  // legado (combo descontinuado; mantido p/ compat)
 
-// Preço do teste avulso (B2C): banco (price_single) → legado (report_price) → env → default
+// Preço do "Perfil Completo" (produto unificado).
+// IMPORTANTE: valores antigos < R$10 (o 9,97 salvo no banco/env ANTES da
+// unificação do produto) são IGNORADOS — senão o site exibiria "de R$99 por
+// R$14,97" mas cobraria 9,97 (divergência). O admin continua podendo ajustar o
+// preço, desde que seja >= R$10. Abaixo disso, usa o preço de lançamento (14,97).
 async function getPriceSingle() {
-  const v = await getSetting('price_single', null);
-  const n = Number(v);
-  if (n > 0) return n;
-  const legacy = Number(await getSetting('report_price', null));
-  if (legacy > 0) return legacy;
-  return Number(process.env.MP_REPORT_PRICE || DEFAULT_SINGLE);
+  const n = Number(await getSetting('price_single', null));
+  if (n >= 10) return n;
+  const envN = Number(process.env.MP_REPORT_PRICE);
+  if (envN >= 10) return envN;
+  return DEFAULT_SINGLE; // 14,97 (lançamento)
 }
 
 // Preço-âncora (riscado) do teste: banco (price_single_anchor) → default 99,00.
