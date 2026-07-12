@@ -7,7 +7,7 @@ const { query } = require('./_lib/db');
 const mailer = require('./_lib/mailer');
 const { getReportPrice } = require('./_lib/settings');
 
-const JLABEL = { arquetipo: 'Arquétipo', bussola: 'Bússola Vocacional', 'fit-cultural': 'Ambiente Ideal', scanner: 'Scanner de Relacionamento' };
+const JLABEL = { arquetipo: 'Arquétipo', bussola: 'Bússola Vocacional', 'fit-cultural': 'Ambiente Ideal', scanner: 'Scanner de Relacionamento', perfil: 'Perfil Completo' };
 function esc(s){ return String(s==null?'':s).replace(/[<>&]/g,''); }
 
 module.exports = async (req, res) => {
