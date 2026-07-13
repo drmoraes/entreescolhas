@@ -42,6 +42,7 @@
 </style>
   <link rel="stylesheet" href="/theme.css?v=3">
   <script src="/theme.js?v=3"></script>
+  <script src="/roda.js?v=1"></script>
   <script src="/cookies.js?v=1" defer></script>
 </head>
 <body>
@@ -102,7 +103,8 @@ function render(d){
     <h2 class="sec">O que é este teste</h2>
     <p class="oque">${OQUE[d.jornada]||OQUE.arquetipo}</p>
 
-    ${dims?`<h2 class="sec">Você em 6 traços (o que cada um significa)</h2>${dims}
+    ${dims?`<h2 class="sec" id="roda-sec">Seu perfil de relance</h2><div id="roda"></div>
+      <h2 class="sec">Você em 6 traços (o que cada um significa)</h2>${dims}
       <p class="small muted" style="margin-top:8px">As notas mostram o seu <b>perfil relativo</b>: o traço mais forte aparece em destaque, e os outros em degradê. Todos fazem parte de você — não há nota "ruim".</p>`:''}
 
     ${ins?`<h2 class="sec">Sua leitura completa</h2>${ins}`:''}
@@ -113,6 +115,9 @@ function render(d){
       <a class="btn-ghost" href="/">Início</a>
     </div>
     <p class="small muted noprint" style="margin-top:14px">Dica: no diálogo de impressão, escolha "Salvar como PDF".</p>`;
+  const rodaEl=document.getElementById('roda');
+  const rodaOk=rodaEl&&window.EERoda&&EERoda.render(rodaEl,{scores:sc,dimNames:dn,dimInfo:di,nivel:nivel});
+  if(!rodaOk){const h=document.getElementById('roda-sec');if(h)h.remove();if(rodaEl)rodaEl.remove();}
 }
 init();
 </script>
