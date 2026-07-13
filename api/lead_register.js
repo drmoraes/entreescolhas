@@ -6,7 +6,7 @@ const mailer = require('./_lib/mailer');
 const { genToken } = require('./_lib/tokens');
 const { checkRateLimit, getClientIp } = require('./_lib/rate-limit');
 
-const ALLOWED_JORNADAS = ['arquetipo', 'fit-cultural', 'scanner', 'bussola'];
+const ALLOWED_JORNADAS = ['arquetipo', 'fit-cultural', 'scanner', 'bussola', 'perfil'];
 
 function escapeHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
