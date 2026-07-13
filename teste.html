@@ -149,6 +149,7 @@
   </style>
   <link rel="stylesheet" href="/theme.css?v=3">
   <script src="/theme.js?v=3"></script>
+  <script src="/roda.js?v=1"></script>
   <script src="/cookies.js?v=1" defer></script>
 </head>
 <body>
@@ -214,6 +215,7 @@
     <div class="dims-section" id="r-dims-section">
       <div class="dims-title" id="r-dims-title">Suas dimensões comportamentais</div>
       <div id="r-metodo" style="display:none;font-size:0.78rem;color:var(--text-3);line-height:1.55;margin:-6px 0 18px;padding:10px 12px;border-left:2px solid var(--accent);background:var(--accent-dim,rgba(108,99,255,0.06));border-radius:0 8px 8px 0;"></div>
+      <div id="r-roda"></div>
       <div id="r-dims"></div>
     </div>
     <div class="insights-section" id="r-insights-section">
@@ -1901,6 +1903,15 @@ function nivelLabel(v) {
   return 'Traço de apoio';
 }
 
+// Roda de Perfil (roda.js) acima das barras; se não der (dimensões fora
+// da faixa 3–6 ou script ausente), as barras seguem sozinhas.
+function renderRoda(scores, dimNames, dimInfo) {
+  const el = document.getElementById('r-roda');
+  if (!el) return;
+  el.innerHTML = '';
+  if (window.EERoda && scores) EERoda.render(el, { scores, dimNames, dimInfo, nivel: nivelLabel });
+}
+
 // Arquétipo primário + secundário + confiança da leitura.
 // match = média das dimensões que definem o arquétipo (0–100). Confiança cresce
 // com a distância entre o 1º e o 2º arquétipo. Secundário só aparece se estiver perto.
@@ -2082,6 +2093,7 @@ function showSavedFullReport() {
       renderDiagnosticoIA();
       renderMetodo(report);
 
+      renderRoda(report.scores, report.dimNames, report.dimInfo);
       const dimsEl = document.getElementById('r-dims');
       dimsEl.innerHTML = '';
       Object.entries(report.scores || {}).forEach(([d, v]) => {
@@ -2113,6 +2125,7 @@ function renderDimsAndInsights(arch, scores) {
   const dimNames = JORNADA_CFG.dimNames;
   const dimInfo = JORNADA_CFG.dimInfo || {};
   renderMetodo(LAST_REPORT);
+  renderRoda(scores, dimNames, dimInfo);
   const dimsEl = document.getElementById('r-dims');
   dimsEl.innerHTML = '';
   Object.entries(scores).forEach(([d, v]) => {
@@ -2181,6 +2194,7 @@ function _perfilBlocoHtml(b, idx, paid) {
       <div style="font-size:0.8rem;color:var(--text-3);">${arch.mode || ''}${b.confianca ? ` · confiança ${b.confianca}%` : ''}</div></div>
     </div>
     ${arch.desc ? `<p style="font-size:0.9rem;color:var(--text-2);line-height:1.6;margin-bottom:16px;">${arch.desc}</p>` : ''}
+    <div id="roda-bloco-${idx}"></div>
     <div>${_perfilDimsHtml(b, paid)}</div>
     ${paid && arch.insights && arch.insights.length ? `<div style="margin-top:16px;display:grid;gap:10px;">${arch.insights.map(i => `<div class="insight"><span class="insight-icon">${i.icon}</span><div class="insight-text"><strong>${i.title}</strong><span>${i.text}</span></div></div>`).join('')}</div>` : ''}
   </div>`;
@@ -2208,6 +2222,11 @@ function renderPerfilReport(report, paid) {
   let html = report.blocos.map((b, i) => _perfilBlocoHtml(b, i, paid)).join('');
   if (paid) html += _perfilGlossarioHtml(report);
   el.innerHTML = html;
+  renderRoda(null); // sem roda "geral" no perfil de 4 blocos — cada bloco tem a sua
+  if (window.EERoda) report.blocos.forEach((b, i) => {
+    const slot = document.getElementById('roda-bloco-' + i);
+    if (slot && (paid || i === 0)) EERoda.render(slot, { scores: b.scores, dimNames: b.dimNames, dimInfo: b.dimInfo, nivel: nivelLabel });
+  });
   const t = document.getElementById('r-dims-title');
   if (t) t.textContent = paid ? 'Seu perfil completo — 4 blocos' : 'Seu perfil — bloco 1 de 4 liberado';
   document.getElementById('r-dims-section').style.display = 'block';

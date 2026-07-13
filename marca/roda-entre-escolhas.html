@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Roda Entre Escolhas — protótipo de identidade</title>
+<style>
+  :root{
+    --bg:#08080F; --bg-card:#0F0F1E; --bg-raised:#141428;
+    --border:rgba(108,99,255,.15);
+    --accent:#6C63FF; --gold:#C9A84C;
+    --text:#F0EFF8; --text-2:#9490C0; --text-3:#5E5A8A;
+    /* Paleta categórica validada (modo escuro, superfície #0F0F1E):
+       banda de luminosidade OK, croma OK, contraste ≥3:1,
+       ΔE adjacente mínimo 9.2 — legal com rótulos diretos + vãos. */
+    --dim-1:#6C63FF; --dim-2:#A8862F; --dim-3:#3D7FD9;
+    --dim-4:#4E9E3D; --dim-5:#D14A7E; --dim-6:#1F9E8C;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.6;padding:34px 20px 70px}
+  .wrap{max-width:860px;margin:0 auto}
+  .brand{font-weight:800;font-size:15px;text-decoration:none;color:var(--text)}
+  .brand span{color:var(--accent)}
+  .tag{display:inline-block;background:rgba(108,99,255,.12);border:1px solid var(--border);
+    border-radius:8px;padding:5px 12px;font-size:.75rem;font-weight:600;color:var(--accent);margin:20px 0 10px}
+  h1{font-size:27px;letter-spacing:-.02em;margin-bottom:6px}
+  .sub{color:var(--text-2);font-size:.95rem;max-width:600px}
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:26px;margin-top:24px}
+  .chart-box{position:relative;display:flex;justify-content:center}
+  svg{max-width:640px;width:100%;height:auto;display:block}
+  svg text{font-family:inherit}
+  .seg{cursor:pointer}
+  .seg .fill{transition:opacity .18s}
+  .seg:hover .fill{opacity:.85}
+  .tooltip{position:absolute;pointer-events:none;background:var(--bg-raised);border:1px solid var(--border);
+    border-radius:10px;padding:10px 13px;font-size:.82rem;max-width:250px;color:var(--text-2);
+    box-shadow:0 8px 28px rgba(0,0,0,.45);opacity:0;transition:opacity .15s;z-index:5}
+  .tooltip b{color:var(--text);display:block;font-size:.86rem}
+  .tooltip .tv{font-weight:700;font-variant-numeric:tabular-nums}
+  h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin:26px 0 12px}
+  table{width:100%;border-collapse:collapse;font-size:.87rem}
+  td,th{padding:9px 10px;text-align:left;border-bottom:1px solid rgba(108,99,255,.08)}
+  th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);font-weight:600}
+  td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+  td .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:9px;vertical-align:-1px}
+  td .nivel{color:var(--text-3);font-size:.78rem;margin-left:8px}
+  .apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:6px}
+  .app{background:var(--bg-raised);border:1px solid var(--border);border-radius:12px;padding:15px}
+  .app b{font-size:.88rem}
+  .app p{font-size:.8rem;color:var(--text-2);margin-top:5px;line-height:1.5}
+  .note{font-size:.8rem;color:var(--text-3);margin-top:14px}
+  @media print{body{background:#fff;color:#111}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="brand" href="/">Entre<span>Escolhas</span></a>
+  <div class="tag">Protótipo de identidade visual · não linkado no site</div>
+  <h1>Roda Entre Escolhas</h1>
+  <p class="sub">Conceito de gráfico radial para o resultado dos testes: as 6 dimensões como setores,
+    preenchidos até o índice de ênfase (40–100), com o score <b style="color:var(--gold)">Geral</b> no centro —
+    dourado, o código visual de "premium / síntese de IA" que a marca já usa.</p>
+
+  <div class="card">
+    <div class="chart-box" id="chartBox">
+      <svg id="roda" viewBox="0 0 720 720" role="img" aria-label="Roda Entre Escolhas: perfil em 6 dimensões com score geral no centro"></svg>
+      <div class="tooltip" id="tip"></div>
+    </div>
+
+    <h2 class="sec">O mesmo perfil, em tabela</h2>
+    <table id="tabela" aria-label="Scores por dimensão">
+      <thead><tr><th>Dimensão</th><th style="text-align:right">Índice</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <p class="note">Escala 40–100 (índice de ênfase relativa — não existe nota "ruim").
+      Anéis-guia em 55, 70 e 85. Rótulo de nível segue a régua já usada no relatório:
+      85+ traço marcante · 72+ bem presente · 64+ presente · abaixo, em desenvolvimento.</p>
+  </div>
+
+  <div class="card">
+    <h2 class="sec" style="margin-top:0">Onde aplicar</h2>
+    <div class="apps">
+      <div class="app"><b>1 · resultado.html / teste.html</b>
+        <p>Substituir (ou preceder) as barras "Você em 6 traços" pela roda — vira a imagem-assinatura do relatório e do PDF.</p></div>
+      <div class="app"><b>2 · Portal RH / Banco de Talentos</b>
+        <p>Miniatura da roda no card do candidato + versão completa no perfil desbloqueado. É o que dá cara de "relatório de consultoria" ao B2B.</p></div>
+      <div class="app"><b>3 · Bússola Vocacional</b>
+        <p>A metáfora é literal: a roda vira bússola, com o vetor dominante apontando a direção. Maior sinergia de marca dos 4 testes.</p></div>
+      <div class="app"><b>4 · Compartilhamento social</b>
+        <p>A roda renderizada como imagem OG do resultado — forma reconhecível à distância, sem expor textos sensíveis do laudo.</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Dados de exemplo (perfil fictício) ──────────────────────
+const DIMS = [
+  {k:'SIS', nome:'Organização e método',  v:78, cor:'var(--dim-1)', hex:'#6C63FF',
+   info:'O quanto você gosta de planejar, organizar e seguir um método antes de agir.'},
+  {k:'AMB', nome:'Lidar com o incerto',   v:62, cor:'var(--dim-2)', hex:'#A8862F',
+   info:'Quão à vontade você fica quando não há regras claras e o caminho precisa ser descoberto.'},
+  {k:'VEL', nome:'Rapidez para decidir',  v:84, cor:'var(--dim-3)', hex:'#3D7FD9',
+   info:'Sua rapidez para bater o martelo, mesmo sem ter todas as informações.'},
+  {k:'EXE', nome:'Mão na massa',          v:73, cor:'var(--dim-4)', hex:'#4E9E3D',
+   info:'Sua energia para sair do plano e fazer acontecer de verdade.'},
+  {k:'REL', nome:'Foco nas pessoas',      v:91, cor:'var(--dim-5)', hex:'#D14A7E',
+   info:'O quanto você leva em conta sentimentos, relações e o impacto nas pessoas ao decidir.'},
+  {k:'EMO', nome:'Equilíbrio emocional',  v:58, cor:'var(--dim-6)', hex:'#1F9E8C',
+   info:'Sua calma e equilíbrio diante de pressão, conflito ou imprevistos.'}
+];
+const GERAL = Math.round(DIMS.reduce((s,d)=>s+d.v,0)/DIMS.length);
+const MIN=40, MAX=100;                       // índice de ênfase
+function nivel(v){return v>=85?'Traço marcante':v>=72?'Bem presente':v>=64?'Presente':'Em desenvolvimento';}
+
+// ── Geometria ───────────────────────────────────────────────
+const CX=360, CY=360;
+const R_IN=118, R_OUT=278;                   // trilho dos setores
+const R_LBL_IN=292, R_LBL_OUT=326;           // banda externa de rótulos
+const PAD=2.6;                               // vão entre setores (graus)
+const N=DIMS.length, STEP=360/N, START=-90;  // começa no topo
+const svgNS='http://www.w3.org/2000/svg';
+
+const rad=a=>a*Math.PI/180;
+const pt=(r,a)=>[CX+r*Math.cos(rad(a)), CY+r*Math.sin(rad(a))];
+function ring(r1,r2,a1,a2){                  // setor de coroa circular
+  const large=(a2-a1)>180?1:0;
+  const [x1,y1]=pt(r2,a1),[x2,y2]=pt(r2,a2),[x3,y3]=pt(r1,a2),[x4,y4]=pt(r1,a1);
+  return `M${x1} ${y1} A${r2} ${r2} 0 ${large} 1 ${x2} ${y2} L${x3} ${y3} A${r1} ${r1} 0 ${large} 0 ${x4} ${y4} Z`;
+}
+const rScale=v=>R_IN+((v-MIN)/(MAX-MIN))*(R_OUT-R_IN);
+
+const svg=document.getElementById('roda');
+const el=(t,at)=>{const e=document.createElementNS(svgNS,t);for(const k in at)e.setAttribute(k,at[k]);return e;};
+
+// Anéis-guia (55 / 70 / 85) — recessivos
+[55,70,85].forEach(g=>{
+  svg.appendChild(el('circle',{cx:CX,cy:CY,r:rScale(g),fill:'none',
+    stroke:'rgba(148,144,192,.16)','stroke-width':1,'stroke-dasharray':'3 5'}));
+});
+
+// Setores
+const tip=document.getElementById('tip'), box=document.getElementById('chartBox');
+DIMS.forEach((d,i)=>{
+  const a1=START+i*STEP+PAD/2, a2=START+(i+1)*STEP-PAD/2, mid=(a1+a2)/2;
+  const g=el('g',{class:'seg',tabindex:0,role:'listitem'});
+  g.appendChild(el('title',{})).textContent=`${d.nome}: ${d.v} de 100 — ${nivel(d.v)}`;
+
+  // trilho (fundo do setor)
+  g.appendChild(el('path',{d:ring(R_IN,R_OUT,a1,a2),fill:d.hex,opacity:.10}));
+  // preenchimento até o valor
+  g.appendChild(el('path',{class:'fill',d:ring(R_IN,rScale(d.v),a1,a2),fill:d.hex}));
+  // banda externa com o nome da dimensão
+  g.appendChild(el('path',{d:ring(R_LBL_IN,R_LBL_OUT,a1,a2),fill:d.hex}));
+
+  // texto seguindo o arco (invertido na metade de baixo para leitura)
+  const flip=mid>0&&mid<180;                 // ângulos: -90 topo → 90 base
+  const rT=flip?R_LBL_IN+11:(R_LBL_IN+R_LBL_OUT)/2+4;
+  const [sx,sy]=pt(rT,flip?a2:a1),[ex,ey]=pt(rT,flip?a1:a2);
+  const large=(a2-a1)>180?1:0;
+  const pathId='lbl'+i;
+  svg.appendChild(el('path',{id:pathId,d:`M${sx} ${sy} A${rT} ${rT} 0 ${large} ${flip?0:1} ${ex} ${ey}`,fill:'none'}));
+  const t=el('text',{'font-size':17,'font-weight':700,fill:'#FFFFFF','letter-spacing':'.4'});
+  const tp=el('textPath',{startOffset:'50%','text-anchor':'middle'});
+  tp.setAttributeNS('http://www.w3.org/1999/xlink','xlink:href','#'+pathId);
+  tp.setAttribute('href','#'+pathId);
+  tp.textContent=d.nome;
+  t.appendChild(tp); g.appendChild(t);
+
+  // rótulo direto do valor
+  const rV=Math.max(R_IN+42,rScale(d.v)-34);
+  const [vx,vy]=pt(rV,mid);
+  const tv=el('text',{x:vx,y:vy,'text-anchor':'middle','dominant-baseline':'middle',
+    'font-size':30,'font-weight':800,fill:'#FFFFFF'});
+  tv.textContent=d.v;
+  g.appendChild(tv);
+
+  // tooltip
+  g.addEventListener('mousemove',ev=>{
+    const r=box.getBoundingClientRect();
+    tip.style.left=Math.min(ev.clientX-r.left+14,r.width-260)+'px';
+    tip.style.top=(ev.clientY-r.top+14)+'px';
+    tip.innerHTML=`<b>${d.nome} · <span class="tv">${d.v}</span>/100</b>${nivel(d.v)} — ${d.info}`;
+    tip.style.opacity=1;
+  });
+  g.addEventListener('mouseleave',()=>tip.style.opacity=0);
+  svg.appendChild(g);
+});
+
+// Centro — Geral em dourado (código "premium/IA" da marca)
+svg.appendChild(el('circle',{cx:CX,cy:CY,r:96,fill:'#141428',stroke:'rgba(201,168,76,.55)','stroke-width':1.5}));
+const tG1=el('text',{x:CX,y:CY-26,'text-anchor':'middle','font-size':16,'font-weight':600,fill:'#9490C0',
+  'letter-spacing':'2','text-transform':'uppercase'}); tG1.textContent='GERAL';
+const tG2=el('text',{x:CX,y:CY+26,'text-anchor':'middle','font-size':58,'font-weight':800,fill:'#C9A84C'});
+tG2.textContent=GERAL;
+svg.appendChild(tG1); svg.appendChild(tG2);
+
+// Marcas da escala nos anéis-guia (discretas, eixo do topo)
+[55,70,85].forEach(g=>{
+  const [x,y]=pt(rScale(g),-90+1.6);
+  const t=el('text',{x,y:y-4,'text-anchor':'middle','font-size':11,fill:'rgba(200,197,230,.85)',
+    stroke:'#0F0F1E','stroke-width':3,'paint-order':'stroke'});
+  t.textContent=g; svg.appendChild(t);
+});
+
+// Tabela (visão acessível)
+document.querySelector('#tabela tbody').innerHTML=
+  DIMS.map(d=>`<tr><td><span class="dot" style="background:${d.hex}"></span>${d.nome}
+    <span class="nivel">${nivel(d.v)}</span></td><td class="num">${d.v}</td></tr>`).join('')
+  +`<tr><td><b style="color:var(--gold)">Geral</b></td><td class="num" style="color:var(--gold)">${GERAL}</td></tr>`;
+</script>
+</body>
+</html>
