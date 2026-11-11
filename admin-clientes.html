@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin · Clientes — Entre Escolhas</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.svg" />
+<link rel="stylesheet" href="/admin-ui.css?v=1">
+<link rel="stylesheet" href="/theme.css?v=3">
+<script src="/theme.js?v=3"></script>
+<script src="/admin-ui.js?v=1"></script>
+</head>
+<body>
+<main id="dash"><p class="muted" style="margin-top:30px"><span class="spin"></span> Carregando…</p></main>
+
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer" role="dialog" aria-label="Ficha do cliente"><button class="x" onclick="closeDrawer()" aria-label="Fechar">✕</button><div id="drawerBody"></div></div>
+
+<script>
+let D = null;
+let SIT = '';   // filtro de situação
+
+// Situação comercial de cada pessoa (calculada no servidor).
+const SITUACAO = {
+  pagante:     ['Pagante', 'g'],
+  cortesia:    ['Ganhou cortesia', 'a'],
+  gratis:      ['Modo grátis', 'a'],
+  nao_liberou: ['Fez o teste, não liberou', 'gold'],
+  convidado:   ['Convidado (cortesia não usada)', 'b'],
+  cadastro:    ['Só cadastro', ''],
+};
+const CURTO = { perfil: 'Perfil Completo', arquetipo: 'Arquétipo', 'fit-cultural': 'Fit Cultural', scanner: 'Scanner', bussola: 'Bússola' };
+const ST_TESTE = { concluido: 'Concluído', travado: 'Travado', pendente: 'E-mail não confirmado', confirmado: 'Não começou', incompleto: 'Incompleto' };
+const LIB = { pago: ['Pago', 'g'], cortesia: ['Cortesia', 'a'], gratis: ['Modo grátis', 'a'] };
+
+function stag(s) { const [t, c] = SITUACAO[s] || [s, '']; return `<span class="tag ${c}">${t}</span>`; }
+function grupo(s) { return (s === 'cortesia' || s === 'gratis') ? 'cortesia' : s; }
+
+async function load() {
+  try { D = await api('fn=admin_clientes&op=list'); render(); }
+  catch (e) { $('dash').innerHTML = '<p class="note warn" style="margin-top:30px">' + esc(e.message) + '</p>'; }
+}
+
+function render() {
+  const k = D.kpis;
+  const kb = (sit, v, l, s, cls) => `<button class="kpi ${SIT === sit ? 'on' : ''}" data-sit="${sit}" aria-pressed="${SIT === sit}">
+    <div class="v ${cls || ''}">${v}</div><div class="l">${l}</div>${s ? `<div class="s">${s}</div>` : ''}</button>`;
+  $('dash').innerHTML = `
+    <h1 class="pg">Clientes — pessoas</h1>
+    <p class="lead">Uma linha por pessoa, juntando todos os testes dela: quem pagou, quem ganhou cortesia e quem concluiu o teste mas parou antes de liberar o relatório. Clique num número para filtrar e numa pessoa para ver a ficha.</p>
+
+    <div class="kpis">
+      ${kb('', k.pessoas, 'Pessoas', k.testes + ' testes iniciados')}
+      ${kb('pagante', k.pagantes, 'Pagantes', brl(k.receita) + ' recebidos', 'green')}
+      ${kb('cortesia', k.cortesia, 'Liberaram de graça', 'cortesia ou modo grátis', 'accent')}
+      ${kb('nao_liberou', k.nao_liberou, 'Fizeram e não liberaram', 'oportunidade de venda', 'gold')}
+      ${kb('convidado', k.convidados, 'Convidados', 'cortesia ainda não usada')}
+      <div class="kpi"><div class="v">${k.conversao_pct}%</div><div class="l">Conversão em pagamento</div><div class="s">${k.pagantes} de ${k.concluiram} que concluíram</div></div>
+    </div>
+
+    <h2 class="sec">Pessoas</h2>
+    <div class="toolbar">
+      <input id="q" placeholder="Buscar por nome, e-mail ou empresa…" style="max-width:320px" aria-label="Buscar pessoa">
+      <select id="fj" style="max-width:220px" aria-label="Filtrar por teste">
+        <option value="">Qualquer teste</option>
+        ${Object.keys(CURTO).map((j) => `<option value="${j}">${CURTO[j]}</option>`).join('')}
+      </select>
+      <button class="btn-ghost" id="btnCsv">Exportar CSV</button>
+      <span class="t3 small" id="conta"></span>
+    </div>
+    ${D.truncado ? '<p class="note warn" style="margin-bottom:12px">Mostrando os 5.000 testes mais recentes. Use a exportação da tela de Testes para o histórico completo.</p>' : ''}
+    <div id="tbl"></div>`;
+  desenhar();
+}
+
+function filtrados() {
+  const q = (($('q') && $('q').value) || '').toLowerCase(), j = ($('fj') && $('fj').value) || '';
+  return D.data.filter((p) => (!SIT || grupo(p.situacao) === SIT)
+    && (!q || [p.nome, p.email, p.empresa].join(' ').toLowerCase().includes(q))
+    && (!j || p.jornadas.some((x) => x.jornada === j)));
+}
+
+function testesHtml(p) {
+  if (!p.jornadas.length) return '<span class="t3 small">ainda não se cadastrou</span>';
+  return '<div class="split">' + p.jornadas.map((t) => {
+    const lib = LIB[t.liberacao];
+    const cls = lib ? lib[1] : (t.status === 'concluido' ? 'gold' : '');
+    const det = lib ? lib[0].toLowerCase() : (t.status === 'concluido' ? 'não liberou' : (ST_TESTE[t.status] || t.status).toLowerCase());
+    return `<span class="tag ${cls}" title="${esc(ST_TESTE[t.status] || t.status)}">${esc(CURTO[t.jornada] || t.jornada)} · ${det}</span>`;
+  }).join('') + '</div>';
+}
+
+function desenhar() {
+  const rows = filtrados();
+  $('conta').textContent = rows.length + (rows.length === 1 ? ' pessoa' : ' pessoas');
+  $('tbl').innerHTML = `<div class="tblwrap"><table>
+    <thead><tr><th>Pessoa</th><th>Situação</th><th>Testes</th><th class="num">Pago</th><th>Última atividade</th></tr></thead>
+    <tbody>${rows.slice(0, 500).map((p) => `<tr class="click" data-email="${esc(p.email)}" tabindex="0">
+      <td><b>${esc(p.nome)}</b><div class="t3 small">${esc(p.email)}${p.empresa ? ' · ' + esc(p.empresa) : ''}</div></td>
+      <td>${stag(p.situacao)}${p.banco_talentos ? ' <span class="tag" title="Também está no Banco de Talentos">Banco de talentos</span>' : ''}${p.cortesia_ativa && p.situacao !== 'convidado' ? ' <span class="tag b" title="Tem cortesia pessoal ativa">cortesia ativa</span>' : ''}</td>
+      <td>${testesHtml(p)}</td>
+      <td class="num">${p.total_pago ? brl(p.total_pago) : '<span class="t3">—</span>'}</td>
+      <td class="small muted">${fmtDate(p.ultimo)}</td></tr>`).join('')
+      || '<tr><td colspan="5" class="muted">Nenhuma pessoa com esse filtro.</td></tr>'}</tbody></table></div>
+    ${rows.length > 500 ? `<p class="t3 small" style="margin-top:8px">Mostrando 500 de ${rows.length}. Refine a busca ou exporte o CSV.</p>` : ''}`;
+}
+
+async function ficha(email) {
+  openDrawer();
+  $('drawerBody').innerHTML = '<div style="margin-top:30px" class="muted"><span class="spin"></span> Carregando…</div>';
+  try {
+    const d = await api('fn=admin_clientes&op=get&email=' + encodeURIComponent(email));
+    const p = D.data.find((x) => x.email === email) || {};
+    const testes = d.testes.map((t) => {
+      const lib = LIB[t.liberacao];
+      const link = location.origin + '/resultado.html?access=' + encodeURIComponent(t.access_token || '');
+      return `<tr>
+        <td><b>${esc(t.jornada_label)}</b>${t.resultado ? `<div class="t3 small">${esc(t.resultado)}</div>` : ''}</td>
+        <td class="small">${esc(ST_TESTE[t.status] || t.status)}<div class="t3">${t.attempts_used}/${t.max_attempts} tentativas</div></td>
+        <td>${lib ? `<span class="tag ${lib[1]}">${lib[0]}</span>${t.cortesia_code ? `<div class="t3 small">${esc(t.cortesia_code)}</div>` : ''}` : (t.status === 'concluido' ? '<span class="tag gold">Não liberou</span>' : '<span class="t3">—</span>')}</td>
+        <td class="small muted">${fmtDate(t.updated_at)}${t.status === 'concluido' ? `<div><button class="btn-soft" style="margin-top:4px" data-copiar="${esc(link)}">Copiar link do resultado</button></div>` : ''}</td></tr>`;
+    }).join('');
+    const compras = d.compras.map((c) => `<tr><td class="small">${fmtDate(c.paid_at || c.created_at)}</td><td class="small">${c.kind === 'combo' ? 'Combo' : esc(CURTO[c.jornada] || c.jornada || 'Teste')}</td>
+      <td class="num">${brl(c.amount)}</td><td><span class="tag ${c.status === 'paid' ? 'g' : c.status === 'pending' ? 'gold' : 'r'}">${esc({ paid: 'Pago', pending: 'Pendente', refunded: 'Estornado', failed: 'Falhou' }[c.status] || c.status)}</span>${c.payment_method ? ` <span class="t3 small">${esc(c.payment_method)}</span>` : ''}</td></tr>`).join('');
+    const cort = d.cortesias.map((c) => `<tr><td><b>${esc(c.code)}</b>${c.motivo ? `<div class="t3 small">${esc(c.motivo)}</div>` : ''}</td>
+      <td class="small">${c.jornadas.length ? c.jornadas.map((j) => esc(CURTO[j] || j)).join(', ') : 'Todos os testes'}</td>
+      <td class="small">${esc({ ativa: 'Ativa', esgotada: 'Usada', expirada: 'Expirada', revogada: 'Revogada' }[c.estado] || c.estado)} · ${c.uses} uso(s)</td>
+      <td class="small muted">${fmtDay(c.created_at)}<div class="t3">${esc(c.created_by || '')}</div></td></tr>`).join('');
+
+    $('drawerBody').innerHTML = `
+      <h2 style="font-size:19px;margin:0 40px 2px 0">${esc(d.pessoa.nome || email)}</h2>
+      <div class="t3 small">${esc(email)}${p.empresa ? ' · ' + esc(p.empresa) : ''}</div>
+      <div class="split" style="margin-top:10px">${p.situacao ? stag(p.situacao) : ''}
+        ${d.candidato ? `<span class="tag">Banco de talentos · ${esc(d.candidato.status)}</span>` : ''}</div>
+      <div class="split" style="margin-top:14px">
+        <button class="btn" data-cortesia="${esc(email)}" data-nome="${esc(d.pessoa.nome || '')}">Dar cortesia a esta pessoa</button>
+      </div>
+      <h2 class="sec">Testes</h2>
+      ${testes ? `<div class="tblwrap"><table><thead><tr><th>Teste</th><th>Andamento</th><th>Liberação</th><th>Atualizado</th></tr></thead><tbody>${testes}</tbody></table></div>` : '<p class="muted small">Ainda não fez o cadastro em nenhum teste.</p>'}
+      <h2 class="sec">Pagamentos</h2>
+      ${compras ? `<div class="tblwrap"><table><thead><tr><th>Data</th><th>Produto</th><th class="num">Valor</th><th>Situação</th></tr></thead><tbody>${compras}</tbody></table></div>` : '<p class="muted small">Nenhum pagamento registrado.</p>'}
+      <h2 class="sec">Cortesias</h2>
+      ${cort ? `<div class="tblwrap"><table><thead><tr><th>Código</th><th>Testes</th><th>Situação</th><th>Criada</th></tr></thead><tbody>${cort}</tbody></table></div>` : '<p class="muted small">Nenhuma cortesia pessoal para este e-mail.</p>'}`;
+  } catch (e) { $('drawerBody').innerHTML = '<p class="red" style="margin-top:30px">' + esc(e.message) + '</p>'; }
+}
+
+function exportar() {
+  baixarCSV('clientes.csv', [
+    ['nome', 'Nome'], ['email', 'E-mail'], [(p) => p.empresa || '', 'Empresa'],
+    [(p) => (SITUACAO[p.situacao] || [p.situacao])[0], 'Situação'],
+    ['testes', 'Testes iniciados'], ['concluidos', 'Concluídos'], ['pagos', 'Pagos'], ['cortesias', 'Cortesias'], ['gratis', 'Modo grátis'],
+    [(p) => Number(p.total_pago || 0).toFixed(2).replace('.', ','), 'Total pago (R$)'],
+    [(p) => p.jornadas.map((t) => (CURTO[t.jornada] || t.jornada)).join(' | '), 'Testes'],
+    [(p) => (p.banco_talentos ? 'sim' : 'não'), 'Banco de talentos'],
+    [(p) => fmtDate(p.primeiro), 'Primeiro contato'], [(p) => fmtDate(p.ultimo), 'Última atividade'],
+  ], filtrados());
+}
+
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (b) {
+    if (b.dataset.sit !== undefined) { SIT = b.dataset.sit; document.querySelectorAll('[data-sit]').forEach((x) => { const on = x.dataset.sit === SIT; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); }); desenhar(); }
+    else if (b.id === 'btnCsv') exportar();
+    else if (b.dataset.copiar) copiar(b.dataset.copiar, b);
+    else if (b.dataset.cortesia) irPara('cortesias', { email: b.dataset.cortesia, nome: b.dataset.nome || '' });
+    return;
+  }
+  const tr = e.target.closest('tr[data-email]');
+  if (tr) ficha(tr.dataset.email);
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.matches && e.target.matches('tr[data-email]')) ficha(e.target.dataset.email);
+});
+document.addEventListener('input', (e) => { if (e.target.id === 'q') desenhar(); });
+document.addEventListener('change', (e) => { if (e.target.id === 'fj') desenhar(); });
+
+iniciarAdmin('clientes', load);
+</script>
+</body>
+</html>

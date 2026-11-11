@@ -23,6 +23,9 @@ module.exports = async (req, res) => {
       cortesia_codes: await getSetting('cortesia_codes', ''),
       cortesia_config: await getSetting('cortesia_config', '[]'),
       counter_base: parseInt(await getSetting('counter_base', '0'), 10) || 0,
+      // saúde do envio do relatório por e-mail (preenchido por _lib/report-email.js)
+      report_email_failures: parseInt(await getSetting('report_email_failures', '0'), 10) || 0,
+      last_report_email_error: await getSetting('last_report_email_error', ''),
       // custos de crédito (B2B) por categoria de candidato
       credit_cost: {
         operacional: Number(await getSetting('credit_cost_operacional', '1')),

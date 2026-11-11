@@ -18,10 +18,22 @@
   .muted{color:var(--text-2)}.small{font-size:12px}.red{color:var(--red)}
   header{display:flex;align-items:center;gap:14px;padding:11px 22px;border-bottom:1px solid var(--border);background:color-mix(in srgb, var(--bg) 96%, transparent)}
   .brand{font-weight:800;font-size:15px}.brand span{color:var(--accent)}
-  nav.tabs{display:flex;gap:2px;padding:0 14px;border-bottom:1px solid var(--border);background:var(--bg-card);overflow-x:auto}
-  nav.tabs button{background:transparent;color:var(--text-2);padding:13px 16px;font-size:13px;border-bottom:2px solid transparent;border-radius:0;white-space:nowrap}
-  nav.tabs button.on{color:var(--text);border-bottom-color:var(--accent)}
-  nav.tabs button:hover{color:var(--text)}
+  .shell{flex:1;display:flex;min-height:0}
+  nav.side{width:216px;flex:none;border-right:1px solid var(--border);background:var(--bg-card);overflow-y:auto;padding:10px 10px 24px}
+  nav.side .grp{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);font-weight:700;padding:14px 10px 6px}
+  nav.side button{display:block;width:100%;text-align:left;background:transparent;color:var(--text-2);padding:9px 10px;font-size:13.5px;font-weight:500;border-radius:8px;border-left:2px solid transparent}
+  nav.side button small{display:block;font-size:11px;font-weight:400;color:var(--text-3);margin-top:1px}
+  nav.side button:hover{color:var(--text);background:var(--accent-dim)}
+  nav.side button.on{color:var(--text);background:var(--accent-dim);border-left-color:var(--accent);font-weight:700}
+  nav.side button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  @media (max-width:820px){
+    .shell{flex-direction:column}
+    nav.side{width:auto;display:flex;gap:4px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--border);padding:6px 10px}
+    nav.side .grp{display:none}
+    nav.side button{width:auto;white-space:nowrap;border-left:0;border-bottom:2px solid transparent;border-radius:6px 6px 0 0;padding:9px 12px}
+    nav.side button small{display:none}
+    nav.side button.on{border-bottom-color:var(--accent)}
+  }
   main{flex:1;position:relative;min-height:0}
   iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--bg)}
   .gate{max-width:380px;margin:80px auto;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:30px}
@@ -47,16 +59,29 @@
     <span id="who" class="muted small"></span>
     <button class="logout" onclick="sair()">Sair</button>
   </header>
-  <nav class="tabs" id="tabs">
-    <button data-tab="overview" data-src="/admin-b2b.html" class="on">Visão geral</button>
-    <button data-tab="candidatos" data-src="/admin-candidatos.html">Candidatos</button>
-    <button data-tab="vagas" data-src="/admin-vagas.html">Vagas</button>
-    <button data-tab="testes" data-src="/admin-testes.html">Testes</button>
-    <button data-tab="cupons" data-src="/admin-cupons.html">Cupons</button>
-    <button data-tab="afiliados" data-src="/admin-cashback.html">Afiliados</button>
-    <button data-tab="usuarios" data-src="/admin-usuarios.html">Usuários</button>
-  </nav>
-  <main><iframe id="frame" title="seção"></iframe></main>
+  <div class="shell">
+    <!-- Menu organizado por PERGUNTA de negócio: quem são os clientes, o que
+         fizeram, o que foi liberado de graça, e o resto da operação. -->
+    <nav class="side" id="tabs" aria-label="Seções do painel">
+      <div class="grp" style="padding-top:6px">Clientes</div>
+      <button data-tab="clientes" data-src="/admin-clientes.html" class="on">Pessoas<small>quem fez teste, pagou ou ganhou</small></button>
+      <button data-tab="empresas" data-src="/admin-b2b.html?view=empresas">Empresas (RH)<small>créditos, usuários, painel 360</small></button>
+      <div class="grp">Testes</div>
+      <button data-tab="testes" data-src="/admin-testes.html">Testes realizados<small>resultados, reinício</small></button>
+      <button data-tab="cortesias" data-src="/admin-cortesias.html">Cortesias<small>teste 100% grátis</small></button>
+      <div class="grp">Banco de talentos</div>
+      <button data-tab="candidatos" data-src="/admin-candidatos.html">Candidatos</button>
+      <button data-tab="vagas" data-src="/admin-vagas.html">Vagas</button>
+      <div class="grp">Financeiro</div>
+      <button data-tab="overview" data-src="/admin-b2b.html">Indicadores B2B<small>receita, funil, auditoria</small></button>
+      <button data-tab="cupons" data-src="/admin-cupons.html">Cupons de crédito</button>
+      <button data-tab="afiliados" data-src="/admin-cashback.html">Afiliados</button>
+      <div class="grp">Sistema</div>
+      <button data-tab="config" data-src="/admin-config.html">Configurações<small>preço, modo grátis, custos</small></button>
+      <button data-tab="usuarios" data-src="/admin-usuarios.html">Usuários e auditoria</button>
+    </nav>
+    <main><iframe id="frame" title="seção"></iframe></main>
+  </div>
 </div>
 
 <script>
@@ -81,13 +106,21 @@ function abrir(){
   const btn=document.querySelector('#tabs button[data-tab="'+tab+'"]')||document.querySelector('#tabs button.on');
   go(btn);
 }
-function go(btn){
+function go(btn,extra){
   if(!btn)return;
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b===btn));
   if(btn.dataset.tab){ try{history.replaceState(null,'','#'+btn.dataset.tab);}catch(e){} }
-  $('frame').src=btn.dataset.src;
+  $('frame').src=btn.dataset.src+(extra?(btn.dataset.src.includes('?')?'&'+extra.slice(1):extra):'');
 }
-$('tabs').addEventListener('click',e=>{if(e.target.dataset.src)go(e.target);});
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-src]');if(b)go(b);});
+// Uma seção pode pedir para abrir outra (ex.: Clientes → "dar cortesia").
+window.addEventListener('message',e=>{
+  if(e.origin!==location.origin||!e.data||e.data.type!=='ee-admin-go')return;
+  const b=document.querySelector('#tabs button[data-tab="'+String(e.data.tab).replace(/[^a-z-]/g,'')+'"]');
+  if(!b)return;
+  const extra=e.data.params?('?'+new URLSearchParams(e.data.params).toString()):'';
+  go(b,extra);
+});
 function sair(){localStorage.removeItem('ee_admin_key');sessionStorage.removeItem('ee_admin_key');location.hash='';location.reload();}
 // auto-entra se já houver chave salva (não pede senha de novo)
 (function(){try{var k=localStorage.getItem('ee_admin_key')||sessionStorage.getItem('ee_admin_key');if(k){localStorage.setItem('ee_admin_key',k);abrir();}}catch(e){}})();

@@ -1344,6 +1344,9 @@ let CORTESIA_CODE = '';
     CORTESIA_CODE = c || (localStorage.getItem('ee_cortesia') || '');
   } catch (e) { CORTESIA_CODE = ''; }
 })();
+// Há cortesia válida para este cadastro? Quem decide é o servidor (lead_status):
+// vale tanto o código do link quanto a cortesia pessoal vinculada ao e-mail.
+function temCortesia() { return !!(LEAD_STATE && LEAD_STATE.cortesia); }
 
 (function initAccessGate() {
   const urlAccess = new URLSearchParams(window.location.search).get('access');
@@ -1373,13 +1376,21 @@ let CORTESIA_CODE = '';
   const startBtn = document.querySelector('#screen-intro .btn-primary');
   if (startBtn) { startBtn.disabled = true; startBtn.style.opacity = '0.5'; }
 
-  fetch('/api/lead_status?access=' + encodeURIComponent(ACCESS_TOKEN))
+  fetch('/api/lead_status?access=' + encodeURIComponent(ACCESS_TOKEN)
+        + (CORTESIA_CODE ? '&cortesia=' + encodeURIComponent(CORTESIA_CODE) : ''))
     .then(res => {
       if (!res.ok) throw new Error('invalid');
       return res.json();
     })
     .then(async data => {
       LEAD_STATE = data;
+      // Código de cortesia guardado mas que não vale mais (expirou, esgotou, foi
+      // revogado ou é de outro teste): descarta, para a pessoa ver a oferta normal
+      // em vez de um botão "grátis" que daria erro.
+      if (CORTESIA_CODE && !data.cortesia && !data.paid) {
+        CORTESIA_CODE = '';
+        try { localStorage.removeItem('ee_cortesia'); } catch (e) {}
+      }
       // Guarda nome/e-mail e o access_token desta jornada para pré-preencher
       // outros formulários do site sem pedir tudo de novo.
       if (window.eeIdentity) {
@@ -1494,7 +1505,7 @@ function ofertaHtml() {
 function renderOferta() {
   if (LEAD_STATE && LEAD_STATE.free_mode) return;
   // Link de cortesia: substitui a oferta paga por um botão de liberação grátis.
-  if (CORTESIA_CODE) return renderCortesia();
+  if (temCortesia()) return renderCortesia();
   const wrap = document.getElementById('paywall-price-wrap');
   const btn = document.getElementById('btn-unlock');
   if (wrap) wrap.innerHTML = ofertaHtml();
@@ -1740,10 +1751,10 @@ function showAlreadyCompleted(data) {
   intro.innerHTML = `
     <div class="intro-badge"><span class="intro-badge-dot"></span><span>Teste concluído</span></div>
     <h1>Você já concluiu<br/><span class="grad serif">este teste</span></h1>
-    <p>Seu resultado está salvo. ${(data.free_mode || CORTESIA_CODE) ? 'Veja o relatório completo gratuitamente' : 'Desbloqueie o relatório completo para ver tudo'}${podeRefazer ? ', ou refaça o teste se quiser' : ''}.</p>
+    <p>Seu resultado está salvo. ${(data.free_mode || data.cortesia) ? 'Veja o relatório completo gratuitamente' : 'Desbloqueie o relatório completo para ver tudo'}${podeRefazer ? ', ou refaça o teste se quiser' : ''}.</p>
     ${data.free_mode
       ? `<button class="btn-primary" style="width:100%;" onclick="unlockReport()">Ver meu relatório grátis</button>`
-      : (CORTESIA_CODE
+      : (data.cortesia
         ? `<button class="btn-primary" style="width:100%;background:#16a34a;border-color:#16a34a;" onclick="cortesiaUnlock(this)">🎁 Liberar meu relatório grátis</button>`
         : ofertaHtml())}
     ${podeRefazer ? '<button class="btn-primary" style="width:100%;margin-top:10px;background:transparent;border:1px solid var(--border);color:var(--text-2);" onclick="startTest()">Refazer o teste</button>' : ''}

@@ -10,37 +10,41 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
-function buildReportEmailHtml(nome, report) {
-  const arch = report.arch || {};
-  const name = escapeHtml(arch.name || '');
-  const mode = escapeHtml(arch.mode || '');
-  const desc = escapeHtml(arch.desc || '');
-
+// Um bloco do relatório (arquétipo + dimensões + insights) em HTML simples de e-mail.
+function blocoHtml(titulo, arch, scores, dimNames) {
+  arch = arch || {};
   let dimsHtml = '';
-  const scores = report.scores || {};
-  const dimNames = report.dimNames || {};
-  for (const dim of Object.keys(scores)) {
-    const label = escapeHtml(dimNames[dim] || dim);
-    dimsHtml += `<p>${label}: <strong>${scores[dim]}/100</strong></p>`;
+  for (const dim of Object.keys(scores || {})) {
+    const label = escapeHtml((dimNames || {})[dim] || dim);
+    dimsHtml += `<p>${label}: <strong>${escapeHtml(scores[dim])}/100</strong></p>`;
   }
-
   let insightsHtml = '';
   for (const insight of (arch.insights || [])) {
-    const title = escapeHtml(insight.title || '');
-    const text = escapeHtml(insight.text || '');
-    insightsHtml += `<p><strong>${title}</strong><br>${text}</p>`;
+    insightsHtml += `<p><strong>${escapeHtml(insight.title || '')}</strong><br>${escapeHtml(insight.text || '')}</p>`;
   }
+  return `
+      ${titulo ? `<p style="color:#6C63FF;font-weight:bold;text-transform:uppercase;font-size:12px;letter-spacing:.05em;margin:22px 0 2px">${escapeHtml(titulo)}</p>` : ''}
+      <h2 style="margin-top:2px">${escapeHtml(arch.name || '')}</h2>
+      ${arch.mode ? `<p>${escapeHtml(arch.mode)}</p>` : ''}
+      ${arch.desc ? `<p>${escapeHtml(arch.desc)}</p>` : ''}
+      ${dimsHtml ? `<h3>Suas dimensões</h3>${dimsHtml}` : ''}
+      ${insightsHtml ? `<h3>Insights</h3>${insightsHtml}` : ''}`;
+}
+
+// Aceita os dois formatos de relatório salvos pelo teste.html:
+//   • jornada simples:   { arch, scores, dimNames }
+//   • Perfil Completo:   { perfilCompleto: true, blocos: [{ titulo, arch, scores, dimNames }, …] }
+function buildReportEmailHtml(nome, report) {
+  report = report || {};
+  const perfil = report.perfilCompleto && Array.isArray(report.blocos) && report.blocos.length;
+  const corpo = perfil
+    ? report.blocos.map((b) => blocoHtml(b.titulo, b.arch, b.scores, b.dimNames)).join('<hr style="border:none;border-top:1px solid #eee;margin:18px 0">')
+    : blocoHtml('', report.arch, report.scores, report.dimNames);
 
   return `
       <p>Olá, ${escapeHtml(nome)}!</p>
-      <p>Seu relatório completo do Entre Escolhas está pronto:</p>
-      <h2>${name}</h2>
-      <p>${mode}</p>
-      <p>${desc}</p>
-      <h3>Suas dimensões</h3>
-      ${dimsHtml}
-      <h3>Insights</h3>
-      ${insightsHtml}
+      <p>Seu ${perfil ? 'Perfil Completo' : 'relatório completo'} do Entre Escolhas está pronto:</p>
+      ${corpo}
       <p>Você pode acessar este relatório novamente a qualquer momento pelo link enviado no e-mail de confirmação.</p>
     `;
 }

@@ -47,6 +47,8 @@ const handlers = {
   admin_vagas:        require('./_admin_vagas'),
   ai_diagnostico:     require('./_ai_diagnostico'),
   admin_migrate_ai:   require('./_admin_migrate_ai'),
+  admin_cortesias:    require('./_admin_cortesias'),
+  admin_clientes:     require('./_admin_clientes'),
 };
 
 module.exports = async (req, res) => {

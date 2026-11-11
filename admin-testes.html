@@ -77,7 +77,7 @@
 
 <script>
 const $=id=>document.getElementById(id);let KEY='';let ROWS=[];
-const JLABEL={arquetipo:'Arquétipo',bussola:'Bússola Vocacional','fit-cultural':'Ambiente Ideal',scanner:'Scanner de Relacionamento'};
+const JLABEL={perfil:'Perfil Completo',arquetipo:'Arquétipo',bussola:'Bússola Vocacional','fit-cultural':'Ambiente Ideal',scanner:'Scanner de Relacionamento'};
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function fmtDate(s){return s?new Date(s).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';}
 function api(path,opts={}){return fetch('/api/b2b?'+path,{...opts,headers:{'X-Api-Key':KEY,...(opts.headers||{})}}).then(async r=>{if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||('Erro '+r.status));}return r.json();});}
@@ -87,6 +87,8 @@ const STATUS={
   pendente:{t:'Não confirmado',c:'gold'}, confirmado:{t:'Aguardando teste',c:'b'},
   incompleto:{t:'Incompleto',c:'gold'},
 };
+const LIB={pago:['Pago','g'],cortesia:['Cortesia','b'],gratis:['Modo grátis','b']};
+function libTag(r){const o=LIB[r.liberacao];if(o)return `<span class="tag ${o[1]}">${o[0]}</span>`;return r.has_report?'<span class="tag gold">Não liberou</span>':'<span class="t3">—</span>';}
 function stag(s){const o=STATUS[s]||{t:s,c:'b'};return `<span class="tag ${o.c}">${o.t}</span>`;}
 
 async function load(){
@@ -110,12 +112,14 @@ function render(d){
       <div class="kpi"><div class="v red">${k.travados}</div><div class="l">Travados</div></div>
       <div class="kpi"><div class="v gold">${k.pendentes}</div><div class="l">Aguardando</div></div>
       <div class="kpi"><div class="v accent">${k.pagos}</div><div class="l">Pagos</div></div>
+      <div class="kpi"><div class="v" style="color:var(--blue)">${k.cortesias||0}</div><div class="l">Liberados de graça</div></div>
     </div>
     <h2 class="sec">Registro de testes</h2>
     <div class="toolbar">
       <input id="q" placeholder="Buscar por nome ou e-mail…" style="max-width:300px" oninput="filtra()">
       <select id="fj" style="max-width:230px" onchange="filtra()">
         <option value="">Todas as jornadas</option>
+        <option value="perfil">Perfil Completo</option>
         <option value="arquetipo">Arquétipo</option>
         <option value="bussola">Bússola Vocacional</option>
         <option value="fit-cultural">Ambiente Ideal</option>
@@ -127,6 +131,13 @@ function render(d){
         <option value="concluido">Concluídos</option>
         <option value="pendente">Não confirmados</option>
       </select>
+      <select id="fl" style="max-width:200px" onchange="filtra()">
+        <option value="">Qualquer liberação</option>
+        <option value="pago">Pagos</option>
+        <option value="cortesia">Cortesia</option>
+        <option value="gratis">Modo grátis</option>
+        <option value="nao">Concluiu e não liberou</option>
+      </select>
       <button class="btn-ghost" onclick="exportCSV()">Exportar CSV</button>
     </div>
     <div id="tbl"></div>`;
@@ -134,20 +145,21 @@ function render(d){
 }
 
 function filtra(){
-  const q=($('q').value||'').toLowerCase(), j=$('fj').value, s=$('fs').value;
-  let r=ROWS.filter(x=>(!q||(x.nome+' '+x.email).toLowerCase().includes(q))&&(!j||x.jornada===j)&&(!s||x.status===s));
+  const q=($('q').value||'').toLowerCase(), j=$('fj').value, s=$('fs').value, l=$('fl').value;
+  let r=ROWS.filter(x=>(!q||(x.nome+' '+x.email).toLowerCase().includes(q))&&(!j||x.jornada===j)&&(!s||x.status===s)
+    &&(!l||(l==='nao'?(x.has_report&&!x.paid):x.liberacao===l)));
   drawTable(r);
 }
 
 function drawTable(rows){
   $('tbl').innerHTML=`<table>
-    <thead><tr><th>Candidato</th><th>Jornada</th><th>Status</th><th>Tentativas</th><th>Pago</th><th>Atualizado</th><th>Ações</th></tr></thead>
+    <thead><tr><th>Candidato</th><th>Jornada</th><th>Status</th><th>Tentativas</th><th>Liberação</th><th>Atualizado</th><th>Ações</th></tr></thead>
     <tbody>${rows.map(r=>`<tr>
       <td><b>${esc(r.nome)}</b><div class="t3 small">${esc(r.email)}</div></td>
       <td>${JLABEL[r.jornada]||r.jornada}</td>
       <td>${stag(r.status)}${r.reset_count?` <span class="t3 small">· ${r.reset_count}× reinic.</span>`:''}</td>
       <td>${r.attempts_used}/${r.max_attempts}</td>
-      <td>${r.paid?'<span class="tag g">sim</span>':'<span class="tag">não</span>'}</td>
+      <td>${libTag(r)}</td>
       <td class="muted small">${fmtDate(r.updated_at)}</td>
       <td class="split">
         ${r.has_report?`<button class="btn-soft" onclick="verResultado(${r.id})">Ver resultado</button>`:'<span class="t3 small">sem resultado</span>'}
@@ -190,30 +202,36 @@ function renderResult(d){
   let body='';
   if(!rep){ body='<p class="muted">Este teste ainda não tem resultado salvo.</p>'; }
   else {
-    const a=rep.arch||{}; const sc=rep.scores||{}; const dn=rep.dimNames||{};
-    const dims=Object.keys(sc).map(k=>`<div style="margin:8px 0"><div class="split" style="justify-content:space-between"><span>${esc(dn[k]||k)}</span><b>${sc[k]}/100</b></div><div class="bar"><i style="width:${Math.max(2,Math.min(100,sc[k]))}%"></i></div></div>`).join('');
-    const ins=(a.insights||[]).map(i=>`<div class="ins"><b>${esc(i.title||'')}</b><div class="muted small" style="margin-top:3px">${esc(i.text||'')}</div></div>`).join('');
-    body=`<div id="printArea">
-      <div style="font-size:12px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">${JLABEL[l.jornada]||l.jornada}</div>
+    // Um bloco = arquétipo + dimensões + insights. A jornada simples tem 1 bloco;
+    // o Perfil Completo tem 4 (rep.blocos), cada um com seu próprio arquétipo.
+    const bloco=(tag,a,sc,dn)=>{
+      a=a||{};sc=sc||{};dn=dn||{};
+      const dims=Object.keys(sc).map(k=>`<div style="margin:8px 0"><div class="split" style="justify-content:space-between"><span>${esc(dn[k]||k)}</span><b>${esc(sc[k])}/100</b></div><div class="bar"><i style="width:${Math.max(2,Math.min(100,Number(sc[k])||0))}%"></i></div></div>`).join('');
+      const ins=(a.insights||[]).map(i=>`<div class="ins"><b>${esc(i.title||'')}</b><div class="muted small" style="margin-top:3px">${esc(i.text||'')}</div></div>`).join('');
+      return `<div style="font-size:12px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">${esc(tag)}</div>
       <h2 style="font-size:22px;margin:2px 0 2px">${esc(a.name||'Resultado')}</h2>
       ${a.mode?`<div class="accent" style="font-weight:600">${esc(a.mode)}</div>`:''}
       ${a.desc?`<p class="muted" style="margin:8px 0 14px">${esc(a.desc)}</p>`:''}
       ${dims?`<h2 class="sec">Dimensões</h2>${dims}`:''}
-      ${ins?`<h2 class="sec">Insights</h2>${ins}`:''}
-    </div>`;
+      ${ins?`<h2 class="sec">Insights</h2>${ins}`:''}`;
+    };
+    const partes=(rep.perfilCompleto&&Array.isArray(rep.blocos)&&rep.blocos.length)
+      ? rep.blocos.map(b=>bloco('Perfil Completo · '+(b.titulo||''),b.arch,b.scores,b.dimNames))
+      : [bloco(JLABEL[l.jornada]||l.jornada,rep.arch,rep.scores,rep.dimNames)];
+    body=`<div id="printArea">${partes.join('<hr style="border:none;border-top:1px solid var(--border);margin:22px 0">')}</div>`;
   }
-  const hist=(d.history||[]).map(h=>`<tr><td>#${h.attempt_no}</td><td>${esc(h.arquetipo||'—')}</td><td>${h.paid?'<span class="tag g">pago</span>':'<span class="tag">grátis</span>'}</td><td class="muted small">${fmtDate(h.created_at)}</td></tr>`).join('');
+  const hist=(d.history||[]).map(h=>`<tr><td>#${h.attempt_no}</td><td>${esc(h.arquetipo||'—')}</td><td>${h.paid?'<span class="tag g">já liberado</span>':'<span class="tag">antes de liberar</span>'}</td><td class="muted small">${fmtDate(h.created_at)}</td></tr>`).join('');
   return `
     <div class="split" style="justify-content:space-between;align-items:flex-start;margin-bottom:6px">
       <div><b style="font-size:16px">${esc(l.nome)}</b><div class="t3 small">${esc(l.email)} · lead #${l.id}</div></div>
-      <div class="split">${l.paid?'<span class="tag g">pago</span>':'<span class="tag gold">grátis</span>'}</div>
+      <div class="split">${libTag(ROWS.find(x=>x.id===l.id)||{has_report:!!rep})}</div>
     </div>
     ${body}
     ${rep?`<div class="split" style="margin:16px 0 6px">
       <button class="btn" onclick="baixarPDF()">⬇︎ Baixar PDF</button>
       <button class="btn-ghost" onclick="copy('${link}')">Copiar link do candidato</button>
     </div>`:''}
-    ${hist?`<h2 class="sec">Histórico de tentativas</h2><table><thead><tr><th>#</th><th>Arquétipo</th><th>Tipo</th><th>Quando</th></tr></thead><tbody>${hist}</tbody></table>`:''}
+    ${hist?`<h2 class="sec">Histórico de tentativas</h2><table><thead><tr><th>#</th><th>Arquétipo</th><th>Na época</th><th>Quando</th></tr></thead><tbody>${hist}</tbody></table>`:''}
   `;
 }
 
@@ -236,7 +254,7 @@ function closeDrawer(){$('scrim').classList.remove('on');$('drawer').classList.r
 
 function exportCSV(){
   const q=v=>{v=v==null?'':String(v);return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
-  const cols=[['nome','Nome'],['email','E-mail'],['jornada','Jornada'],['status','Status'],['attempts_used','Tentativas'],['max_attempts','Máx'],['paid','Pago'],['updated_at','Atualizado']];
+  const cols=[['nome','Nome'],['email','E-mail'],['jornada','Jornada'],['status','Status'],['attempts_used','Tentativas'],['max_attempts','Máx'],['paid','Liberado'],['liberacao','Como foi liberado'],['updated_at','Atualizado']];
   const csv=[cols.map(c=>q(c[1])).join(',')].concat(ROWS.map(r=>cols.map(c=>q(r[c[0]])).join(','))).join('\r\n');
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='testes.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);

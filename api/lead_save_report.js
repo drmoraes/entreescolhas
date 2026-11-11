@@ -6,6 +6,18 @@ const { query } = require('./_lib/db');
 const mailer = require('./_lib/mailer');
 const { buildReportEmailHtml } = require('./_lib/report-email');
 
+// Rótulo curto do resultado para o histórico (test_attempts.arquetipo).
+// Jornada simples → nome do arquétipo; Perfil Completo → um arquétipo por bloco.
+function resumoArquetipo(report) {
+  if (!report) return null;
+  if (report.arch && report.arch.name) return String(report.arch.name).slice(0, 120);
+  if (report.perfilCompleto && Array.isArray(report.blocos)) {
+    const nomes = report.blocos.map((b) => b && b.arch && b.arch.name).filter(Boolean);
+    return nomes.length ? nomes.join(' · ').slice(0, 120) : 'Perfil Completo';
+  }
+  return null;
+}
+
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
   if (req.method !== 'POST') return err(res, 'Method not allowed', 405);
@@ -42,7 +54,7 @@ module.exports = async (req, res) => {
       `INSERT INTO test_attempts (lead_id, jornada, attempt_no, report_json, arquetipo, paid, ip)
        VALUES ($1,$2,$3,$4,$5,$6,$7)`,
       [lead.id, lead.jornada, novasTentativas, JSON.stringify(report),
-       (report && report.arch && report.arch.name) ? String(report.arch.name).slice(0, 120) : null,
+       resumoArquetipo(report),
        jaPago, ip]
     );
   } catch (e) { console.error('test_attempts insert falhou:', e.message); }

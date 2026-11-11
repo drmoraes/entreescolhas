@@ -72,6 +72,7 @@
 
 <script>
 const $=id=>document.getElementById(id);let KEY='';
+const VIEW=new URLSearchParams(location.search).get('view')||'';
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function pct(n){return (n==null?0:n)+'%';}
 
@@ -85,104 +86,7 @@ async function load(){
     const d=await r.json();
     $('gate').classList.add('hide');$('dash').classList.remove('hide');$('refreshBtn').style.display='';
     render(d);
-    carregarPreco();
   }catch(e){$('gErr').textContent=e.message;}
-}
-
-async function carregarPreco(){
-  try{ const d=await fetch('/api/b2b?fn=admin_settings&op=get',{headers:{'X-Api-Key':KEY}}).then(r=>r.json());
-    if($('cfgPrice')) $('cfgPrice').value=Number(d.report_price).toFixed(2);
-    if($('cfgFree')) $('cfgFree').checked=!!d.free_mode;
-    if($('cfgCortesia')) $('cfgCortesia').value=d.cortesia_codes||'';
-    if($('cfgCounter')) $('cfgCounter').value=d.counter_base||0;
-    if($('cfgCortAdv')){
-      let arr=[]; try{arr=JSON.parse(d.cortesia_config||'[]')||[];}catch(e){}
-      $('cfgCortAdv').value=arr.map(c=>[c.code,(c.expires||''),(c.max_uses||0)].join(' | ')).join('\n');
-      renderCortUsos(arr);
-    }
-    const cc=d.credit_cost||{};
-    ['operacional','analista','especialista','gerencial','pcd'].forEach(k=>{ if($('cc_'+k)&&cc[k]!=null) $('cc_'+k).value=cc[k]; });
-  }catch(e){}
-}
-function renderCortUsos(arr){
-  const box=$('cortUsos'); if(!box)return;
-  if(!arr.length){box.innerHTML='';return;}
-  box.innerHTML='<div class="muted small" style="margin-top:8px">Usos por código:</div>'+arr.map(c=>{
-    const lim=c.max_uses?('/'+c.max_uses):' (ilimitado)';
-    const exp=c.expires?(' · expira '+c.expires):'';
-    return `<div class="small" style="padding:2px 0"><b>${c.code}</b> — ${c.uses||0}${lim} usos${exp}</div>`;
-  }).join('');
-}
-async function salvarCortAdv(){
-  const msg=$('cortAdvMsg'); msg.textContent='Salvando…';msg.className='small muted';
-  const linhas=($('cfgCortAdv').value||'').split('\n').map(l=>l.trim()).filter(Boolean);
-  const cortesia_config=linhas.map(l=>{
-    const p=l.split('|').map(s=>s.trim());
-    return { code:(p[0]||'').toUpperCase(), expires:(p[1]||''), max_uses:parseInt(p[2],10)||0 };
-  }).filter(c=>c.code);
-  try{
-    const r=await fetch('/api/b2b?fn=admin_settings&op=set',{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':KEY},body:JSON.stringify({cortesia_config})});
-    const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
-    let arr=[];try{arr=JSON.parse(d.cortesia_config||'[]')||[];}catch(e){}
-    $('cfgCortAdv').value=arr.map(c=>[c.code,(c.expires||''),(c.max_uses||0)].join(' | ')).join('\n');
-    renderCortUsos(arr);
-    msg.textContent='✓ Links de cortesia salvos';msg.className='small green';
-  }catch(e){msg.textContent=e.message;msg.className='small red';}
-}
-async function salvarCounter(){
-  const msg=$('counterMsg'); msg.textContent='Salvando…';msg.className='small muted';
-  try{
-    const r=await fetch('/api/b2b?fn=admin_settings&op=set',{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':KEY},body:JSON.stringify({counter_base:parseInt($('cfgCounter').value,10)||0})});
-    const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
-    $('cfgCounter').value=d.counter_base||0;
-    msg.textContent='✓ Contador salvo ('+(d.counter_base||0).toLocaleString('pt-BR')+' + reais)';msg.className='small green';
-  }catch(e){msg.textContent=e.message;msg.className='small red';}
-}
-async function salvarCustos(){
-  const msg=$('ccMsg'); msg.textContent='Salvando…';msg.className='small muted';
-  const credit_cost={};
-  ['operacional','analista','especialista','gerencial','pcd'].forEach(k=>{ const el=$('cc_'+k); if(el&&el.value!=='') credit_cost[k]=parseInt(el.value,10); });
-  try{
-    const r=await fetch('/api/b2b?fn=admin_settings&op=set',{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':KEY},body:JSON.stringify({credit_cost})});
-    const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
-    msg.textContent='✓ Custos salvos';msg.className='small green';
-  }catch(e){msg.textContent=e.message;msg.className='small red';}
-}
-async function migrarRH(){
-  const msg=$('ccMsg'); if(!confirm('Cria as colunas de categoria/setores e os parâmetros de custo. Idempotente. Continuar?'))return;
-  msg.textContent='Migrando…';msg.className='small muted';
-  try{
-    const r=await fetch('/api/b2b?fn=admin_migrate_rh',{headers:{'X-Api-Key':KEY}});
-    const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
-    msg.textContent='✓ Migração RH OK ('+d.applied+' comandos)';msg.className='small green';carregarPreco();
-  }catch(e){msg.textContent=e.message;msg.className='small red';}
-}
-async function salvarFree(){
-  const msg=$('cfgMsg'); msg.textContent='Salvando…';msg.className='small muted';
-  try{
-    const r=await fetch('/api/b2b?fn=admin_settings&op=set',{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':KEY},body:JSON.stringify({free_mode:$('cfgFree').checked})});
-    const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
-    msg.textContent=d.free_mode?'✓ Modo grátis LIGADO':'✓ Modo grátis desligado (cobrando)';msg.className='small green';
-  }catch(e){msg.textContent=e.message;msg.className='small red';}
-}
-async function salvarCortesia(){
-  const msg=$('cortMsg'); msg.textContent='Salvando…';msg.className='small muted';
-  try{
-    const r=await fetch('/api/b2b?fn=admin_settings&op=set',{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':KEY},body:JSON.stringify({cortesia_codes:$('cfgCortesia').value})});
-    const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
-    $('cfgCortesia').value=d.cortesia_codes||'';
-    msg.textContent='✓ Códigos salvos';msg.className='small green';
-  }catch(e){msg.textContent=e.message;msg.className='small red';}
-}
-async function salvarPreco(){
-  const v=parseFloat($('cfgPrice').value), msg=$('cfgMsg');
-  if(!(v>0)){msg.textContent='Valor inválido';msg.className='small red';return;}
-  msg.textContent='Salvando…';msg.className='small muted';
-  try{
-    const r=await fetch('/api/b2b?fn=admin_settings&op=set',{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':KEY},body:JSON.stringify({report_price:v})});
-    const d=await r.json(); if(!r.ok)throw new Error(d.error||'Falha');
-    msg.textContent='✓ Preço salvo: R$ '+Number(d.report_price).toFixed(2);msg.className='small green';
-  }catch(e){msg.textContent=e.message;msg.className='small red';}
 }
 
 function kpi(v,l,s,cls){return `<div class="kpi"><div class="v ${cls||''}">${v}</div><div class="l">${l}</div>${s?'<div class="s muted">'+s+'</div>':''}</div>`;}
@@ -231,69 +135,10 @@ function render(d){
       <div style="width:100%;background:linear-gradient(180deg,#6C63FF,rgba(108,99,255,.2));border-radius:5px 5px 0 0;height:${Math.max(4,Math.round(s.receita/smax*120))}px"></div>
       <div style="font-size:10px;color:var(--text-3)">${s.mes.slice(5)}</div></div>`).join(''):'<span class="muted small">Sem vendas pagas ainda.</span>';
 
-  $('dash').innerHTML=`
-  <h2 class="sec">Relatório do candidato (B2C)</h2>
-  <div class="kpi" style="padding:14px;max-width:560px">
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <span class="muted small">Preço R$</span>
-      <input id="cfgPrice" type="number" step="0.01" min="0.5" style="width:120px" placeholder="7.97">
-      <button class="btn" onclick="salvarPreco()">Salvar</button>
-      <span id="cfgMsg" class="small"></span>
-    </div>
-    <label class="small" style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer">
-      <input type="checkbox" id="cfgFree" onchange="salvarFree()" style="width:auto">
-      <span><b>Modo grátis</b> — libera o relatório sem pagamento (foco em volume / Banco de Talentos)</span>
-    </label>
-    <p class="muted small" style="margin-top:8px">Com o modo grátis ligado, o paywall vira "Ver meu relatório grátis" e não cobra. Desligado = cobra o preço acima.</p>
-  </div>
-
-  <h2 class="sec">Contador público (prova social)</h2>
-  <div class="kpi" style="padding:14px;max-width:560px">
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <span class="muted small">Base do contador</span>
-      <input id="cfgCounter" type="number" min="0" step="1" style="width:140px" placeholder="100000">
-      <button class="btn" onclick="salvarCounter()">Salvar</button>
-      <span id="counterMsg" class="small"></span>
-    </div>
-    <p class="muted small" style="margin-top:8px">Nº de <b>pessoas</b> somado à contagem real de testes concluídos. O contador da home mostra <b>cenários analisados = (concluídos reais + base) × 20</b>. Ex.: base <code>500</code> → contador ~10 mil cenários. Recomendação honesta: reflita números reais (ou lançamentos antigos), não infle — credibilidade converte mais que um número grande.</p>
-  </div>
-
-  <h2 class="sec">Links de cortesia (grátis com validade e limite)</h2>
-  <div class="kpi" style="padding:14px;max-width:680px">
-    <label class="muted small">Um código por linha: <code>CÓDIGO | validade(AAAA-MM-DD) | limite de usos</code></label>
-    <textarea id="cfgCortAdv" rows="4" style="width:100%;margin-top:4px;font-family:monospace;font-size:13px" placeholder="SEGUIDORES | 2026-07-31 | 500&#10;IMPRENSA | | 0"></textarea>
-    <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
-      <button class="btn" onclick="salvarCortAdv()">Salvar links</button>
-      <span id="cortAdvMsg" class="small"></span>
-    </div>
-    <div id="cortUsos"></div>
-    <p class="muted small" style="margin-top:10px">Validade e limite s&atilde;o opcionais: deixe em branco / <code>0</code> para sem expira&ccedil;&atilde;o ou sem limite. Link: <code>entreescolhas.com.br/teste.html?jornada=arquetipo&amp;cortesia=CÓDIGO</code>. Quem abrir faz cadastro + teste e libera o relat&oacute;rio de gra&ccedil;a. Para revogar, apague a linha.</p>
-    <p class="muted small" style="margin-top:6px">Jornadas: <code>arquetipo</code>, <code>fit-cultural</code>, <code>scanner</code>, <code>bussola</code>.</p>
-    <details style="margin-top:8px"><summary class="muted small" style="cursor:pointer">C&oacute;digos simples (legado, sem limite)</summary>
-      <input id="cfgCortesia" type="text" style="width:100%;margin-top:6px" placeholder="IMPRENSA2026, PARCEIRO">
-      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
-        <button class="btn" onclick="salvarCortesia()">Salvar (legado)</button><span id="cortMsg" class="small"></span>
-      </div>
-    </details>
-  </div>
-
-  <h2 class="sec">Custo de crédito por categoria (B2B)</h2>
-  <div class="kpi" style="padding:14px;max-width:680px">
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
-      <div><label class="muted small">Operacional</label><input id="cc_operacional" type="number" min="0" step="1" placeholder="1"></div>
-      <div><label class="muted small">Analista</label><input id="cc_analista" type="number" min="0" step="1" placeholder="4"></div>
-      <div><label class="muted small">Especialista</label><input id="cc_especialista" type="number" min="0" step="1" placeholder="4"></div>
-      <div><label class="muted small">Gerencial</label><input id="cc_gerencial" type="number" min="0" step="1" placeholder="6"></div>
-      <div><label class="muted small">PCD</label><input id="cc_pcd" type="number" min="0" step="1" placeholder="8"></div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap">
-      <button class="btn" onclick="salvarCustos()">Salvar custos</button>
-      <button class="btn-ghost" onclick="migrarRH()">Instalar/migrar RH (1ª vez)</button>
-      <span id="ccMsg" class="small"></span>
-    </div>
-    <p class="muted small" style="margin-top:8px">Quantos créditos a empresa gasta ao desbloquear cada perfil. PCD tem precedência sobre a categoria. A categoria vem do CSV/cadastro ou é deduzida do cargo/senioridade.</p>
-  </div>
-
+  const VIEW_EMP=VIEW==='empresas';
+  const html=`
+  <h1 style="font-size:20px;font-weight:800">Indicadores B2B</h1>
+  <p class="muted" style="max-width:760px;margin-top:4px">Receita, funil e qualidade do Banco de Talentos. Preço, modo grátis e custos de crédito agora ficam em “Configurações”; cortesias, em “Cortesias”.</p>
   ${alertas.length?`<h2 class="sec">Alertas (${alertas.length})</h2><div class="kpis">${alertasHtml}</div>`:''}
 
   <h2 class="sec">Receita (R$)</h2>
@@ -342,6 +187,41 @@ function render(d){
     ${kpi(cr.expirados,'Expirados','')}
   </div>
 
+<!--EMPRESAS-->  <h2 class="sec">Qualidade da base</h2>
+  <div class="kpis">
+    ${kpi(b.total,'Candidatos','não arquivados')}
+    ${kpi(b.consentidos,'Consentidos B2B','')}
+    ${kpi(b.ativos,'Ativos','confirmados ≤45d','green')}
+    ${kpi(b.fantasmas,'Fantasmas','>90d ou nunca','red')}
+    ${kpi(b.email_ok,'E-mail verificado','')}
+    ${kpi(b.phone_ok,'Telefone verificado','')}
+  </div>
+
+  <h2 class="sec">Privacidade & risco</h2>
+  <div class="kpis">
+    ${kpi(pv.celulas_risco,'Células k<5','risco de reidentificação',pv.celulas_risco>0?'red':'green')}
+    ${kpi(pv.celulas_total,'Células totais','área+senioridade+cidade')}
+    ${kpi(pv.revogacoes,'Revogações de consentimento','')}
+  </div>
+
+  <h2 class="sec">Auditoria — acessos a PII (recentes)</h2>
+  <table><thead><tr><th>Data</th><th>Ação</th><th>Empresa</th><th>Candidato</th><th>Detalhe</th></tr></thead><tbody>
+    ${d.logs.map(l=>`<tr><td>${new Date(l.created_at).toLocaleString('pt-BR')}</td>
+      <td>${esc(l.action)}</td><td>${esc(l.empresa||('#'+(l.company_id||'-')))}</td>
+      <td>${l.candidate_id?('#'+l.candidate_id):'—'}</td><td class="muted">${esc(l.purpose||'')}</td></tr>`).join('')||'<tr><td colspan="5" class="muted">Sem logs</td></tr>'}
+  </tbody></table>
+  <p class="muted small" style="margin:14px 0 40px">access_logs é append-only (imutável) — UPDATE/DELETE bloqueados por trigger no banco.</p>`;
+
+  // Visão "Empresas (RH)": só o que se FAZ com as empresas clientes.
+  const htmlEmpresas=`
+  <h1 style="font-size:20px;font-weight:800">Clientes — empresas (RH)</h1>
+  <p class="muted" style="max-width:760px;margin-top:4px">Empresas que usam o Banco de Talentos. Clique numa empresa para abrir o painel 360 (compras, créditos e usuários). Os indicadores de receita e funil ficam em “Indicadores B2B”.</p>
+  <div class="kpis" style="margin-top:18px">
+    ${kpi(d.companies.ativas,'Empresas ativas',d.companies.total+' no total','accent')}
+    ${kpi((d.empresas||[]).filter(e=>e.saldo<5).length,'Com saldo baixo','menos de 5 créditos','gold')}
+    ${kpi(cr.emitidos,'Créditos emitidos','compras + bônus')}
+    ${kpi(cr.consumidos,'Créditos consumidos','desbloqueios')}
+  </div>
   <h2 class="sec">Conceder créditos a uma empresa</h2>
   <div class="kpi" style="padding:18px;max-width:680px">
     <div style="display:grid;grid-template-columns:1fr 130px;gap:12px">
@@ -367,36 +247,13 @@ function render(d){
       <td>${esc(e.plan)}</td><td>${esc(e.status)}</td>
       <td class="${e.saldo<5?'red':''}">${e.saldo}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">Sem empresas</td></tr>'}
   </tbody></table>
-
-  <h2 class="sec">Qualidade da base</h2>
-  <div class="kpis">
-    ${kpi(b.total,'Candidatos','não arquivados')}
-    ${kpi(b.consentidos,'Consentidos B2B','')}
-    ${kpi(b.ativos,'Ativos','confirmados ≤45d','green')}
-    ${kpi(b.fantasmas,'Fantasmas','>90d ou nunca','red')}
-    ${kpi(b.email_ok,'E-mail verificado','')}
-    ${kpi(b.phone_ok,'Telefone verificado','')}
-  </div>
-
-  <h2 class="sec">Privacidade & risco</h2>
-  <div class="kpis">
-    ${kpi(pv.celulas_risco,'Células k<5','risco de reidentificação',pv.celulas_risco>0?'red':'green')}
-    ${kpi(pv.celulas_total,'Células totais','área+senioridade+cidade')}
-    ${kpi(pv.revogacoes,'Revogações de consentimento','')}
-  </div>
-
   <h2 class="sec">Receita por cliente (top 10)</h2>
   <table><thead><tr><th>Empresa</th><th>Plano</th><th>Créditos comprados</th><th>Desbloqueios</th></tr></thead><tbody>
     ${d.top_clientes.map(c=>`<tr><td>${esc(c.nome)}</td><td>${esc(c.plan)}</td><td>${c.comprados}</td><td>${c.desbloqueios}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">Sem dados</td></tr>'}
   </tbody></table>
+  <p style="margin-bottom:40px"></p>`;
 
-  <h2 class="sec">Auditoria — acessos a PII (recentes)</h2>
-  <table><thead><tr><th>Data</th><th>Ação</th><th>Empresa</th><th>Candidato</th><th>Detalhe</th></tr></thead><tbody>
-    ${d.logs.map(l=>`<tr><td>${new Date(l.created_at).toLocaleString('pt-BR')}</td>
-      <td>${esc(l.action)}</td><td>${esc(l.empresa||('#'+(l.company_id||'-')))}</td>
-      <td>${l.candidate_id?('#'+l.candidate_id):'—'}</td><td class="muted">${esc(l.purpose||'')}</td></tr>`).join('')||'<tr><td colspan="5" class="muted">Sem logs</td></tr>'}
-  </tbody></table>
-  <p class="muted small" style="margin:14px 0 40px">access_logs é append-only (imutável) — UPDATE/DELETE bloqueados por trigger no banco.</p>`;
+  $('dash').innerHTML=VIEW_EMP?htmlEmpresas:html.replace('<!--EMPRESAS-->','');
 }
 
 /* ---------- Empresa 360 (drawer) ---------- */
@@ -509,7 +366,7 @@ async function cuReset(id,nome){ if(!confirm('Resetar a senha de '+nome+'?'))ret
 
 /* auto-login dentro do painel unificado (chave compartilhada via sessionStorage) */
 (function(){try{
-  if(window.self===window.top){location.replace('/painel.html#overview');return;}
+  if(window.self===window.top){location.replace('/painel.html#'+(VIEW==='empresas'?'empresas':'overview'));return;}
   var h=document.querySelector("header");if(h)h.style.display="none";
   var k=localStorage.getItem('ee_admin_key')||sessionStorage.getItem('ee_admin_key');
   if(k){KEY=k;load();}

@@ -6,6 +6,7 @@ const { query } = require('./_lib/db');
 const { adminCan } = require('./_lib/admin-perms');
 const mailer = require('./_lib/mailer');
 const { buildReportEmailHtml } = require('./_lib/report-email');
+const { registrarUso, origemLiberacao } = require('./_lib/cortesia');
 
 const MAX = () => Number(process.env.MAX_TEST_ATTEMPTS || 3);
 
@@ -37,7 +38,7 @@ module.exports = async (req, res) => {
     const whereSQL = where.length ? 'WHERE ' + where.join(' AND ') : '';
 
     const { rows } = await query(
-      `SELECT l.id, l.nome, l.email, l.jornada, l.confirmed_at, l.payment_status,
+      `SELECT l.id, l.nome, l.email, l.jornada, l.confirmed_at, l.payment_status, l.mp_payment_id,
               l.attempts_used, l.reset_count, l.last_reset_at, l.report_json IS NOT NULL AS has_report,
               l.created_at, l.updated_at, l.access_token
          FROM leads l
@@ -48,6 +49,7 @@ module.exports = async (req, res) => {
     const data = rows.map((l) => ({
       id: l.id, nome: l.nome, email: l.email, jornada: l.jornada,
       confirmed: !!l.confirmed_at, paid: l.payment_status === 'paid',
+      liberacao: origemLiberacao(l), // 'pago' | 'cortesia' | 'gratis' | null
       attempts_used: Number(l.attempts_used), max_attempts: max,
       reset_count: Number(l.reset_count || 0), last_reset_at: l.last_reset_at,
       has_report: l.has_report, status: statusOf(l, max),
@@ -56,12 +58,13 @@ module.exports = async (req, res) => {
     }));
 
     // KPIs rápidos
-    const k = { total: data.length, concluidos: 0, travados: 0, pendentes: 0, pagos: 0 };
+    const k = { total: data.length, concluidos: 0, travados: 0, pendentes: 0, pagos: 0, cortesias: 0 };
     for (const d of data) {
       if (d.status === 'concluido') k.concluidos++;
       if (d.status === 'travado') k.travados++;
       if (d.status === 'pendente' || d.status === 'confirmado') k.pendentes++;
-      if (d.paid) k.pagos++;
+      if (d.liberacao === 'pago') k.pagos++;
+      if (d.liberacao === 'cortesia' || d.liberacao === 'gratis') k.cortesias++;
     }
     return json(res, { ok: true, kpis: k, max_attempts: max, data });
   }
@@ -136,7 +139,7 @@ module.exports = async (req, res) => {
     if (!id) return err(res, 'id obrigatório');
 
     const { rows } = await query(
-      'SELECT id, nome, email, payment_status, report_json FROM leads WHERE id = $1', [id]);
+      'SELECT id, nome, email, jornada, payment_status, report_json FROM leads WHERE id = $1', [id]);
     const l = rows[0];
     if (!l) return err(res, 'Lead não encontrado', 404);
     if (!l.report_json) return err(res, 'Este candidato ainda não concluiu o teste — não há relatório para liberar.', 400);
@@ -144,6 +147,7 @@ module.exports = async (req, res) => {
 
     await query(
       "UPDATE leads SET payment_status='paid', mp_payment_id='cortesia', updated_at=NOW() WHERE id=$1", [id]);
+    await registrarUso({ cortesiaId: null, lead: l, origem: 'admin', actor: (req.actor || {}).nome });
 
     // envia o relatório por e-mail (best-effort)
     let email_ok = false;

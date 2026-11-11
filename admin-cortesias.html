@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin · Cortesias — Entre Escolhas</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.svg" />
+<link rel="stylesheet" href="/admin-ui.css?v=1">
+<link rel="stylesheet" href="/theme.css?v=3">
+<script src="/theme.js?v=3"></script>
+<script src="/admin-ui.js?v=1"></script>
+</head>
+<body>
+<main id="dash"><p class="muted" style="margin-top:30px"><span class="spin"></span> Carregando…</p></main>
+
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer" role="dialog" aria-label="Detalhes da cortesia"><button class="x" onclick="closeDrawer()" aria-label="Fechar">✕</button><div id="drawerBody"></div></div>
+
+<script>
+let D = null;          // última resposta de op=list
+let TIPO = 'pessoa';   // aba do formulário: 'pessoa' | 'link'
+let FILTRO = '';       // '', 'pessoa', 'link'
+let ULTIMA = null;     // cortesia recém-criada (para mostrar os links)
+const PRE = new URLSearchParams(location.search); // vindo de Clientes: ?email=&nome=
+
+const ESTADO = { ativa: ['Ativa', 'g'], esgotada: ['Usada / esgotada', 'b'], expirada: ['Expirada', 'gold'], revogada: ['Revogada', 'r'] };
+function jlabel(id) { const j = (D.jornadas || []).find((x) => x.id === id); return j ? j.label : id; }
+function testesTxt(c) { return c.jornadas.length ? c.jornadas.map(jlabel).join(', ') : 'Todos os testes'; }
+
+async function load() {
+  try { D = await api('fn=admin_cortesias&op=list'); render(); }
+  catch (e) { $('dash').innerHTML = '<p class="note warn" style="margin-top:30px">' + esc(e.message) + '</p>'; }
+}
+
+function render() {
+  const k = D.kpis;
+  $('dash').innerHTML = `
+    <h1 class="pg">Cortesias — teste 100% grátis</h1>
+    <p class="lead">Libere a experiência completa do site para quem você quiser. A pessoa faz o cadastro e o teste como qualquer cliente; quando chega ao relatório, ele é liberado sem cobrança. Tudo o que foi liberado de graça fica registrado aqui.</p>
+
+    ${D.free_mode ? `<p class="note warn" style="margin-top:14px"><b>O modo grátis geral está ligado.</b> Hoje todo mundo libera o relatório sem pagar, com ou sem cortesia. Para cobrar de novo, desligue em <a href="#" data-ir="config" class="accent">Configurações</a>.</p>` : ''}
+    ${D.importados ? `<p class="note ok" style="margin-top:14px">${D.importados} código(s) de cortesia antigos foram trazidos para esta tela. Eles continuam funcionando.</p>` : ''}
+
+    <div class="kpis">
+      <div class="kpi"><div class="v green">${k.ativas}</div><div class="l">Cortesias ativas</div><div class="s">${k.pessoas} para pessoas · ${k.links} em links</div></div>
+      <div class="kpi"><div class="v gold">${k.aguardando}</div><div class="l">Convidados que ainda não usaram</div></div>
+      <div class="kpi"><div class="v">${k.liberacoes}</div><div class="l">Relatórios liberados de graça</div><div class="s">${k.liberacoes_30d} nos últimos 30 dias</div></div>
+    </div>
+
+    ${D.pode_editar ? formHtml() : '<p class="note" style="margin-top:22px">Seu perfil pode consultar as cortesias, mas não criar ou revogar.</p>'}
+
+    <h2 class="sec">Cortesias criadas</h2>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Filtrar por tipo">
+        <button data-filtro="" class="${FILTRO === '' ? 'on' : ''}">Todas</button>
+        <button data-filtro="pessoa" class="${FILTRO === 'pessoa' ? 'on' : ''}">Pessoas</button>
+        <button data-filtro="link" class="${FILTRO === 'link' ? 'on' : ''}">Links</button>
+      </div>
+      <input id="q" placeholder="Buscar por nome, e-mail, empresa ou código…" style="max-width:340px" aria-label="Buscar cortesia">
+    </div>
+    <div id="tbl"></div>
+
+    <h2 class="sec">Histórico — relatórios liberados de graça</h2>
+    <p class="muted small" style="margin:-6px 0 10px">Inclui cortesias pessoais, links, liberações manuais feitas em “Testes realizados” e o modo grátis geral.</p>
+    <div id="hist"></div>`;
+  desenharTabela();
+  desenharHistorico();
+  aplicarTipo();
+  if (ULTIMA) mostrarCriada();
+  if (PRE.get('email') && $('f_email')) {
+    $('f_email').value = PRE.get('email'); $('f_nome').value = PRE.get('nome') || '';
+    PRE.delete('email'); PRE.delete('nome');
+    $('f_email').scrollIntoView({ block: 'center' });
+  }
+}
+
+function formHtml() {
+  return `
+    <h2 class="sec">Liberar um teste grátis</h2>
+    <div class="card">
+      <div class="seg" role="group" aria-label="Tipo de cortesia" style="margin-bottom:14px">
+        <button data-tipo="pessoa">Para uma pessoa</button>
+        <button data-tipo="link">Link para compartilhar</button>
+      </div>
+      <p class="muted small" id="tipoDica" style="margin-bottom:14px"></p>
+
+      <div id="blocoPessoa">
+        <div class="grid3">
+          <div><label class="fl" for="f_email">E-mail da pessoa</label><input id="f_email" type="email" autocomplete="off" placeholder="cliente@empresa.com.br"></div>
+          <div><label class="fl" for="f_nome">Nome <span class="t3">(opcional)</span></label><input id="f_nome" autocomplete="off" placeholder="Como ela será chamada no convite"></div>
+          <div><label class="fl" for="f_empresa">Empresa <span class="t3">(opcional)</span></label><input id="f_empresa" autocomplete="off" placeholder="Para você saber de onde é"></div>
+        </div>
+      </div>
+      <div id="blocoLink" style="display:none">
+        <div class="grid2">
+          <div><label class="fl" for="f_code">Código do link <span class="t3">(opcional — se vazio, é gerado)</span></label><input id="f_code" autocomplete="off" placeholder="ex.: EVENTO-RH" style="text-transform:uppercase"></div>
+          <div><label class="fl" for="f_max">Limite de usos <span class="t3">(0 = sem limite)</span></label><input id="f_max" type="number" min="0" step="1" value="0"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <span class="fl">Quais testes ficam liberados</span>
+        <div class="chips" id="f_jornadas">
+          ${D.jornadas.map((j) => `<label class="chip"><input type="checkbox" value="${esc(j.id)}" checked>${esc(j.label)}</label>`).join('')}
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:14px">
+        <div><label class="fl" for="f_expires">Válida até <span class="t3">(opcional)</span></label><input id="f_expires" type="date"></div>
+        <div><label class="fl" for="f_motivo">Motivo <span class="t3">(opcional, só para o seu controle)</span></label><input id="f_motivo" autocomplete="off" placeholder="ex.: demonstração para cliente, imprensa, parceiro"></div>
+      </div>
+
+      <label id="conviteWrap" class="small" style="display:flex;align-items:center;gap:8px;margin-top:14px;cursor:pointer">
+        <input type="checkbox" id="f_invite" checked>
+        <span>Enviar o convite por e-mail agora <span class="t3">(com o link e o passo a passo)</span></span>
+      </label>
+
+      <div class="split" style="margin-top:16px;gap:12px">
+        <button class="btn" id="btnCriar">Liberar cortesia</button>
+        <span id="fMsg" class="small" role="status"></span>
+      </div>
+      <div id="criada"></div>
+    </div>`;
+}
+
+function aplicarTipo() {
+  if (!$('blocoPessoa')) return;
+  document.querySelectorAll('[data-tipo]').forEach((b) => b.classList.toggle('on', b.dataset.tipo === TIPO));
+  $('blocoPessoa').style.display = TIPO === 'pessoa' ? '' : 'none';
+  $('blocoLink').style.display = TIPO === 'link' ? '' : 'none';
+  $('conviteWrap').style.display = TIPO === 'pessoa' ? 'flex' : 'none';
+  $('btnCriar').textContent = TIPO === 'pessoa' ? 'Liberar cortesia' : 'Criar link';
+  $('tipoDica').textContent = TIPO === 'pessoa'
+    ? 'A cortesia fica presa ao e-mail: só vale para quem se cadastrar com ele. Ideal para um cliente viver a experiência inteira.'
+    : 'Qualquer pessoa com o link libera o relatório grátis. Use validade e limite para campanhas, eventos e parceiros.';
+}
+
+async function criar() {
+  const msg = $('fMsg'), btn = $('btnCriar');
+  const jornadas = [...document.querySelectorAll('#f_jornadas input:checked')].map((i) => i.value);
+  if (!jornadas.length) { msg.textContent = 'Marque pelo menos um teste.'; msg.className = 'small red'; return; }
+  const body = { tipo: TIPO, jornadas, expires: $('f_expires').value, motivo: $('f_motivo').value.trim() };
+  if (TIPO === 'pessoa') {
+    body.email = $('f_email').value.trim(); body.nome = $('f_nome').value.trim(); body.empresa = $('f_empresa').value.trim();
+    body.send_invite = $('f_invite').checked;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) { msg.textContent = 'Informe o e-mail da pessoa.'; msg.className = 'small red'; $('f_email').focus(); return; }
+  } else {
+    body.code = $('f_code').value.trim(); body.max_uses = parseInt($('f_max').value, 10) || 0;
+  }
+  btn.disabled = true; msg.textContent = 'Criando…'; msg.className = 'small muted';
+  try {
+    const d = await post('fn=admin_cortesias&op=create', body);
+    ULTIMA = d;
+    await load();
+  } catch (e) { msg.textContent = e.message; msg.className = 'small red'; btn.disabled = false; }
+}
+
+function mostrarCriada() {
+  const d = ULTIMA, c = d.cortesia; ULTIMA = null;
+  if (!$('criada')) return;
+  let aviso = '';
+  if (c.tipo === 'pessoa') {
+    aviso = d.invite_ok === true ? `Convite enviado para <b>${esc(c.email)}</b>.`
+      : d.invite_ok === false ? `<span class="red">Não foi possível enviar o e-mail (verifique o SMTP).</span> Copie o link abaixo e envie você mesmo.`
+      : 'Convite não enviado — copie o link abaixo e envie você mesmo.';
+    if (d.testes_pendentes) aviso += ` Essa pessoa já tem ${d.testes_pendentes} teste(s) concluído(s): basta ela abrir e clicar em “Liberar meu relatório grátis”.`;
+  } else {
+    aviso = `Link criado com o código <b>${esc(c.code)}</b>.`;
+  }
+  $('criada').innerHTML = `<div class="note ok" style="margin-top:16px"><b>Cortesia liberada.</b> ${aviso}${linksHtml(c)}</div>`;
+  $('criada').scrollIntoView({ block: 'nearest' });
+}
+
+function linksHtml(c) {
+  return c.links.map((l) => `<div style="margin-top:10px"><span class="small">${esc(l.label)}</span>
+    <div class="linkbox"><code>${esc(l.url)}</code><button class="btn-soft" data-copiar="${esc(l.url)}">Copiar link</button></div></div>`).join('');
+}
+
+function desenharTabela() {
+  const q = (($('q') && $('q').value) || '').toLowerCase();
+  const rows = D.cortesias.filter((c) => (!FILTRO || c.tipo === FILTRO)
+    && (!q || [c.nome, c.email, c.empresa, c.code, c.motivo].join(' ').toLowerCase().includes(q)));
+  $('tbl').innerHTML = `<div class="tblwrap"><table>
+    <thead><tr><th>Para quem</th><th>Testes</th><th class="num">Usos</th><th>Validade</th><th>Situação</th><th>Criada</th><th>Ações</th></tr></thead>
+    <tbody>${rows.map((c) => {
+      const [et, ec] = ESTADO[c.estado] || [c.estado, ''];
+      const quem = c.tipo === 'pessoa'
+        ? `<b>${esc(c.nome || c.email)}</b><div class="t3 small">${esc(c.email)}${c.empresa ? ' · ' + esc(c.empresa) : ''}</div>`
+        : `<b>Link ${esc(c.code)}</b><div class="t3 small">qualquer pessoa com o link</div>`;
+      const situ = (c.tipo === 'pessoa' && c.estado === 'ativa')
+        ? (c.uses > 0 ? '<span class="tag g">Em uso</span>' : '<span class="tag gold">Aguardando a pessoa</span>')
+        : `<span class="tag ${ec}">${et}</span>`;
+      return `<tr>
+        <td>${quem}${c.motivo ? `<div class="t3 small" style="margin-top:2px">${esc(c.motivo)}</div>` : ''}</td>
+        <td class="small">${esc(testesTxt(c))}</td>
+        <td class="num">${c.uses}${c.max_uses ? ' / ' + c.max_uses : ''}</td>
+        <td class="small">${c.expires ? fmtYmd(c.expires) : '<span class="t3">sem prazo</span>'}</td>
+        <td>${situ}${c.tipo === 'pessoa' && c.invite_sent_at ? `<div class="t3 small" style="margin-top:3px">convite enviado ${fmtDay(c.invite_sent_at)}</div>` : ''}</td>
+        <td class="small muted">${fmtDay(c.created_at)}<div class="t3">${esc(c.created_by || '')}</div></td>
+        <td><div class="split">
+          <button class="btn-soft" data-ver="${c.id}">Links e usos</button>
+          ${D.pode_editar && c.tipo === 'pessoa' && c.estado === 'ativa' ? `<button class="btn-soft" data-reenviar="${c.id}">Reenviar convite</button>` : ''}
+          ${D.pode_editar ? (c.status === 'ativa' ? `<button class="btn-red" data-toggle="${c.id}">Revogar</button>` : `<button class="btn-green" data-toggle="${c.id}">Reativar</button>`) : ''}
+        </div></td></tr>`;
+    }).join('') || `<tr><td colspan="7" class="muted">${D.cortesias.length ? 'Nenhuma cortesia com esse filtro.' : 'Nenhuma cortesia criada ainda. Use o formulário acima para liberar a primeira.'}</td></tr>`}</tbody></table></div>`;
+}
+
+function desenharHistorico() {
+  $('hist').innerHTML = `<div class="tblwrap"><table>
+    <thead><tr><th>Pessoa</th><th>Teste</th><th>Como foi liberado</th><th>Código</th><th>Quando</th></tr></thead>
+    <tbody>${D.liberacoes.map((l) => `<tr>
+      <td><b>${esc(l.nome)}</b><div class="t3 small">${esc(l.email)}</div></td>
+      <td class="small">${esc(l.jornada_label)}</td>
+      <td class="small">${esc(l.origem)}${l.por ? `<div class="t3">por ${esc(l.por)}</div>` : ''}</td>
+      <td class="small">${l.code ? esc(l.code) : '<span class="t3">—</span>'}</td>
+      <td class="small muted">${fmtDate(l.quando)}</td></tr>`).join('')
+      || '<tr><td colspan="5" class="muted">Nenhum relatório foi liberado de graça ainda.</td></tr>'}</tbody></table></div>`;
+}
+
+async function ver(id) {
+  const c = D.cortesias.find((x) => x.id === id); if (!c) return;
+  openDrawer();
+  const [et, ec] = ESTADO[c.estado] || [c.estado, ''];
+  $('drawerBody').innerHTML = `
+    <div class="t3 small" style="text-transform:uppercase;letter-spacing:.05em">${c.tipo === 'pessoa' ? 'Cortesia pessoal' : 'Link de cortesia'}</div>
+    <h2 style="font-size:19px;margin:2px 40px 6px 0">${esc(c.tipo === 'pessoa' ? (c.nome || c.email) : c.code)}</h2>
+    <div class="split"><span class="tag ${ec}">${et}</span><span class="t3 small">código ${esc(c.code)} · ${esc(testesTxt(c))}</span></div>
+    ${c.tipo === 'pessoa' ? `<p class="muted small" style="margin-top:10px">Vale só para quem se cadastrar com <b>${esc(c.email)}</b>.</p>` : ''}
+    <h2 class="sec">Links</h2>${linksHtml(c)}
+    <h2 class="sec">Quem usou</h2><div id="usos"><span class="spin"></span></div>`;
+  try {
+    const d = await api('fn=admin_cortesias&op=usos&id=' + id);
+    $('usos').innerHTML = d.data.length ? `<div class="tblwrap"><table><thead><tr><th>Pessoa</th><th>Teste</th><th>Quando</th></tr></thead><tbody>${
+      d.data.map((u) => `<tr><td><b>${esc(u.nome || '—')}</b><div class="t3 small">${esc(u.email)}</div></td><td class="small">${esc(u.jornada_label || '')}</td><td class="small muted">${fmtDate(u.created_at)}</td></tr>`).join('')
+    }</tbody></table></div>` : `<p class="muted small">${c.uses ? 'Usos anteriores a esta tela não têm o detalhe de quem usou.' : 'Ninguém usou ainda.'}</p>`;
+  } catch (e) { $('usos').innerHTML = '<p class="red small">' + esc(e.message) + '</p>'; }
+}
+
+async function alternar(id, btn) {
+  const c = D.cortesias.find((x) => x.id === id); if (!c) return;
+  if (c.status === 'ativa' && !confirm(`Revogar a cortesia ${c.tipo === 'pessoa' ? 'de ' + (c.nome || c.email) : c.code}?\n\nQuem ainda não liberou o relatório deixa de ter o acesso grátis. Relatórios já liberados continuam liberados.`)) return;
+  btn.disabled = true;
+  try { await post('fn=admin_cortesias&op=toggle', { id }); await load(); }
+  catch (e) { alert(e.message); btn.disabled = false; }
+}
+
+async function reenviar(id, btn) {
+  const antes = btn.textContent; btn.disabled = true; btn.textContent = 'Enviando…';
+  try { await post('fn=admin_cortesias&op=resend', { id }); btn.textContent = 'Enviado ✓'; setTimeout(load, 1200); }
+  catch (e) { alert(e.message); btn.textContent = antes; btn.disabled = false; }
+}
+
+// Um único ouvinte de cliques para a tela toda (os dados vêm em data-*).
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button,a'); if (!t) return;
+  if (t.dataset.tipo) { TIPO = t.dataset.tipo; aplicarTipo(); }
+  else if (t.dataset.filtro !== undefined) { FILTRO = t.dataset.filtro; document.querySelectorAll('[data-filtro]').forEach((b) => b.classList.toggle('on', b.dataset.filtro === FILTRO)); desenharTabela(); }
+  else if (t.id === 'btnCriar') criar();
+  else if (t.dataset.copiar) copiar(t.dataset.copiar, t);
+  else if (t.dataset.ver) ver(Number(t.dataset.ver));
+  else if (t.dataset.toggle) alternar(Number(t.dataset.toggle), t);
+  else if (t.dataset.reenviar) reenviar(Number(t.dataset.reenviar), t);
+  else if (t.dataset.ir) { e.preventDefault(); irPara(t.dataset.ir); }
+});
+document.addEventListener('input', (e) => { if (e.target.id === 'q') desenharTabela(); });
+
+iniciarAdmin('cortesias', load);
+</script>
+</body>
+</html>

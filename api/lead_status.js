@@ -4,6 +4,7 @@ const { setCors, json, err } = require('./_lib/http');
 const { query } = require('./_lib/db');
 const { getSetting, getPriceSingle, getPriceSingleAnchor, getPriceCombo, getCommissionPct } = require('./_lib/settings');
 const { computeAmount } = require('./_lib/referral-core');
+const { resolveCortesia } = require('./_lib/cortesia');
 
 module.exports = async (req, res) => {
   if (setCors(req, res)) return;
@@ -33,6 +34,16 @@ module.exports = async (req, res) => {
     } catch (e) { /* tabela pode não existir antes da migração */ }
   }
 
+  // Cortesia: há um acesso grátis válido para este cadastro? (cortesia pessoal pelo
+  // e-mail, ou o código do link em ?cortesia=). Só informa — quem libera é cortesia_unlock.
+  let cortesia = false;
+  if (!paid) {
+    try {
+      const c = await resolveCortesia({ code: req.query.cortesia, email: lead.email, jornada: lead.jornada });
+      cortesia = !!c.ok;
+    } catch (e) { cortesia = false; }
+  }
+
   // preços já com eventual desconto de indicação (calculado no servidor)
   const single = await computeAmount('single', lead.email, refCode);
   const combo = await computeAmount('combo', lead.email, refCode);
@@ -58,5 +69,6 @@ module.exports = async (req, res) => {
     referido: !!lead.referred_by_code,
     commission_pct: await getCommissionPct(),
     free_mode: (await getSetting('free_mode', '0')) === '1',
+    cortesia,
   });
 };

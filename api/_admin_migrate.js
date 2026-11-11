@@ -107,6 +107,9 @@ const STATEMENTS = [
     nome VARCHAR(160), email VARCHAR(255), telefone VARCHAR(30),
     created_at TIMESTAMPTZ DEFAULT NOW())`,
   "CREATE INDEX IF NOT EXISTS idx_vaga_apps ON vaga_applications (vaga_id, created_at DESC)",
+  // ── Cortesias: teste 100% grátis por pessoa ou por link (Rodada 14) ──
+  // (o Admin → Cortesias também cria estas tabelas sozinho na primeira abertura)
+  ...require('./_lib/cortesia').SCHEMA,
 ];
 
 const NEEDED = ['cep', 'lat', 'lon', 'idiomas', 'aceita_relocacao', 'contrato'];

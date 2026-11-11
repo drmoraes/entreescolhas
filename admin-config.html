@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin · Configurações — Entre Escolhas</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.svg" />
+<link rel="stylesheet" href="/admin-ui.css?v=1">
+<link rel="stylesheet" href="/theme.css?v=3">
+<script src="/theme.js?v=3"></script>
+<script src="/admin-ui.js?v=1"></script>
+</head>
+<body>
+<main id="dash"><p class="muted" style="margin-top:30px"><span class="spin"></span> Carregando…</p></main>
+
+<script>
+const CATS = [['operacional', 'Operacional'], ['analista', 'Analista'], ['especialista', 'Especialista'], ['gerencial', 'Gerencial'], ['pcd', 'PCD']];
+
+async function load() {
+  try { render(await api('fn=admin_settings&op=get')); }
+  catch (e) { $('dash').innerHTML = '<p class="note warn" style="margin-top:30px">' + esc(e.message) + '</p>'; }
+}
+
+function render(d) {
+  const cc = d.credit_cost || {};
+  $('dash').innerHTML = `
+    <h1 class="pg">Configurações</h1>
+    <p class="lead">Ajustes que valem para o site inteiro. Cada alteração fica registrada em “Usuários e auditoria”.</p>
+
+    <h2 class="sec">Relatório do candidato (B2C)</h2>
+    <div class="card" style="max-width:680px">
+      <label class="fl" for="cfgPrice">Preço do relatório completo (R$)</label>
+      <div class="split">
+        <input id="cfgPrice" type="number" step="0.01" min="10" style="width:140px" value="${Number(d.price_single).toFixed(2)}">
+        <button class="btn" id="btnPreco">Salvar preço</button>
+        <span id="precoMsg" class="small" role="status"></span>
+      </div>
+      <p class="muted small" style="margin-top:8px">Mínimo de R$ 10,00 — valores abaixo disso são ignorados pelo site, que volta ao preço de lançamento.</p>
+
+      <label class="small" style="display:flex;align-items:flex-start;gap:10px;margin-top:18px;cursor:pointer">
+        <input type="checkbox" id="cfgFree" ${d.free_mode ? 'checked' : ''} style="margin-top:3px">
+        <span><b>Modo grátis para todo mundo</b><br><span class="muted">Ligado, ninguém paga: o botão do relatório vira “Ver meu relatório grátis”. Para liberar só algumas pessoas, deixe desligado e use <a href="#" data-ir="cortesias" class="accent">Cortesias</a>.</span></span>
+      </label>
+      <span id="freeMsg" class="small" role="status" style="display:block;margin-top:8px"></span>
+    </div>
+
+    <h2 class="sec">Envio do relatório por e-mail</h2>
+    <div class="card" style="max-width:680px">
+      ${d.report_email_failures
+        ? `<p><b class="red">${d.report_email_failures}</b> envio(s) com falha até hoje.</p><p class="muted small" style="margin-top:6px">Última falha: ${esc(d.last_report_email_error || '—')}</p><p class="muted small" style="margin-top:6px">A pessoa vê o relatório na tela mesmo quando o e-mail falha. Se o número crescer, confira as variáveis SMTP na Vercel.</p>`
+        : '<p class="green">Nenhuma falha de envio registrada.</p>'}
+    </div>
+
+    <h2 class="sec">Contador público (prova social)</h2>
+    <div class="card" style="max-width:680px">
+      <label class="fl" for="cfgCounter">Base somada à contagem real de testes concluídos</label>
+      <div class="split">
+        <input id="cfgCounter" type="number" min="0" step="1" style="width:160px" value="${d.counter_base || 0}">
+        <button class="btn" id="btnCounter">Salvar</button>
+        <span id="counterMsg" class="small" role="status"></span>
+      </div>
+      <p class="muted small" style="margin-top:8px">A home mostra <b>cenários analisados = (concluídos reais + base) × 20</b>. Use números que você consiga sustentar — credibilidade converte mais que um número grande.</p>
+    </div>
+
+    <h2 class="sec">Custo de crédito por categoria (B2B)</h2>
+    <div class="card" style="max-width:680px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px">
+        ${CATS.map(([k, l]) => `<div><label class="fl" for="cc_${k}">${l}</label><input id="cc_${k}" type="number" min="0" step="1" value="${cc[k] != null ? cc[k] : ''}"></div>`).join('')}
+      </div>
+      <div class="split" style="margin-top:12px">
+        <button class="btn" id="btnCustos">Salvar custos</button>
+        <span id="ccMsg" class="small" role="status"></span>
+      </div>
+      <p class="muted small" style="margin-top:8px">Créditos que a empresa gasta ao desbloquear cada perfil. PCD tem precedência sobre a categoria.</p>
+    </div>
+
+    <h2 class="sec">Manutenção do banco de dados</h2>
+    <div class="card" style="max-width:680px">
+      <p class="muted small">Só é preciso depois de uma atualização que crie tabelas novas. Pode rodar mais de uma vez sem risco.</p>
+      <div class="split" style="margin-top:10px">
+        <button class="btn-ghost" id="btnMigrar">Atualizar estrutura geral</button>
+        <button class="btn-ghost" id="btnMigrarRH">Atualizar estrutura do RH</button>
+        <span id="migMsg" class="small" role="status"></span>
+      </div>
+    </div>`;
+}
+
+async function salvar(body, msgId, okTxt) {
+  const msg = $(msgId); msg.textContent = 'Salvando…'; msg.className = 'small muted';
+  try { const d = await post('fn=admin_settings&op=set', body); msg.textContent = '✓ ' + okTxt(d); msg.className = 'small green'; return d; }
+  catch (e) { msg.textContent = e.message; msg.className = 'small red'; return null; }
+}
+
+document.addEventListener('click', async (e) => {
+  const t = e.target.closest('button,a'); if (!t) return;
+  if (t.dataset.ir) { e.preventDefault(); irPara(t.dataset.ir); return; }
+  if (t.id === 'btnPreco') {
+    const v = parseFloat($('cfgPrice').value);
+    if (!(v >= 10)) { $('precoMsg').textContent = 'Informe um valor a partir de R$ 10,00.'; $('precoMsg').className = 'small red'; return; }
+    salvar({ price_single: v }, 'precoMsg', (d) => 'Preço salvo: ' + brl(d.price_single));
+  } else if (t.id === 'btnCounter') {
+    salvar({ counter_base: parseInt($('cfgCounter').value, 10) || 0 }, 'counterMsg', (d) => 'Contador salvo (' + Number(d.counter_base || 0).toLocaleString('pt-BR') + ' + reais)');
+  } else if (t.id === 'btnCustos') {
+    const credit_cost = {};
+    CATS.forEach(([k]) => { const el = $('cc_' + k); if (el && el.value !== '') credit_cost[k] = parseInt(el.value, 10); });
+    salvar({ credit_cost }, 'ccMsg', () => 'Custos salvos');
+  } else if (t.id === 'btnMigrar' || t.id === 'btnMigrarRH') {
+    const msg = $('migMsg'); msg.textContent = 'Atualizando…'; msg.className = 'small muted';
+    try {
+      const d = await api('fn=' + (t.id === 'btnMigrar' ? 'admin_migrate' : 'admin_migrate_rh'));
+      const falhas = Array.isArray(d.applied) ? d.applied.filter((x) => !x.ok).length : 0;
+      msg.textContent = falhas ? `Concluído com ${falhas} comando(s) com erro — veja os logs.` : '✓ Estrutura atualizada';
+      msg.className = 'small ' + (falhas ? 'gold' : 'green');
+    } catch (err) { msg.textContent = err.message; msg.className = 'small red'; }
+  }
+});
+document.addEventListener('change', async (e) => {
+  if (e.target.id !== 'cfgFree') return;
+  const liga = e.target.checked;
+  if (liga && !confirm('Ligar o modo grátis para TODO MUNDO?\n\nEnquanto estiver ligado, nenhum relatório é cobrado.')) { e.target.checked = false; return; }
+  const d = await salvar({ free_mode: liga }, 'freeMsg', (r) => (r.free_mode ? 'Modo grátis LIGADO — ninguém está sendo cobrado' : 'Modo grátis desligado — cobrando normalmente'));
+  if (!d) e.target.checked = !liga;
+});
+
+iniciarAdmin('config', load);
+</script>
+</body>
+</html>
